@@ -1,5 +1,6 @@
 # Parte solo quando una modifica tocca il backend: finché la cartella non esiste,
-# il workflow non viene mai eseguito.
+# il workflow non viene mai eseguito. Il file del workflow non compare fra i path
+# monitorati, altrimenti basterebbe modificarlo per farlo partire a vuoto.
 #
 # Assume che backend/pyproject.toml dichiari un extra "dev" con ruff e pytest.
 
@@ -10,12 +11,10 @@ on:
     branches: [main, develop]
     paths:
       - 'backend/**'
-      - '.github/workflows/backend.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'backend/**'
-      - '.github/workflows/backend.yml'
 
 jobs:
   verifica:
@@ -25,9 +24,9 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
           cache: pip

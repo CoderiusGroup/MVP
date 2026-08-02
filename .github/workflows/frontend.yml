@@ -1,5 +1,6 @@
 # Parte solo quando una modifica tocca il frontend: finché la cartella non esiste,
-# il workflow non viene mai eseguito.
+# il workflow non viene mai eseguito. Il file del workflow non compare fra i path
+# monitorati, altrimenti basterebbe modificarlo per farlo partire a vuoto.
 #
 # Assume che frontend/package.json definisca gli script "lint", "test:coverage" e "build".
 
@@ -10,12 +11,10 @@ on:
     branches: [main, develop]
     paths:
       - 'frontend/**'
-      - '.github/workflows/frontend.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'frontend/**'
-      - '.github/workflows/frontend.yml'
 
 jobs:
   verifica:
@@ -25,9 +24,9 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
