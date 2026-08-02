@@ -1,0 +1,45 @@
+# Parte solo quando una modifica tocca il backend: finché la cartella non esiste,
+# il workflow non viene mai eseguito.
+#
+# Assume che backend/pyproject.toml dichiari un extra "dev" con ruff e pytest.
+
+name: Backend
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  verifica:
+    name: Lint e test (Python 3.12)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Installazione dipendenze
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Test con coverage
+        run: pytest --cov --cov-report=term-missing
