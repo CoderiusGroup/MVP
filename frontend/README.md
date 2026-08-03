@@ -3,8 +3,10 @@
 Bozza **puramente estetica** dell'interfaccia: serve a discutere impaginazione, terminologia e
 flusso fra le pagine. Non è ancora l'implementazione descritta dalla Specifica Tecnica.
 
-Cosa c'è: le otto pagine previste dalla Specifica Tecnica, la navigazione fra loro con React Router,
-e dati di esempio statici in `src/datiEsempio.js`.
+Cosa c'è: le otto pagine previste dalla Specifica Tecnica, più due pagine per il catalogo dei
+decision tree (elenco e dettaglio) che i requisiti obbligatori RF-Ob63 → RF-Ob76 impongono ma che
+la Specifica Tecnica non prevede ancora. La navigazione fra le pagine usa React Router e i dati di
+esempio sono statici, in `src/datiEsempio.js`.
 
 Cosa non c'è: chiamate al backend, store Zustand, validazione Zod, TanStack Query, gestione degli
 errori, test. I campi dei form non sono controllati e i pulsanti di azione non fanno nulla.
@@ -27,6 +29,7 @@ src/
 ├── index.css          unico foglio di stile
 ├── datiEsempio.js     dati statici di riempimento
 ├── components/
-│   └── Esito.jsx      etichetta PASS / FAIL / NOT APPLICABLE / In corso / Non valutato
+│   ├── Esito.jsx      etichetta PASS / FAIL / NOT APPLICABLE / In corso / Non valutato
+│   └── GrafoDecisionTree.jsx  disegno statico dell'albero di ACM-1
 └── pages/             una pagina per ciascun caso d'uso di ingresso
 ```

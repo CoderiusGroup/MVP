@@ -52,3 +52,67 @@ export const risultati = [
     ],
   },
 ]
+
+// UC-29.1: per ogni albero servono codice e nome del requisito associato.
+export const catalogoDecisionTree = [
+  { requisito: 'ACM-1', nome: 'Applicable access control mechanisms', nodi: 7, dipendenze: [] },
+  { requisito: 'ACM-2', nome: 'Appropriate access control mechanisms', nodi: 9, dipendenze: ['ACM-1'] },
+  { requisito: 'AUM-1', nome: 'Applicable authentication mechanisms', nodi: 5, dipendenze: [] },
+  { requisito: 'AUM-5', nome: 'Password strength', nodi: 11, dipendenze: ['AUM-1'] },
+  { requisito: 'SUM-1', nome: 'Secure update mechanisms', nodi: 8, dipendenze: [] },
+]
+
+// Albero di ACM-1 in forma piatta, come il formato di importazione:
+// nodi con domanda più rami sì/no, nodi foglia con esito.
+export const alberoAcm1 = {
+  requisito: 'ACM-1',
+  nome: 'Applicable access control mechanisms',
+  versione: '1.0.0',
+  applicabileA: ['network', 'security'],
+  dipendenze: [],
+  radice: 'N1',
+  nodi: [
+    {
+      id: 'N1',
+      tipo: 'domanda',
+      testo: 'Il dispositivo implementa un meccanismo di controllo degli accessi per le sue funzionalità?',
+      rami: { sì: 'N2', no: 'L-FAIL-1' },
+    },
+    {
+      id: 'N2',
+      tipo: 'domanda',
+      testo: 'Il controllo degli accessi distingue fra ruoli diversi, per esempio utente e amministratore?',
+      rami: { sì: 'N3', no: 'L-FAIL-2' },
+    },
+    {
+      id: 'N3',
+      tipo: 'domanda',
+      testo: 'I permessi di accesso seguono il principio del privilegio minimo?',
+      rami: { sì: 'L-PASS', no: 'L-FAIL-3' },
+    },
+    {
+      id: 'L-PASS',
+      tipo: 'foglia',
+      esito: 'PASS',
+      testo: 'Il meccanismo di controllo degli accessi è implementato correttamente.',
+    },
+    {
+      id: 'L-FAIL-1',
+      tipo: 'foglia',
+      esito: 'FAIL',
+      testo: 'Il dispositivo non implementa alcun meccanismo di controllo degli accessi.',
+    },
+    {
+      id: 'L-FAIL-2',
+      tipo: 'foglia',
+      esito: 'FAIL',
+      testo: 'Il controllo degli accessi non distingue fra ruoli: tutti gli utenti hanno gli stessi permessi.',
+    },
+    {
+      id: 'L-FAIL-3',
+      tipo: 'foglia',
+      esito: 'FAIL',
+      testo: 'I permessi non seguono il principio del privilegio minimo.',
+    },
+  ],
+}

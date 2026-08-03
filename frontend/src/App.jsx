@@ -8,6 +8,8 @@ import DeviceSummaryPage from './pages/DeviceSummaryPage.jsx'
 import SessionRunnerPage from './pages/SessionRunnerPage.jsx'
 import ModifySessionPage from './pages/ModifySessionPage.jsx'
 import ResultsPage from './pages/ResultsPage.jsx'
+import DecisionTreeListPage from './pages/DecisionTreeListPage.jsx'
+import DecisionTreeDetailPage from './pages/DecisionTreeDetailPage.jsx'
 
 // Le otto pagine previste dalla Specifica Tecnica. La barra le espone tutte
 // perche la bozza va guardata pagina per pagina, non percorsa come un flusso:
@@ -22,6 +24,8 @@ const pagine = [
   { percorso: '/sessione', nome: 'Valutazione' },
   { percorso: '/sessione/modifica', nome: 'Modifica sessione' },
   { percorso: '/risultati', nome: 'Risultati' },
+  { percorso: '/decision-tree', nome: 'Decision tree' },
+  { percorso: '/decision-tree/dettaglio', nome: 'Dettaglio albero' },
 ]
 
 export default function App() {
@@ -57,6 +61,8 @@ export default function App() {
           <Route path="/sessione" element={<SessionRunnerPage />} />
           <Route path="/sessione/modifica" element={<ModifySessionPage />} />
           <Route path="/risultati" element={<ResultsPage />} />
+          <Route path="/decision-tree" element={<DecisionTreeListPage />} />
+          <Route path="/decision-tree/dettaglio" element={<DecisionTreeDetailPage />} />
         </Routes>
       </main>
     </>

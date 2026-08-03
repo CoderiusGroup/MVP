@@ -245,6 +245,31 @@ td a { color: var(--accent); text-decoration: none; }
   border-radius: 4px;
 }
 
+/* ---------- grafo ---------- */
+
+.grafo { width: 100%; height: auto; max-height: 22rem; display: block; margin: 0.6rem 0 1rem; }
+
+.grafo-arco { stroke: #c3c9d2; stroke-width: 1.5; }
+
+.grafo-etichetta {
+  fill: var(--muted);
+  font-size: 11px;
+  font-family: system-ui, sans-serif;
+}
+
+.grafo-nodo { stroke-width: 1.5; }
+.grafo-nodo-domanda { fill: var(--surface); stroke: var(--accent); }
+.grafo-nodo-pass { fill: var(--pass-bg); stroke: var(--pass-fg); }
+.grafo-nodo-fail { fill: var(--fail-bg); stroke: var(--fail-fg); }
+
+.grafo-testo {
+  fill: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-anchor: middle;
+}
+
 .percorso { list-style: none; font-size: 13px; }
 .percorso li { display: flex; justify-content: space-between; padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
 .percorso li:last-child { border-bottom: none; }

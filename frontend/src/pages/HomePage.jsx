@@ -34,6 +34,10 @@ export default function HomePage() {
         </p>
         <p className="nota">Salvata il 28/07/2026 alle 11:05</p>
       </div>
+
+      <p style={{ marginTop: '1.2rem' }}>
+        <Link to="/decision-tree">Consulta i decision tree disponibili</Link>
+      </p>
     </>
   )
 }
