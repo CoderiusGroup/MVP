@@ -1,5 +1,7 @@
 # MVP — Gruppo Coderius
 
+[![Coverage Status](https://coveralls.io/repos/github/CoderiusGroup/MVP/badge.svg?branch=develop)](https://coveralls.io/github/CoderiusGroup/MVP?branch=develop)
+
 Repository ufficiale del codice del gruppo Coderius, nell'ambito del corso di Ingegneria del
 Software — Università degli Studi di Padova (a.a. 2025/2026).
 
@@ -21,23 +23,25 @@ l'[Analisi dei Requisiti][ar], la [Specifica Tecnica][st] e le [Norme di Progett
 
 ```
 MVP/
-├── backend/     API REST in Flask (Python 3.12): logica di valutazione, validazione
-│                dei file JSON, persistenza su filesystem, generazione dei report
-├── frontend/    Single Page Application React (Vite): interfaccia utente
-└── .github/     workflow di integrazione continua e template delle pull request
+├── backend/             API REST in Flask (Python 3.12): logica di valutazione, validazione
+│                        dei file JSON, persistenza su filesystem, generazione dei report
+├── frontend/            Single Page Application React (Vite): interfaccia utente
+├── docs/                contratto API e altra documentazione interna alla repository
+├── .github/             workflow di integrazione continua e template delle pull request
+├── docker-compose.yml   orchestrazione backend + frontend per l'ambiente locale
+└── CONTRIBUTING.md      convenzioni di branch, commit e checklist per le pull request
 ```
-
-Le cartelle `backend/` e `frontend/` vengono create dai primi branch di feature.
 
 ## Tecnologie
 
 | Ambito | Tecnologia | Versione |
 |---|---|---|
 | Backend | Python, Flask | 3.12, 3.1.3 |
-| Frontend | JavaScript, React, Vite | ES2020, 19.2.7, 8.0.16 |
+| Frontend | TypeScript, React 19, Vite 8 | —, 19.2.7, 8.0.16 |
+| Runtime frontend | Node.js | 22 |
 | Librerie frontend | Zustand, Zod, TanStack Query, react-hot-toast | — |
-| Test | pytest, Vitest, React Testing Library | — |
-| Deployment | Docker, Docker Compose | — |
+| Test | pytest, ruff, Vitest, React Testing Library | — |
+| Deployment | Docker, Docker Compose | 28.5.1, v2.40.0 |
 
 Client e server comunicano esclusivamente via HTTP secondo lo stile REST, con scambio di dati in
 JSON e senza stato di sessione conservato dal server.

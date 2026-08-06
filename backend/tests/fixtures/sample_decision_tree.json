@@ -1,0 +1,24 @@
+{
+  "id": "t1",
+  "name": "EN 18031 — Autenticazione",
+  "rootNodeId": "n1",
+  "nodes": [
+    {
+      "kind": "question",
+      "id": "n1",
+      "text": "Il dispositivo espone un'interfaccia di rete?",
+      "onYes": "n2",
+      "onNo": "n5"
+    },
+    {
+      "kind": "question",
+      "id": "n2",
+      "text": "L'interfaccia richiede autenticazione?",
+      "onYes": "n3",
+      "onNo": "n4"
+    },
+    { "kind": "leaf", "id": "n3", "result": "PASS" },
+    { "kind": "leaf", "id": "n4", "result": "FAIL" },
+    { "kind": "leaf", "id": "n5", "result": "NOT_APPLICABLE" }
+  ]
+}
