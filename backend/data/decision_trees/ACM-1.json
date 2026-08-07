@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "decisionTree",
+  "decisionTree": {
+    "requirementId": "ACM-1",
+    "requirementName": "Applicability of access control mechanisms",
+    "version": "1.0.0",
+    "appliesTo": ["network", "security"],
+    "dependencies": [],
+    "rootNode": "DT.ACM-1.DN-1",
+    "nodes": [
+      {
+        "id": "DT.ACM-1.DN-1",
+        "type": "question",
+        "text": "Is the public accessibility of the asset the equipment's intended functionality?",
+        "branches": { "yes": "L-NA-1", "no": "DT.ACM-1.DN-2" }
+      },
+      {
+        "id": "DT.ACM-1.DN-2",
+        "type": "question",
+        "text": "Do the physical or logical measures in the targeted operational environment limit the accessibility to authorized entities?",
+        "branches": { "yes": "L-NA-2", "no": "DT.ACM-1.DN-3" }
+      },
+      {
+        "id": "DT.ACM-1.DN-3",
+        "type": "question",
+        "text": "Do legal implications not allow access control mechanisms?",
+        "branches": { "yes": "L-NA-3", "no": "DT.ACM-1.DN-4" }
+      },
+      {
+        "id": "DT.ACM-1.DN-4",
+        "type": "question",
+        "text": "Are there access control mechanisms that manage entities' access to the security assets and network assets?",
+        "branches": { "yes": "L-PASS-1", "no": "L-FAIL-1" }
+      },
+      {
+        "id": "L-PASS-1",
+        "type": "leaf",
+        "outcome": "PASS",
+        "text": "Access control mechanisms manage entities' access to the security and network assets."
+      },
+      {
+        "id": "L-FAIL-1",
+        "type": "leaf",
+        "outcome": "FAIL",
+        "text": "No access control mechanism manages entities' access to the security and network assets."
+      },
+      {
+        "id": "L-NA-1",
+        "type": "leaf",
+        "outcome": "NOT_APPLICABLE",
+        "text": "Public accessibility of the asset is the equipment's intended functionality."
+      },
+      {
+        "id": "L-NA-2",
+        "type": "leaf",
+        "outcome": "NOT_APPLICABLE",
+        "text": "Physical or logical measures in the targeted operational environment limit accessibility to authorized entities."
+      },
+      {
+        "id": "L-NA-3",
+        "type": "leaf",
+        "outcome": "NOT_APPLICABLE",
+        "text": "Legal implications do not allow access control mechanisms."
+      }
+    ]
+  }
+}

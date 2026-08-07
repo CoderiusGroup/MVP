@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "decisionTree",
+  "decisionTree": {
+    "requirementId": "AUM-1-1",
+    "requirementName": "Applicability of authentication mechanisms (network interface)",
+    "version": "1.0.0",
+    "appliesTo": ["network", "security"],
+    "dependencies": ["ACM-1"],
+    "rootNode": "DT.AUM-1-1.DN-1",
+    "nodes": [
+      {
+        "id": "DT.AUM-1-1.DN-1",
+        "type": "question",
+        "text": "Is the managed access for network functions or network functions configuration and is the absence of authentication required for the equipment's intended functionality?",
+        "branches": { "yes": "L-NA-1", "no": "DT.AUM-1-1.DN-2" }
+      },
+      {
+        "id": "DT.AUM-1-1.DN-2",
+        "type": "question",
+        "text": "Is the managed access performed over networks where access is limited to authorized entities?",
+        "branches": { "yes": "L-NA-2", "no": "DT.AUM-1-1.DN-3" }
+      },
+      {
+        "id": "DT.AUM-1-1.DN-3",
+        "type": "question",
+        "text": "Does the managed access use authentication mechanisms?",
+        "branches": { "yes": "L-PASS-1", "no": "L-FAIL-1" }
+      },
+      {
+        "id": "L-PASS-1",
+        "type": "leaf",
+        "outcome": "PASS",
+        "text": "The managed access uses authentication mechanisms."
+      },
+      {
+        "id": "L-FAIL-1",
+        "type": "leaf",
+        "outcome": "FAIL",
+        "text": "The managed access does not use authentication mechanisms."
+      },
+      {
+        "id": "L-NA-1",
+        "type": "leaf",
+        "outcome": "NOT_APPLICABLE",
+        "text": "The absence of authentication is required for the equipment's intended functionality."
+      },
+      {
+        "id": "L-NA-2",
+        "type": "leaf",
+        "outcome": "NOT_APPLICABLE",
+        "text": "The access is performed over networks where access is limited to authorized entities."
+      }
+    ]
+  }
+}

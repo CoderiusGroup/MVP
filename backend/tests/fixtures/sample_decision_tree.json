@@ -1,24 +1,70 @@
 {
-  "id": "t1",
-  "name": "EN 18031 — Autenticazione",
-  "rootNodeId": "n1",
-  "nodes": [
-    {
-      "kind": "question",
-      "id": "n1",
-      "text": "Il dispositivo espone un'interfaccia di rete?",
-      "onYes": "n2",
-      "onNo": "n5"
-    },
-    {
-      "kind": "question",
-      "id": "n2",
-      "text": "L'interfaccia richiede autenticazione?",
-      "onYes": "n3",
-      "onNo": "n4"
-    },
-    { "kind": "leaf", "id": "n3", "result": "PASS" },
-    { "kind": "leaf", "id": "n4", "result": "FAIL" },
-    { "kind": "leaf", "id": "n5", "result": "NOT_APPLICABLE" }
-  ]
+  "schemaVersion": "1.0",
+  "kind": "decisionTree",
+  "exportedAt": "2026-07-28T09:30:00Z",
+  "generator": "EN18031 Compliance Verification 0.1.0",
+  "decisionTree": {
+    "requirementId": "ACM-1",
+    "requirementName": "Applicable access control mechanisms",
+    "version": "1.0.0",
+    "appliesTo": ["network", "security"],
+    "dependencies": [],
+    "rootNode": "N1",
+    "nodes": [
+      {
+        "id": "N1",
+        "type": "question",
+        "text": "Il dispositivo espone asset di rete o asset di sicurezza per i quali e' richiesto un controllo degli accessi?",
+        "branches": { "yes": "N2", "no": "L-NA" }
+      },
+      {
+        "id": "N2",
+        "type": "question",
+        "text": "E' presente un meccanismo di controllo degli accessi applicato a tutti gli asset di rete e di sicurezza individuati?",
+        "branches": { "yes": "N3", "no": "L-FAIL-1" }
+      },
+      {
+        "id": "N3",
+        "type": "question",
+        "text": "Il meccanismo di controllo degli accessi risulta attivo nella configurazione predefinita del dispositivo?",
+        "branches": { "yes": "L-PASS-1", "no": "N4" }
+      },
+      {
+        "id": "N4",
+        "type": "question",
+        "text": "La documentazione tecnica fornisce una giustificazione per l'assenza del meccanismo nella configurazione predefinita?",
+        "branches": { "yes": "L-PASS-2", "no": "L-FAIL-2" }
+      },
+      {
+        "id": "L-PASS-1",
+        "type": "leaf",
+        "outcome": "PASS",
+        "text": "Il meccanismo di controllo degli accessi e' presente e attivo per impostazione predefinita."
+      },
+      {
+        "id": "L-PASS-2",
+        "type": "leaf",
+        "outcome": "PASS",
+        "text": "Il meccanismo di controllo degli accessi e' presente e la configurazione non predefinita e' giustificata nella documentazione."
+      },
+      {
+        "id": "L-FAIL-1",
+        "type": "leaf",
+        "outcome": "FAIL",
+        "text": "Non tutti gli asset di rete e di sicurezza sono protetti da un meccanismo di controllo degli accessi."
+      },
+      {
+        "id": "L-FAIL-2",
+        "type": "leaf",
+        "outcome": "FAIL",
+        "text": "Il meccanismo non e' attivo per impostazione predefinita e la scelta non e' giustificata nella documentazione."
+      },
+      {
+        "id": "L-NA",
+        "type": "leaf",
+        "outcome": "NOT_APPLICABLE",
+        "text": "Il dispositivo non espone asset che richiedono un controllo degli accessi."
+      }
+    ]
+  }
 }

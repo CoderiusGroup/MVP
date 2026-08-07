@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "decisionTree",
+  "decisionTree": {
+    "requirementId": "AUM-6",
+    "requirementName": "Brute force protection",
+    "version": "1.0.0",
+    "appliesTo": ["network", "security"],
+    "dependencies": ["AUM-1-1", "AUM-1-2"],
+    "rootNode": "DT.AUM-6.DN-1",
+    "nodes": [
+      {
+        "id": "DT.AUM-6.DN-1",
+        "type": "question",
+        "text": "Has the authentication mechanism the capability to be resilient against brute force attacks?",
+        "branches": { "yes": "L-PASS-1", "no": "L-FAIL-1" }
+      },
+      {
+        "id": "L-PASS-1",
+        "type": "leaf",
+        "outcome": "PASS",
+        "text": "The mechanism is resilient against brute force attacks."
+      },
+      {
+        "id": "L-FAIL-1",
+        "type": "leaf",
+        "outcome": "FAIL",
+        "text": "The mechanism is not resilient against brute force attacks."
+      }
+    ]
+  }
+}
