@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "decisionTree",
+  "decisionTree": {
+    "requirementId": "AUM-3",
+    "requirementName": "Authenticator validation",
+    "version": "1.0.0",
+    "appliesTo": ["network", "security"],
+    "dependencies": ["AUM-1-1", "AUM-1-2"],
+    "rootNode": "DT.AUM-3.DN-1",
+    "nodes": [
+      {
+        "id": "DT.AUM-3.DN-1",
+        "type": "question",
+        "text": "Does the authentication mechanism validate all relevant properties considering the available information about the authenticator in the operational environments of use?",
+        "branches": { "yes": "L-PASS-1", "no": "L-FAIL-1" }
+      },
+      {
+        "id": "L-PASS-1",
+        "type": "leaf",
+        "outcome": "PASS",
+        "text": "All relevant properties of the authenticator are correctly validated."
+      },
+      {
+        "id": "L-FAIL-1",
+        "type": "leaf",
+        "outcome": "FAIL",
+        "text": "The authentication mechanism fails to validate all relevant properties."
+      }
+    ]
+  }
+}

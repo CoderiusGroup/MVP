@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "decisionTree",
+  "decisionTree": {
+    "requirementId": "ACM-2",
+    "requirementName": "Appropriate access control mechanisms",
+    "version": "1.0.0",
+    "appliesTo": ["network", "security"],
+    "dependencies": ["ACM-1"],
+    "rootNode": "DT.ACM-2.DN-1",
+    "nodes": [
+      {
+        "id": "DT.ACM-2.DN-1",
+        "type": "question",
+        "text": "Do the access control mechanisms ensure that only authorized entities have access to the protected security asset or network asset?",
+        "branches": { "yes": "L-PASS-1", "no": "L-FAIL-1" }
+      },
+      {
+        "id": "L-PASS-1",
+        "type": "leaf",
+        "outcome": "PASS",
+        "text": "The access control mechanisms ensure that only authorized entities have access to the protected asset."
+      },
+      {
+        "id": "L-FAIL-1",
+        "type": "leaf",
+        "outcome": "FAIL",
+        "text": "The access control mechanisms do not ensure that only authorized entities have access to the protected asset."
+      }
+    ]
+  }
+}
