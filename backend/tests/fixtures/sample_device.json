@@ -1,8 +1,36 @@
 {
-  "id": "d1",
-  "name": "Router domestico XR500",
-  "assets": [
-    { "id": "a1", "deviceId": "d1", "name": "Interfaccia web di gestione" },
-    { "id": "a2", "deviceId": "d1", "name": "Servizio di aggiornamento firmware" }
-  ]
+  "schemaVersion": "1.0",
+  "kind": "device",
+  "exportedAt": "2026-07-28T09:30:00Z",
+  "generator": "EN18031 Compliance Verification 0.1.0",
+  "device": {
+    "id": "DEV-SL200",
+    "name": "Smart Lock SL-200",
+    "operatingSystem": "Zephyr RTOS 3.5",
+    "description": "Serratura elettronica connessa tramite Wi-Fi e Bluetooth Low Energy, controllabile da applicazione mobile e da pannello locale.",
+    "assets": [
+      {
+        "id": "AS-01",
+        "name": "Interfaccia di rete Wi-Fi",
+        "type": "network",
+        "description": "Interfaccia radio 802.11 utilizzata per la comunicazione con il servizio cloud e con l'applicazione mobile.",
+        "sensitive": false
+      },
+      {
+        "id": "AS-02",
+        "name": "Credenziali di accesso utente",
+        "type": "security",
+        "description": "Codici PIN e token di accesso memorizzati sul dispositivo per l'autorizzazione all'apertura della serratura.",
+        "sensitive": true,
+        "requirements": ["ACM-1", "ACM-2"]
+      },
+      {
+        "id": "AS-03",
+        "name": "Registro degli accessi",
+        "type": "privacy",
+        "description": "Storico degli eventi di apertura e chiusura, con data, ora e identificativo dell'utente che ha effettuato l'operazione.",
+        "sensitive": true
+      }
+    ]
+  }
 }

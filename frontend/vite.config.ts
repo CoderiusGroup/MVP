@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/devices': 'http://localhost:5000',
+      '/decision-trees': 'http://localhost:5000',
       '/health': 'http://localhost:5000',
     },
   },

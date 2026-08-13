@@ -1,30 +1,60 @@
-import { describe, it, beforeEach, vi, expect } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
 import { FetchApiClient } from "./FetchApiClient";
 
-
 describe("FetchApiClient", () => {
-    let client: FetchApiClient;
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
 
-    beforeEach(() =>{
-        client = new FetchApiClient();
-        vi.restoreAllMocks();
+  it("resolves with the parsed JSON body on a successful GET", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve(JSON.stringify({ id: "t1" })),
     });
+    vi.stubGlobal("fetch", fetchMock);
 
-    it("effettua una POST e restituisce il body parsato", async () =>{
-        const responseBody = {id: "1", name:"Router1" };
-        vi.spyOn(globalThis, "fetch").mockResolvedValue(
-            new Response(JSON.stringify(responseBody), {status: 201})
-        );
+    const client = new FetchApiClient();
+    const result = await client.get<{ id: string }>("/decision-trees/t1");
 
-        const result = await client.post("/devices", {name: "Router1"});
-        expect(result).toEqual(responseBody);
-    });
+    expect(result).toEqual({ id: "t1" });
+    expect(fetchMock).toHaveBeenCalledWith("/decision-trees/t1", { method: "GET" });
+  });
 
-    it("lancia un errore se la risposta non è ok", async () =>{
-        vi.spyOn(globalThis, "fetch").mockResolvedValue(
-            new Response(JSON.stringify({error:"Campo name richiesto"}), {status: 400})
-        );
+  it("throws when a GET response is not ok", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, status: 404, text: () => Promise.resolve("") }),
+    );
 
-        await expect(client.post("/devices", {})).rejects.toThrow();
-    })
+    const client = new FetchApiClient();
+
+    await expect(client.get("/decision-trees/missing")).rejects.toThrow();
+  });
+
+  it("effettua una POST e restituisce il body parsato", async () => {
+    const responseBody = { id: "1", name: "Router1" };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(JSON.stringify(responseBody), { status: 201 })),
+    );
+
+    const client = new FetchApiClient();
+    const result = await client.post("/devices", { name: "Router1" });
+
+    expect(result).toEqual(responseBody);
+  });
+
+  it("lancia un errore se la risposta POST non è ok", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ error: "Campo name richiesto" }), { status: 400 }),
+      ),
+    );
+
+    const client = new FetchApiClient();
+
+    await expect(client.post("/devices", {})).rejects.toThrow();
+  });
 });

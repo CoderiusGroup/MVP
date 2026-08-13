@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "decisionTree",
+  "decisionTree": {
+    "requirementId": "AUM-5-1",
+    "requirementName": "Password strength for factory default passwords",
+    "version": "1.0.0",
+    "appliesTo": ["network", "security"],
+    "dependencies": ["AUM-1-1", "AUM-1-2"],
+    "rootNode": "DT.AUM-5-1.DN-1",
+    "nodes": [
+      {
+        "id": "DT.AUM-5-1.DN-1",
+        "type": "question",
+        "text": "Is the password enforced to be changed by the user before or on first use?",
+        "branches": { "yes": "L-PASS-1", "no": "DT.AUM-5-1.DN-2" }
+      },
+      {
+        "id": "DT.AUM-5-1.DN-2",
+        "type": "question",
+        "text": "Is the password unique per equipment?",
+        "branches": { "yes": "DT.AUM-5-1.DN-3", "no": "L-FAIL-1" }
+      },
+      {
+        "id": "DT.AUM-5-1.DN-3",
+        "type": "question",
+        "text": "Does the password follow best practice concerning strength?",
+        "branches": { "yes": "L-PASS-2", "no": "L-FAIL-2" }
+      },
+      {
+        "id": "L-PASS-1",
+        "type": "leaf",
+        "outcome": "PASS",
+        "text": "The password change is correctly enforced before or on first use."
+      },
+      {
+        "id": "L-PASS-2",
+        "type": "leaf",
+        "outcome": "PASS",
+        "text": "The factory default password is unique and follows best practices concerning strength."
+      },
+      {
+        "id": "L-FAIL-1",
+        "type": "leaf",
+        "outcome": "FAIL",
+        "text": "The password is not unique per equipment."
+      },
+      {
+        "id": "L-FAIL-2",
+        "type": "leaf",
+        "outcome": "FAIL",
+        "text": "The password does not follow best practice concerning strength."
+      }
+    ]
+  }
+}

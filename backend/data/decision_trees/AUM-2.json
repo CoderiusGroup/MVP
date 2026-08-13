@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "decisionTree",
+  "decisionTree": {
+    "requirementId": "AUM-2",
+    "requirementName": "Appropriate authentication mechanisms",
+    "version": "1.0.0",
+    "appliesTo": ["network", "security"],
+    "dependencies": ["AUM-1-1", "AUM-1-2"],
+    "rootNode": "DT.AUM-2.DN-1",
+    "nodes": [
+      {
+        "id": "DT.AUM-2.DN-1",
+        "type": "question",
+        "text": "Does the authentication mechanism examine evidence from at least one element of the categories knowledge, possession and inherence (one factor authentication)?",
+        "branches": { "yes": "L-PASS-1", "no": "L-FAIL-1" }
+      },
+      {
+        "id": "L-PASS-1",
+        "type": "leaf",
+        "outcome": "PASS",
+        "text": "The mechanism examines evidence from at least one element for one factor authentication."
+      },
+      {
+        "id": "L-FAIL-1",
+        "type": "leaf",
+        "outcome": "FAIL",
+        "text": "The mechanism fails to examine evidence from the required categories."
+      }
+    ]
+  }
+}
