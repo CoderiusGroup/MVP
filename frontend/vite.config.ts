@@ -4,10 +4,16 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    proxy: {
+      '/devices': 'http://localhost:5000',
+      '/health': 'http://localhost:5000',
+    },
+  },
   test: {
-    environment: "jsdom",
     globals: true,
-    setupFiles: "./src/shared/setupTests.ts",  
+    environment: 'jsdom',
+    setupFiles: ['./src/setupTests.ts'],
     coverage: {
       reporter: ['text', 'lcov'],
     },

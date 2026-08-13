@@ -6,7 +6,7 @@ type Props ={
     onBack: () => void;
 };
 
-export default function DeviceDetailPage({device, payload, onBack}: Props) {
+export default function DeviceDetailPage({device, onBack}: Props) {
     return (
         <div style={{padding: "1rem"}}>
         <button onClick={onBack}>Torna indietro</button>
@@ -17,7 +17,7 @@ export default function DeviceDetailPage({device, payload, onBack}: Props) {
         <>
           <p><strong>ID:</strong> {device.id}</p>
           <p><strong>Nome:</strong> {device.name}</p>
-          <p><strong>Sistema operativo:</strong> {device.OperatingSystem}</p>
+          <p><strong>Sistema operativo:</strong> {device.operatingSystem}</p>
           <p><strong>Descrizione:</strong> {device.description}</p>
         </>
         ) : (

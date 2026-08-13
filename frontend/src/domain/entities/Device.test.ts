@@ -4,7 +4,13 @@ import { DeviceSchema } from "./Device";
 
 describe("DeviceSchema", () => {
   it("accepts a valid device", () => {
-    const result = DeviceSchema.safeParse({ id: "d1", name: "Router" , OperatingSystem: "Linux", description: "Router principale"});
+    const result = DeviceSchema.safeParse({
+      id: "d1",
+      name: "Router",
+      operatingSystem: "Linux",
+      description: "Router principale",
+      assets: [],
+    });
 
     expect(result.success).toBe(true);
   });

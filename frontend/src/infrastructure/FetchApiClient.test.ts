@@ -12,7 +12,7 @@ describe("FetchApiClient", () => {
 
     it("effettua una POST e restituisce il body parsato", async () =>{
         const responseBody = {id: "1", name:"Router1" };
-        vi.spyOn(global, "fetch").mockResolvedValue(
+        vi.spyOn(globalThis, "fetch").mockResolvedValue(
             new Response(JSON.stringify(responseBody), {status: 201})
         );
 
@@ -21,7 +21,7 @@ describe("FetchApiClient", () => {
     });
 
     it("lancia un errore se la risposta non è ok", async () =>{
-        vi.spyOn(global, "fetch").mockResolvedValue(
+        vi.spyOn(globalThis, "fetch").mockResolvedValue(
             new Response(JSON.stringify({error:"Campo name richiesto"}), {status: 400})
         );
 

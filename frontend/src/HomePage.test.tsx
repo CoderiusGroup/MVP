@@ -1,23 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import PaginaIniziale from "./PaginaIniziale";
+import HomePage from "./HomePage";
 import { FetchApiClient } from "./infrastructure/FetchApiClient";
 
 vi.mock("./infrastructure/FetchApiClient");
 
-describe("PaginaIniziale", () =>{
+describe("HomePage", () =>{
     const onDeviceSaved = vi.fn();
 
     beforeEach(() => {
         vi.clearAllMocks();
     });
-    
+
     it("crea un dispositivo tramite il form", async () =>{
-        const mockDevice = {id:"1", name:"Router1", OperatingSystem:"Linux", description:"Router per la casa"};
+        const mockDevice = {id:"1", name:"Router1", operatingSystem:"Linux", description:"Router per la casa", assets: []};
         vi.mocked(FetchApiClient.prototype.post).mockResolvedValue(mockDevice);
 
-        render(<PaginaIniziale onDeviceSaved={onDeviceSaved}/>);
+        render(<HomePage onDeviceSaved={onDeviceSaved}/>);
 
         await userEvent.type(screen.getByPlaceholderText("Nome"), "Router1");
         await userEvent.type(screen.getByPlaceholderText("Sistema Operativo"), "Linux");
@@ -26,11 +26,11 @@ describe("PaginaIniziale", () =>{
 
         await waitFor(() =>{
             expect(onDeviceSaved).toHaveBeenCalledWith(mockDevice, expect.objectContaining({name: "Router1"}));
-        }); 
+        });
     });
 
     it("mostra un errore se il nome è mancante nel form", async() =>{
-        render(<PaginaIniziale onDeviceSaved={onDeviceSaved}/>);
+        render(<HomePage onDeviceSaved={onDeviceSaved}/>);
 
         await userEvent.click(screen.getByRole("button", {name:"Invia"}));
 
@@ -38,13 +38,13 @@ describe("PaginaIniziale", () =>{
     });
 
     it("carica un dispositivo da un file JSON valido", async () =>{
-        const mockDevice = {id:"1", name:"Server1", OperatingSystem:"Windows", description:"minecraft server"};
+        const mockDevice = {id:"1", name:"Server1", operatingSystem:"Windows", description:"minecraft server", assets: []};
         vi.mocked(FetchApiClient.prototype.post).mockResolvedValue(mockDevice);
 
-        render(<PaginaIniziale onDeviceSaved={onDeviceSaved}/>);
+        render(<HomePage onDeviceSaved={onDeviceSaved}/>);
 
         const file = new File(
-            [JSON.stringify({name:"Server1", OperatingSystem: "Windows"})],
+            [JSON.stringify({name:"Server1", operatingSystem: "Windows"})],
             "device.json",
             {type: "application/json"}
         );
@@ -58,10 +58,10 @@ describe("PaginaIniziale", () =>{
     });
 
     it("rifiuta un file JSON che contiene un array", async () =>{
-        render(<PaginaIniziale onDeviceSaved={onDeviceSaved}/>);
+        render(<HomePage onDeviceSaved={onDeviceSaved}/>);
 
         const file = new File(
-            [JSON.stringify([{name:"Server1", OperatingSystem: "Windows"}])],
+            [JSON.stringify([{name:"Server1", operatingSystem: "Windows"}])],
             "device.json",
             {type: "application/json"}
         );

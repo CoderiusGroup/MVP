@@ -1,7 +1,9 @@
 from flask import Flask
 from flask_cors import CORS
-from src.routes.health import health_bp
+
 from src.routes.devices import devices_bp
+from src.routes.health import health_bp
+
 
 def create_app() -> Flask:
     app = Flask(__name__)
