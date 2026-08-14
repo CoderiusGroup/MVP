@@ -21,7 +21,7 @@ beforeEach(() => {
     "fetch",
     vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(sampleTreeResponse),
+      text: () => Promise.resolve(JSON.stringify(sampleTreeResponse)),
     }),
   );
 });

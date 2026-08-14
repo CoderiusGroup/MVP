@@ -12,4 +12,12 @@ export const DeviceSchema = z.object({
   assets: z.array(AssetSchema),
 });
 
+export const DeviceCreateSchema = z.object({
+  name: z.string().min(1),
+  operatingSystem: z.string().optional().default(""),
+  description: z.string().optional().default(""),
+});
+
 export type Device = z.infer<typeof DeviceSchema>;
+
+export type DeviceCreate = z.infer<typeof DeviceCreateSchema>;

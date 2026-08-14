@@ -7,23 +7,43 @@ export class FetchApiClient implements ApiClientService {
     this.baseUrl = baseUrl;
   }
 
-  async get<T>(path: string): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`);
+  private buildUrl(path: string) {
+    return `${this.baseUrl}${path}`;
+  }
+
+  private async handleResponse<T>(response: Response): Promise<T> {
+    const text = await response.text();
     if (!response.ok) {
-      throw new Error(`GET ${path} failed with status ${response.status}`);
+      throw new Error(text || response.statusText);
     }
-    return (await response.json()) as T;
+    return text ? (JSON.parse(text) as T) : (undefined as unknown as T);
   }
 
-  post<T>(_path: string, _body: unknown): Promise<T> {
-    throw new Error("not implemented");
+  get<T>(path: string): Promise<T> {
+    return fetch(this.buildUrl(path), { method: "GET" }).then((response) =>
+      this.handleResponse<T>(response),
+    );
   }
 
-  put<T>(_path: string, _body: unknown): Promise<T> {
-    throw new Error("not implemented");
+  post<T>(path: string, body: unknown): Promise<T> {
+    return fetch(this.buildUrl(path), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then((response) => this.handleResponse<T>(response));
   }
 
-  delete<T>(_path: string): Promise<T> {
-    throw new Error("not implemented");
+  put<T>(path: string, body: unknown): Promise<T> {
+    return fetch(this.buildUrl(path), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then((response) => this.handleResponse<T>(response));
+  }
+
+  delete<T>(path: string): Promise<T> {
+    return fetch(this.buildUrl(path), { method: "DELETE" }).then((response) =>
+      this.handleResponse<T>(response),
+    );
   }
 }

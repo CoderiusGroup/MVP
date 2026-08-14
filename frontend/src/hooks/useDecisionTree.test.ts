@@ -25,7 +25,7 @@ describe("useDecisionTree", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(sampleTreeResponse),
+        text: () => Promise.resolve(JSON.stringify(sampleTreeResponse)),
       }),
     );
 
@@ -38,7 +38,10 @@ describe("useDecisionTree", () => {
   });
 
   it("sets status to error when the fetch fails", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, status: 500, text: () => Promise.resolve("") }),
+    );
 
     const { result } = renderHook(() => useDecisionTree("ACM-1"));
 
