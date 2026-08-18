@@ -1,12 +1,13 @@
+// Scope attuale: gestisce la navigazione di UN SOLO decision tree/requisito per volta.
+// L'orchestrazione dell'intera sessione (più asset, più requisiti in sequenza) implicata
+// dal nome ufficiale della pagina è lavoro futuro, non implementata in questo branch.
+import { useParams } from "react-router-dom";
 import { useDecisionTree } from "../hooks/useDecisionTree";
 import { useTreeStore } from "../store/TreeStore";
 
-interface DecisionTreePageProps {
-  treeId: string;
-}
-
-export function DecisionTreePage({ treeId }: DecisionTreePageProps) {
-  const { status } = useDecisionTree(treeId);
+export function SessionRunnerPage() {
+  const { requirementId } = useParams<{ requirementId: string }>();
+  const { status } = useDecisionTree(requirementId ?? "");
   const tree = useTreeStore((state) => state.tree);
   const currentNodeId = useTreeStore((state) => state.currentNodeId);
   const history = useTreeStore((state) => state.history);
