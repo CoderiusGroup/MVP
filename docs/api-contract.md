@@ -5,10 +5,9 @@ concordata aggiornando questo documento prima del codice.
 
 La forma di `Device`, `Asset`, `DecisionTree` e `Session` segue la specifica di
 importazione/esportazione JSON del progetto (schema `1.0`): stesso formato in lettura API,
-in importazione da file e in esportazione. `Device`/`Asset`/`Session` non hanno ancora un
-endpoint REST proprio in questo branch — solo `DecisionTree` è esposto — ma la forma è
-documentata qui perché condivisa dalle entità di dominio già presenti nel codice
-(`backend/src/domain/`, `frontend/src/domain/entities/`).
+in importazione da file e in esportazione. `Asset`/`Session` non hanno ancora un endpoint
+REST proprio in questo branch, ma la forma è documentata qui perché condivisa dalle entità
+di dominio già presenti nel codice (`backend/src/domain/`, `frontend/src/domain/entities/`).
 
 Tutte le risposte sono `application/json`. Errori nel formato:
 
@@ -65,7 +64,56 @@ Risposta `200`:
 Errori:
 - `404` — nessun decision tree con quel `requirementId`
 
-## Device (forma dati, endpoint non ancora implementato)
+## Device
+
+### `POST /devices` — creazione device (stateless)
+
+Richiesta:
+
+```json
+{
+  "name": "Smart Lock SL-200",
+  "operatingSystem": "Zephyr RTOS 3.5",
+  "description": "Serratura elettronica connessa tramite Wi-Fi e BLE."
+}
+```
+
+| Campo | Obbl. | Note |
+|---|---|---|
+| `name` | sì | 1–100 caratteri |
+| `operatingSystem` | sì | 1–100 caratteri |
+| `description` | sì | 1–1000 caratteri |
+| `id` | no | se fornito viene rispettato (caso importazione); se assente il sistema lo genera |
+
+Risposta `201`:
+
+```json
+{
+  "id": "b16c57f8-c58b-488e-b017-4505a4f206c0",
+  "name": "Smart Lock SL-200",
+  "operatingSystem": "Zephyr RTOS 3.5",
+  "description": "Serratura elettronica connessa tramite Wi-Fi e BLE.",
+  "assets": []
+}
+```
+
+`assets` è sempre `[]` in risposta: la creazione device (UC-4.1.1–4.1.3) non include gli
+asset, che sono un passo separato (UC-12) e non hanno un endpoint proprio in questo branch.
+
+Errori:
+- `400` — corpo non valido, oppure `name`/`operatingSystem`/`description` mancante o vuoto
+
+**Nessun `GET /devices/{id}`, di proposito.** L'endpoint è stateless: il backend non
+persiste il device da nessuna parte (nessun file, nessuno storage, nessuna collezione
+richiamabile). Esiste un solo dispositivo alla volta, lato client. L'unico caso in cui un
+device viene salvato è incorporato in una sessione di valutazione (`Session.device`, vedi
+sotto), ed è un file scaricato dall'utente — non uno stato sul server. Per questo non c'è
+nulla da recuperare per id.
+
+### Forma completa (con asset, usata dentro `Session`)
+
+`Device` accetta anche una lista di `Asset` popolata — è la forma usata quando il device
+viaggia dentro una sessione di valutazione, non quella restituita da `POST /devices`:
 
 ```json
 {
@@ -88,10 +136,6 @@ Errori:
 
 | Campo | Obbl. | Note |
 |---|---|---|
-| `device.id` | sì* | identificativo univoco (\*generato dal sistema se assente in importazione) |
-| `device.name` | sì | 1–100 caratteri |
-| `device.operatingSystem` | sì | 1–100 caratteri |
-| `device.description` | sì | 1–1000 caratteri |
 | `device.assets` | sì | lista, può essere vuota |
 | `assets[].id` | sì* | univoco nel device (\*generato se assente in importazione) |
 | `assets[].name` | sì | 1–100 caratteri |
