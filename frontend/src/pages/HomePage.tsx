@@ -1,6 +1,6 @@
-import { NotificationManager } from "./infrastructure/NotificationManager";
-import { importDeviceFromJson, createDeviceManually } from "./services/DeviceService";
-import type { Device } from "./domain/entities/Device";
+import { NotificationManager } from "../infrastructure/NotificationManager";
+import { importDeviceFromJson, createDeviceManually } from "../services/DeviceService";
+import type { Device } from "../domain/entities/Device";
 
 type Props = {
     onDeviceSaved: (device: Device, payload: unknown) => void;

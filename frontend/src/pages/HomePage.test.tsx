@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import HomePage from "./HomePage";
-import { FetchApiClient } from "./infrastructure/FetchApiClient";
+import { FetchApiClient } from "../infrastructure/FetchApiClient";
 
-vi.mock("./infrastructure/FetchApiClient");
+vi.mock("../infrastructure/FetchApiClient");
 
 describe("HomePage", () =>{
     const onDeviceSaved = vi.fn();

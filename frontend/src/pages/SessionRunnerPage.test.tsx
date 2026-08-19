@@ -1,8 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 import { useTreeStore } from "../store/TreeStore";
-import { DecisionTreePage } from "./DecisionTreePage";
+import { SessionRunnerPage } from "./SessionRunnerPage";
 
 const sampleTreeResponse = {
   requirementId: "ACM-1",
@@ -14,6 +15,16 @@ const sampleTreeResponse = {
     { id: "n3", type: "leaf", outcome: "FAIL" },
   ],
 };
+
+function renderPage(requirementId = "ACM-1") {
+  return render(
+    <MemoryRouter initialEntries={[`/decision-tree/${requirementId}`]}>
+      <Routes>
+        <Route path="/decision-tree/:requirementId" element={<SessionRunnerPage />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
 
 beforeEach(() => {
   useTreeStore.getState().reset();
@@ -30,16 +41,16 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("DecisionTreePage", () => {
+describe("SessionRunnerPage", () => {
   it("shows the code and text of the current node (UC-22.1)", async () => {
-    render(<DecisionTreePage treeId="ACM-1" />);
+    renderPage();
 
     await waitFor(() => expect(screen.getByText("n1")).toBeInTheDocument());
     expect(screen.getByText("Domanda 1?")).toBeInTheDocument();
   });
 
   it("renders the full graph and highlights the current node and visited path (UC-22.2)", async () => {
-    render(<DecisionTreePage treeId="ACM-1" />);
+    renderPage();
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Sì" })).toBeInTheDocument());
 
@@ -54,7 +65,7 @@ describe("DecisionTreePage", () => {
   });
 
   it("lets the user go back without losing the answer, and forward to restore it", async () => {
-    render(<DecisionTreePage treeId="ACM-1" />);
+    renderPage();
     await waitFor(() => expect(screen.getByRole("button", { name: "Sì" })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole("button", { name: "Sì" }));
@@ -72,7 +83,7 @@ describe("DecisionTreePage", () => {
   });
 
   it("discards the future when a past answer is changed to a different value", async () => {
-    render(<DecisionTreePage treeId="ACM-1" />);
+    renderPage();
     await waitFor(() => expect(screen.getByRole("button", { name: "Sì" })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole("button", { name: "Sì" }));

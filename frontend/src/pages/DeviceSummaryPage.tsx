@@ -1,15 +1,13 @@
-import type { Device } from "./domain/entities/Device";
+import { useNavigate } from "react-router-dom";
+import { useDeviceStore } from "../store/DeviceStore";
 
-type Props ={
-    device: Device | null;
-    payload: unknown;
-    onBack: () => void;
-};
+export default function DeviceSummaryPage() {
+    const navigate = useNavigate();
+    const device = useDeviceStore((state) => state.device);
 
-export default function DeviceDetailPage({device, onBack}: Props) {
     return (
         <div style={{padding: "1rem"}}>
-        <button onClick={onBack}>Torna indietro</button>
+        <button onClick={() => navigate("/")}>Torna indietro</button>
 
         <h1>Dettaglio Dispositivo</h1>
 
