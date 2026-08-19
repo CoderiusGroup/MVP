@@ -4,19 +4,29 @@ import "./App.css";
 import HomePage from "./pages/HomePage";
 import DeviceSummaryPage from "./pages/DeviceSummaryPage";
 import { SessionRunnerPage } from "./pages/SessionRunnerPage";
+import { SessionPage } from "./pages/SessionPage";
+import { ModifySessionPage } from "./pages/ModifySessionPage";
 import type { Device } from "./domain/entities/Device.ts";
+import type { Session } from "./domain/entities/Session.ts";
 import { useDeviceStore } from "./store/DeviceStore";
+import { useSessionStore } from "./store/SessionStore";
 
 function HomeRoute() {
   const navigate = useNavigate();
   const setDevice = useDeviceStore((state) => state.setDevice);
+  const resumeSession = useSessionStore((state) => state.resume);
 
   const handleDeviceSaved = (device: Device, payload: unknown) => {
     setDevice(device, payload);
     navigate("/device");
   };
 
-  return <HomePage onDeviceSaved={handleDeviceSaved} />;
+  const handleSessionResumed = (session: Session) => {
+    resumeSession(session);
+    navigate("/session");
+  };
+
+  return <HomePage onDeviceSaved={handleDeviceSaved} onSessionResumed={handleSessionResumed} />;
 }
 
 function App() {
@@ -26,6 +36,8 @@ function App() {
       <Routes>
         <Route path="/" element={<HomeRoute />} />
         <Route path="/device" element={<DeviceSummaryPage />} />
+        <Route path="/session" element={<SessionPage />} />
+        <Route path="/session/modify" element={<ModifySessionPage />} />
         <Route path="/decision-tree/:requirementId" element={<SessionRunnerPage />} />
       </Routes>
     </BrowserRouter>
