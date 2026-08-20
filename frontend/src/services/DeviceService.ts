@@ -5,6 +5,12 @@ import {
   type Device,
   type DeviceCreate,
 } from "../domain/entities/Device";
+import {
+  AssetSchema,
+  AssetCreateSchema,
+  type Asset,
+  type AssetCreate,
+} from "../domain/entities/Asset";
 
 const apiClient = new FetchApiClient();
 
@@ -44,6 +50,16 @@ export async function createDeviceManually(payload: DeviceCreate): Promise<Devic
   }
 
   return saveDevice(result.data);
+}
+
+export async function createAsset(payload: AssetCreate): Promise<Asset> {
+  const result = AssetCreateSchema.safeParse(payload);
+  if (!result.success) {
+    throw new Error("Dati asset non validi");
+  }
+
+  const raw = await apiClient.post<unknown>("/assets", result.data);
+  return AssetSchema.parse(raw);
 }
 
 async function saveDevice(payload: DeviceCreate): Promise<DeviceSaveResult> {

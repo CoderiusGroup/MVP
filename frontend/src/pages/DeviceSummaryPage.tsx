@@ -17,6 +17,7 @@ export default function DeviceSummaryPage() {
           <p><strong>Nome:</strong> {device.name}</p>
           <p><strong>Sistema operativo:</strong> {device.operatingSystem}</p>
           <p><strong>Descrizione:</strong> {device.description}</p>
+          <button onClick={() => navigate("/device/assets")}>Gestisci asset</button>
         </>
         ) : (
             <p>Nessun dispositivo disponibile.</p>
