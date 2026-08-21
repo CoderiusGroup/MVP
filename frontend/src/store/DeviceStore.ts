@@ -6,7 +6,6 @@ import type { Device } from "../domain/entities/Device";
 interface DeviceState {
   device: Device | null;
   payload: unknown;
-  assets: Asset[];
   setDevice: (device: Device, payload: unknown) => void;
   addAsset: (asset: Asset) => void;
   removeAsset: (assetId: string) => void;
@@ -16,21 +15,33 @@ interface DeviceState {
 export const useDeviceStore = create<DeviceState>((set) => ({
   device: null,
   payload: null,
-  assets: [],
 
   setDevice: (device, payload) => {
-    set({ device, payload, assets: [] });
+    set({ device, payload });
   },
 
   addAsset: (asset) => {
-    set((state) => ({ assets: [...state.assets, asset] }));
+    set((state) =>
+      state.device
+        ? { device: { ...state.device, assets: [...state.device.assets, asset] } }
+        : state,
+    );
   },
 
   removeAsset: (assetId) => {
-    set((state) => ({ assets: state.assets.filter((asset) => asset.id !== assetId) }));
+    set((state) =>
+      state.device
+        ? {
+            device: {
+              ...state.device,
+              assets: state.device.assets.filter((asset) => asset.id !== assetId),
+            },
+          }
+        : state,
+    );
   },
 
   reset: () => {
-    set({ device: null, payload: null, assets: [] });
+    set({ device: null, payload: null });
   },
 }));

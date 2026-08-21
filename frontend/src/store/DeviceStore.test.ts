@@ -26,9 +26,9 @@ beforeEach(() => {
 });
 
 describe("DeviceStore", () => {
-  it("starts with no device and an empty asset list", () => {
+  it("starts with no device", () => {
     expect(useDeviceStore.getState().device).toBeNull();
-    expect(useDeviceStore.getState().assets).toEqual([]);
+    expect(useDeviceStore.getState().payload).toBeNull();
   });
 
   it("setDevice stores the device and payload", () => {
@@ -38,48 +38,59 @@ describe("DeviceStore", () => {
     expect(useDeviceStore.getState().payload).toEqual({ name: "Router1" });
   });
 
-  it("setDevice resets the asset list", () => {
+  it("setDevice replaces the device together with its assets", () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
     useDeviceStore.getState().addAsset(sampleAsset);
 
     useDeviceStore.getState().setDevice(sampleDevice, {});
 
-    expect(useDeviceStore.getState().assets).toEqual([]);
+    expect(useDeviceStore.getState().device?.assets).toEqual([]);
   });
 
-  it("addAsset appends an asset to the list", () => {
+  it("addAsset appends an asset to the device", () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
     useDeviceStore.getState().addAsset(sampleAsset);
 
-    expect(useDeviceStore.getState().assets).toEqual([sampleAsset]);
+    expect(useDeviceStore.getState().device?.assets).toEqual([sampleAsset]);
   });
 
   it("addAsset keeps previously added assets", () => {
     const secondAsset: Asset = { ...sampleAsset, id: "AS-2", name: "Registro accessi" };
 
+    useDeviceStore.getState().setDevice(sampleDevice, {});
     useDeviceStore.getState().addAsset(sampleAsset);
     useDeviceStore.getState().addAsset(secondAsset);
 
-    expect(useDeviceStore.getState().assets).toEqual([sampleAsset, secondAsset]);
+    expect(useDeviceStore.getState().device?.assets).toEqual([sampleAsset, secondAsset]);
+  });
+
+  it("addAsset does nothing when there is no device", () => {
+    useDeviceStore.getState().addAsset(sampleAsset);
+
+    expect(useDeviceStore.getState().device).toBeNull();
   });
 
   it("removeAsset removes only the matching asset", () => {
     const secondAsset: Asset = { ...sampleAsset, id: "AS-2", name: "Registro accessi" };
+    useDeviceStore.getState().setDevice(sampleDevice, {});
     useDeviceStore.getState().addAsset(sampleAsset);
     useDeviceStore.getState().addAsset(secondAsset);
 
     useDeviceStore.getState().removeAsset("AS-1");
 
-    expect(useDeviceStore.getState().assets).toEqual([secondAsset]);
+    expect(useDeviceStore.getState().device?.assets).toEqual([secondAsset]);
   });
 
   it("removeAsset does nothing when the id is not found", () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
     useDeviceStore.getState().addAsset(sampleAsset);
 
     useDeviceStore.getState().removeAsset("does-not-exist");
 
-    expect(useDeviceStore.getState().assets).toEqual([sampleAsset]);
+    expect(useDeviceStore.getState().device?.assets).toEqual([sampleAsset]);
   });
 
-  it("reset clears device, payload and assets", () => {
+  it("reset clears device and payload", () => {
     useDeviceStore.getState().setDevice(sampleDevice, { name: "Router1" });
     useDeviceStore.getState().addAsset(sampleAsset);
 
@@ -87,6 +98,5 @@ describe("DeviceStore", () => {
 
     expect(useDeviceStore.getState().device).toBeNull();
     expect(useDeviceStore.getState().payload).toBeNull();
-    expect(useDeviceStore.getState().assets).toEqual([]);
   });
 });
