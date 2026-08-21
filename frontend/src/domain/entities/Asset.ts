@@ -12,4 +12,14 @@ export const AssetSchema = z.object({
   requirements: z.array(requirementCode).optional(),
 });
 
+export const AssetCreateSchema = z.object({
+  name: z.string().min(1).max(100),
+  type: z.enum(["network", "security", "privacy", "financial"]),
+  description: z.string().min(1).max(1000),
+  sensitive: z.boolean(),
+  requirements: z.array(requirementCode).optional(),
+});
+
 export type Asset = z.infer<typeof AssetSchema>;
+
+export type AssetCreate = z.infer<typeof AssetCreateSchema>;

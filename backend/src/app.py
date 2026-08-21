@@ -4,6 +4,7 @@ from flask import Flask
 from flask_cors import CORS
 
 from src.repositories.decision_tree_repository import JsonDecisionTreeRepository
+from src.routes.assets import create_assets_blueprint
 from src.routes.decision_tree import create_decision_tree_blueprint
 from src.routes.devices import devices_bp
 from src.routes.health import health_bp
@@ -20,6 +21,7 @@ def create_app() -> Flask:
     decision_tree_repository = JsonDecisionTreeRepository(DATA_DIR / "decision_trees")
     decision_tree_service = DecisionTreeService(decision_tree_repository)
     app.register_blueprint(create_decision_tree_blueprint(decision_tree_service))
+    app.register_blueprint(create_assets_blueprint(decision_tree_service))
 
     CORS(app)
 

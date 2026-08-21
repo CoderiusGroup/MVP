@@ -98,7 +98,7 @@ Risposta `201`:
 ```
 
 `assets` è sempre `[]` in risposta: la creazione device (UC-4.1.1–4.1.3) non include gli
-asset, che sono un passo separato (UC-12) e non hanno un endpoint proprio in questo branch.
+asset, che sono un passo separato (UC-12, vedi `POST /assets` più sotto).
 
 Errori:
 - `400` — corpo non valido, oppure `name`/`operatingSystem`/`description` mancante o vuoto
@@ -143,6 +143,58 @@ viaggia dentro una sessione di valutazione, non quella restituita da `POST /devi
 | `assets[].description` | sì | 1–1000 caratteri |
 | `assets[].sensitive` | sì | booleano |
 | `assets[].requirements` | no | se assente, derivati dal tipo asset tramite `appliesTo` del decision tree |
+
+## Asset
+
+### `POST /assets` — creazione asset (stateless)
+
+Come `POST /devices`: nessuna persistenza server-side, nessuna associazione al device
+lato backend. Il client è responsabile di aggiungere l'asset restituito alla lista `assets`
+del device che gestisce in memoria (vedi UC-12).
+
+**Nessun campo `state`/`stato`, di proposito.** La Specifica Tecnica lo prevede
+(`non_valutato | in_corso | PASS | FAIL | NOT_APPLICABLE`), ma è uno stato di
+valutazione derivato dalle `Evaluation` di una `Session` (vedi sotto) per coppia
+asset+requirement — un asset appena creato non ha ancora nessuna valutazione a cui
+agganciarlo. Il campo arriverà come proprietà calcolata quando `Session`/`Result`
+saranno implementati, non come campo statico di questo endpoint.
+
+Richiesta:
+
+```json
+{
+  "name": "Credenziali di accesso utente",
+  "type": "security",
+  "description": "Codici PIN e token memorizzati sul dispositivo.",
+  "sensitive": true
+}
+```
+
+| Campo | Obbl. | Note |
+|---|---|---|
+| `name` | sì | 1–100 caratteri |
+| `type` | sì | `network` \| `security` \| `privacy` \| `financial` |
+| `description` | sì | 1–1000 caratteri |
+| `sensitive` | sì | booleano |
+| `requirements` | no | se **assente** (chiave non presente o `null`), derivato dal `type` tramite `appliesTo` dei decision tree disponibili; se presente (anche `[]`), rispettato così com'è |
+| `id` | no | se fornito viene rispettato (caso importazione); se assente il sistema lo genera |
+
+Risposta `201`:
+
+```json
+{
+  "id": "b16c57f8-c58b-488e-b017-4505a4f206c0",
+  "name": "Credenziali di accesso utente",
+  "type": "security",
+  "description": "Codici PIN e token memorizzati sul dispositivo.",
+  "sensitive": true,
+  "requirements": ["ACM-1", "ACM-2"]
+}
+```
+
+Errori:
+- `400` — corpo non valido, oppure `name`/`type`/`description`/`sensitive` mancante,
+  vuoto o di tipo errato; `type` fuori dai valori ammessi
 
 ## Session (forma dati, endpoint non ancora implementato)
 

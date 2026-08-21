@@ -48,3 +48,11 @@ class DecisionTreeService:
         if raw is None:
             raise DecisionTreeNotFoundError(requirement_id)
         return normalize_tree(raw)
+
+    def list_requirement_ids_for_type(self, asset_type: str) -> list[str]:
+        requirement_ids = []
+        for tree_id in self._repository.list():
+            tree = self.get_tree(tree_id)
+            if asset_type in tree.applies_to:
+                requirement_ids.append(tree.requirement_id)
+        return requirement_ids
