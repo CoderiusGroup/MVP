@@ -3,6 +3,8 @@ import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import "./App.css";
 import HomePage from "./pages/HomePage";
 import DeviceSummaryPage from "./pages/DeviceSummaryPage";
+import DeviceAssetManagementPage from "./pages/DeviceAssetManagementPage";
+import AssetFormPage from "./pages/AssetFormPage";
 import { SessionRunnerPage } from "./pages/SessionRunnerPage";
 import { SessionPage } from "./pages/SessionPage";
 import { ModifySessionPage } from "./pages/ModifySessionPage";
@@ -38,6 +40,8 @@ function App() {
         <Route path="/device" element={<DeviceSummaryPage />} />
         <Route path="/session" element={<SessionPage />} />
         <Route path="/session/modify" element={<ModifySessionPage />} />
+        <Route path="/device/assets" element={<DeviceAssetManagementPage />} />
+        <Route path="/device/assets/new" element={<AssetFormPage />} />
         <Route path="/decision-tree/:requirementId" element={<SessionRunnerPage />} />
       </Routes>
     </BrowserRouter>

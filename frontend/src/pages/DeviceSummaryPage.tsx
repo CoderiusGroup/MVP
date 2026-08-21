@@ -36,6 +36,7 @@ export default function DeviceSummaryPage() {
           {!hasAssets ? (
             <p>Nessun asset da valutare: aggiungi almeno un asset prima di avviare.</p>
           ) : null}
+          <button onClick={() => navigate("/device/assets")}>Gestisci asset</button>
         </>
         ) : (
             <p>Nessun dispositivo disponibile.</p>
