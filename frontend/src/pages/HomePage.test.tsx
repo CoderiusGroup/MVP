@@ -8,6 +8,7 @@ vi.mock("../infrastructure/FetchApiClient");
 
 describe("HomePage", () =>{
     const onDeviceSaved = vi.fn();
+    const onSessionResumed = vi.fn();
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -17,7 +18,7 @@ describe("HomePage", () =>{
         const mockDevice = {id:"1", name:"Router1", operatingSystem:"Linux", description:"Router per la casa", assets: []};
         vi.mocked(FetchApiClient.prototype.post).mockResolvedValue(mockDevice);
 
-        render(<HomePage onDeviceSaved={onDeviceSaved}/>);
+        render(<HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/>);
 
         await userEvent.type(screen.getByPlaceholderText("Nome"), "Router1");
         await userEvent.type(screen.getByPlaceholderText("Sistema Operativo"), "Linux");
@@ -30,7 +31,7 @@ describe("HomePage", () =>{
     });
 
     it("mostra un errore se il nome è mancante nel form", async() =>{
-        render(<HomePage onDeviceSaved={onDeviceSaved}/>);
+        render(<HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/>);
 
         await userEvent.click(screen.getByRole("button", {name:"Invia"}));
 
@@ -41,7 +42,7 @@ describe("HomePage", () =>{
         const mockDevice = {id:"1", name:"Server1", operatingSystem:"Windows", description:"minecraft server", assets: []};
         vi.mocked(FetchApiClient.prototype.post).mockResolvedValue(mockDevice);
 
-        render(<HomePage onDeviceSaved={onDeviceSaved}/>);
+        render(<HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/>);
 
         const file = new File(
             [JSON.stringify({name:"Server1", operatingSystem: "Windows"})],
@@ -58,7 +59,7 @@ describe("HomePage", () =>{
     });
 
     it("rifiuta un file JSON che contiene un array", async () =>{
-        render(<HomePage onDeviceSaved={onDeviceSaved}/>);
+        render(<HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/>);
 
         const file = new File(
             [JSON.stringify([{name:"Server1", operatingSystem: "Windows"}])],
@@ -71,6 +72,40 @@ describe("HomePage", () =>{
 
         await waitFor(() =>{
             expect(onDeviceSaved).not.toHaveBeenCalled();
+        });
+    });
+
+    it("riprende una sessione da un file JSON valido", async () =>{
+        render(<HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/>);
+
+        const session = {
+            id: "SES-1",
+            savedAt: "2026-08-19T10:00:00Z",
+            status: "in_progress",
+            device: { id: "DEV-1", name: "D", operatingSystem: "OS", description: "desc", assets: [] },
+            evaluations: [],
+            current: { assetId: "AS-1", requirementId: "ACM-1", nodeId: "N1" },
+        };
+        const file = new File([JSON.stringify(session)], "sessione.json", {type: "application/json"});
+
+        const input = screen.getByLabelText(/Riprendi sessione/i) as HTMLInputElement;
+        await userEvent.upload(input, file);
+
+        await waitFor(() =>{
+            expect(onSessionResumed).toHaveBeenCalledWith(expect.objectContaining({id: "SES-1"}));
+        });
+    });
+
+    it("rifiuta un file sessione non valido", async () =>{
+        render(<HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/>);
+
+        const file = new File([JSON.stringify({foo: "bar"})], "sessione.json", {type: "application/json"});
+
+        const input = screen.getByLabelText(/Riprendi sessione/i) as HTMLInputElement;
+        await userEvent.upload(input, file);
+
+        await waitFor(() =>{
+            expect(onSessionResumed).not.toHaveBeenCalled();
         });
     });
 });

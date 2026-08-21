@@ -1,11 +1,8 @@
 import { create } from "zustand";
 
 import type { DecisionTree } from "../domain/entities/DecisionTree";
-
-interface PathStep {
-  nodeId: string;
-  answer: "yes" | "no";
-}
+import type { PathStep } from "../domain/entities/Session";
+import { resolveNodeId } from "../domain/rules/treeRules";
 
 interface TreeState {
   tree: DecisionTree | null;
@@ -13,23 +10,14 @@ interface TreeState {
   history: PathStep[];
   cursor: number;
   loadTree: (tree: DecisionTree) => void;
+  hydrate: (tree: DecisionTree, steps: PathStep[]) => void;
   answer: (value: boolean) => void;
   goBack: () => void;
   goForward: () => void;
   reset: () => void;
 }
 
-function resolveCurrentNodeId(tree: DecisionTree, steps: PathStep[]): string {
-  let nodeId = tree.rootNode;
-  for (const step of steps) {
-    const node = tree.nodes.find((n) => n.id === nodeId);
-    if (!node || node.type !== "question") {
-      break;
-    }
-    nodeId = step.answer === "yes" ? node.branches.yes : node.branches.no;
-  }
-  return nodeId;
-}
+const resolveCurrentNodeId = resolveNodeId;
 
 export const useTreeStore = create<TreeState>((set, get) => ({
   tree: null,
@@ -39,6 +27,15 @@ export const useTreeStore = create<TreeState>((set, get) => ({
 
   loadTree: (tree) => {
     set({ tree, currentNodeId: tree.rootNode, history: [], cursor: 0 });
+  },
+
+  hydrate: (tree, steps) => {
+    set({
+      tree,
+      history: steps,
+      cursor: steps.length,
+      currentNodeId: resolveCurrentNodeId(tree, steps),
+    });
   },
 
   answer: (value) => {
