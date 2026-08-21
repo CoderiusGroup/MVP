@@ -1,3 +1,4 @@
+import type { Asset } from "../entities/Asset";
 import type { Device } from "../entities/Device";
 import type { Evaluation, Session } from "../entities/Session";
 
@@ -101,4 +102,72 @@ export function createInitialSession(
       ? { assetId: first.assetId, requirementId: first.requirementId, nodeId: "" }
       : undefined,
   };
+}
+
+export type DisplayStatus =
+  | "FAIL"
+  | "in_progress"
+  | "not_evaluated"
+  | "PASS"
+  | "NOT_APPLICABLE"
+  | "no_requirements";
+
+export const STATUS_LABELS: Record<DisplayStatus, string> = {
+  FAIL: "FAIL",
+  in_progress: "In corso",
+  not_evaluated: "Non valutato",
+  PASS: "PASS",
+  NOT_APPLICABLE: "Non applicabile",
+  no_requirements: "Nessun requisito applicabile",
+};
+
+const STATUS_PRIORITY: DisplayStatus[] = [
+  "FAIL",
+  "in_progress",
+  "not_evaluated",
+  "PASS",
+  "NOT_APPLICABLE",
+  "no_requirements",
+];
+
+function statusOf(evaluation: Evaluation): DisplayStatus {
+  if (evaluation.status !== "completed") {
+    return evaluation.status;
+  }
+  return evaluation.outcome ?? "NOT_APPLICABLE";
+}
+
+function reduceStatuses(statuses: DisplayStatus[]): DisplayStatus {
+  if (statuses.length === 0) {
+    return "no_requirements";
+  }
+  return STATUS_PRIORITY.find((candidate) => statuses.includes(candidate)) ?? "no_requirements";
+}
+
+export function getEvaluationStatus(
+  session: Session | null,
+  assetId: string,
+  requirementId: string,
+): DisplayStatus {
+  if (!session) {
+    return "not_evaluated";
+  }
+  const evaluation = session.evaluations.find(
+    (e) => e.assetId === assetId && e.requirementId === requirementId,
+  );
+  return evaluation ? statusOf(evaluation) : "not_evaluated";
+}
+
+export function getAssetStatus(session: Session | null, asset: Asset): DisplayStatus {
+  const requirementIds = asset.requirements ?? [];
+  if (requirementIds.length === 0) {
+    return "no_requirements";
+  }
+  return reduceStatuses(
+    requirementIds.map((requirementId) => getEvaluationStatus(session, asset.id, requirementId)),
+  );
+}
+
+export function getDeviceStatus(session: Session | null, device: Device): DisplayStatus {
+  return reduceStatuses(device.assets.map((asset) => getAssetStatus(session, asset)));
 }

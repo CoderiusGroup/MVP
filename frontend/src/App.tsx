@@ -24,6 +24,7 @@ function HomeRoute() {
   };
 
   const handleSessionResumed = (session: Session) => {
+    setDevice(session.device, null);
     resumeSession(session);
     navigate("/session");
   };

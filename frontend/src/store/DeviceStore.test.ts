@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { Asset } from "../domain/entities/Asset";
 import type { Device } from "../domain/entities/Device";
 import { useDeviceStore } from "./DeviceStore";
+import { useSessionStore } from "./SessionStore";
 
 const sampleDevice: Device = {
   id: "DEV-1",
@@ -23,6 +24,7 @@ const sampleAsset: Asset = {
 
 beforeEach(() => {
   useDeviceStore.getState().reset();
+  useSessionStore.getState().reset();
 });
 
 describe("DeviceStore", () => {
@@ -45,6 +47,16 @@ describe("DeviceStore", () => {
     useDeviceStore.getState().setDevice(sampleDevice, {});
 
     expect(useDeviceStore.getState().device?.assets).toEqual([]);
+  });
+
+  it("setDevice resets an existing session", () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useSessionStore.getState().start(sampleDevice);
+    expect(useSessionStore.getState().session).not.toBeNull();
+
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+
+    expect(useSessionStore.getState().session).toBeNull();
   });
 
   it("addAsset appends an asset to the device", () => {

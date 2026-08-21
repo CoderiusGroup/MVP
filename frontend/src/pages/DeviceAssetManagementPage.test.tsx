@@ -5,7 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Asset } from "../domain/entities/Asset";
 import type { Device } from "../domain/entities/Device";
+import type { Session } from "../domain/entities/Session";
 import { useDeviceStore } from "../store/DeviceStore";
+import { useSessionStore } from "../store/SessionStore";
 import DeviceAssetManagementPage from "./DeviceAssetManagementPage";
 
 const sampleDevice: Device = {
@@ -39,6 +41,7 @@ function renderPage() {
 
 beforeEach(() => {
   useDeviceStore.getState().reset();
+  useSessionStore.getState().reset();
 });
 
 afterEach(() => {
@@ -62,6 +65,34 @@ describe("DeviceAssetManagementPage", () => {
 
     expect(screen.getByText("Credenziali utente", { exact: false })).toBeInTheDocument();
     expect(screen.getByText(/security/)).toBeInTheDocument();
+  });
+
+  it("shows 'Non valutato' next to each asset when no session exists (RF-Ob35)", () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useDeviceStore.getState().addAsset(sampleAsset);
+
+    renderPage();
+
+    expect(screen.getByText(/Non valutato/)).toBeInTheDocument();
+  });
+
+  it("shows the asset status derived from the session (RF-Ob35)", () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useDeviceStore.getState().addAsset(sampleAsset);
+    const session: Session = {
+      id: "SES-1",
+      savedAt: "2026-08-21T10:00:00Z",
+      status: "in_progress",
+      device: { ...sampleDevice, assets: [sampleAsset] },
+      evaluations: [
+        { assetId: sampleAsset.id, requirementId: "ACM-1", status: "completed", outcome: "FAIL" },
+      ],
+    };
+    useSessionStore.getState().resume(session);
+
+    renderPage();
+
+    expect(screen.getByText(/FAIL/)).toBeInTheDocument();
   });
 
   it("navigates to the asset form when adding a new asset", async () => {
@@ -96,6 +127,26 @@ describe("DeviceAssetManagementPage", () => {
     expect(screen.getByText(sampleAsset.description)).toBeInTheDocument();
     expect(screen.getByText("Sì", { exact: false })).toBeInTheDocument();
     expect(screen.getByText("ACM-1", { exact: false })).toBeInTheDocument();
+  });
+
+  it("shows the status of each requirement in the detail view (RF-Ob43)", async () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useDeviceStore.getState().addAsset(sampleAsset);
+    const session: Session = {
+      id: "SES-1",
+      savedAt: "2026-08-21T10:00:00Z",
+      status: "in_progress",
+      device: { ...sampleDevice, assets: [sampleAsset] },
+      evaluations: [
+        { assetId: sampleAsset.id, requirementId: "ACM-1", status: "completed", outcome: "PASS" },
+      ],
+    };
+    useSessionStore.getState().resume(session);
+
+    renderPage();
+    await userEvent.click(screen.getByRole("button", { name: /Credenziali utente/ }));
+
+    expect(screen.getByText(/ACM-1.*PASS/)).toBeInTheDocument();
   });
 
   it("collapses the detail again on a second selection", async () => {
