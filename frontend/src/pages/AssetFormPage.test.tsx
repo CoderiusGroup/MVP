@@ -3,8 +3,17 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { Device } from "../domain/entities/Device";
 import { useDeviceStore } from "../store/DeviceStore";
 import AssetFormPage from "./AssetFormPage";
+
+const sampleDevice: Device = {
+  id: "DEV-1",
+  name: "Router1",
+  operatingSystem: "Linux",
+  description: "Router per la casa",
+  assets: [],
+};
 
 function renderPage() {
   return render(
@@ -40,6 +49,7 @@ describe("AssetFormPage", () => {
       vi.fn().mockResolvedValue(new Response(JSON.stringify(mockAsset), { status: 201 })),
     );
 
+    useDeviceStore.getState().setDevice(sampleDevice, {});
     renderPage();
 
     await userEvent.type(screen.getByPlaceholderText("Nome"), "Credenziali utente");
@@ -52,7 +62,7 @@ describe("AssetFormPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Invia" }));
 
     await waitFor(() => {
-      expect(useDeviceStore.getState().assets).toEqual([mockAsset]);
+      expect(useDeviceStore.getState().device?.assets).toEqual([mockAsset]);
     });
     expect(await screen.findByText("Pagina gestione asset")).toBeInTheDocument();
   });
@@ -65,6 +75,7 @@ describe("AssetFormPage", () => {
       ),
     );
 
+    useDeviceStore.getState().setDevice(sampleDevice, {});
     renderPage();
 
     await userEvent.type(screen.getByPlaceholderText("Nome"), "Credenziali utente");
@@ -77,6 +88,6 @@ describe("AssetFormPage", () => {
     await waitFor(() => {
       expect(screen.queryByText("Pagina gestione asset")).not.toBeInTheDocument();
     });
-    expect(useDeviceStore.getState().assets).toEqual([]);
+    expect(useDeviceStore.getState().device?.assets).toEqual([]);
   });
 });

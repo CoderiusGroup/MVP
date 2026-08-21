@@ -5,7 +5,7 @@ import { useDeviceStore } from "../store/DeviceStore";
 export default function DeviceAssetManagementPage() {
   const navigate = useNavigate();
   const device = useDeviceStore((state) => state.device);
-  const assets = useDeviceStore((state) => state.assets);
+  const assets = useDeviceStore((state) => state.device?.assets ?? []);
   const removeAsset = useDeviceStore((state) => state.removeAsset);
   const [expandedAssetId, setExpandedAssetId] = useState<string | null>(null);
 

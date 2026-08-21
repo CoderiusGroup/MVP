@@ -129,7 +129,7 @@ describe("DeviceAssetManagementPage", () => {
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: "Rimuovi" }));
 
-    expect(useDeviceStore.getState().assets).toEqual([]);
+    expect(useDeviceStore.getState().device?.assets).toEqual([]);
   });
 
   it("keeps the asset when the user cancels the confirmation", async () => {
@@ -140,6 +140,6 @@ describe("DeviceAssetManagementPage", () => {
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: "Rimuovi" }));
 
-    expect(useDeviceStore.getState().assets).toEqual([sampleAsset]);
+    expect(useDeviceStore.getState().device?.assets).toEqual([sampleAsset]);
   });
 });
