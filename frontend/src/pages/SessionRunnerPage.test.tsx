@@ -1,11 +1,13 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 
+import type { Session } from "../domain/entities/Session";
+import { useSessionStore } from "../store/SessionStore";
 import { useTreeStore } from "../store/TreeStore";
 import { SessionRunnerPage } from "./SessionRunnerPage";
 
-const sampleTreeResponse = {
+const treeResponse = {
   requirementId: "ACM-1",
   requirementName: "Sample",
   rootNode: "n1",
@@ -16,23 +18,49 @@ const sampleTreeResponse = {
   ],
 };
 
-function renderPage(requirementId = "ACM-1") {
+function baseSession(overrides: Partial<Session> = {}): Session {
+  return {
+    id: "SES-1",
+    savedAt: "2026-08-19T10:00:00Z",
+    status: "in_progress",
+    device: {
+      id: "DEV-1",
+      name: "Device",
+      operatingSystem: "OS",
+      description: "desc",
+      assets: [
+        {
+          id: "AS-1",
+          name: "Asset 1",
+          type: "network",
+          description: "d",
+          sensitive: false,
+          requirements: ["ACM-1"],
+        },
+      ],
+    },
+    evaluations: [{ assetId: "AS-1", requirementId: "ACM-1", status: "not_evaluated" }],
+    current: { assetId: "AS-1", requirementId: "ACM-1", nodeId: "n1" },
+    ...overrides,
+  };
+}
+
+function renderPage() {
   return render(
-    <MemoryRouter initialEntries={[`/decision-tree/${requirementId}`]}>
-      <Routes>
-        <Route path="/decision-tree/:requirementId" element={<SessionRunnerPage />} />
-      </Routes>
+    <MemoryRouter initialEntries={["/session"]}>
+      <SessionRunnerPage />
     </MemoryRouter>,
   );
 }
 
 beforeEach(() => {
+  useSessionStore.getState().reset();
   useTreeStore.getState().reset();
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue({
       ok: true,
-      text: () => Promise.resolve(JSON.stringify(sampleTreeResponse)),
+      text: () => Promise.resolve(JSON.stringify(treeResponse)),
     }),
   );
 });
@@ -42,57 +70,85 @@ afterEach(() => {
 });
 
 describe("SessionRunnerPage", () => {
-  it("shows the code and text of the current node (UC-22.1)", async () => {
+  it("blocks access when no session is active (route guard)", () => {
+    renderPage();
+    expect(screen.getByRole("alert")).toHaveTextContent("Nessuna sessione attiva");
+  });
+
+  it("runs a requirement to its leaf and completes the session", async () => {
+    useSessionStore.getState().resume(baseSession());
     renderPage();
 
-    await waitFor(() => expect(screen.getByText("n1")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Domanda 1?")).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("button", { name: "Sì" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Prossimo requisito" })).toBeInTheDocument(),
+    );
+    expect(screen.getByText("PASS")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Prossimo requisito" }));
+
+    await waitFor(() => expect(screen.getByText("Valutazione completata")).toBeInTheDocument());
+    expect(useSessionStore.getState().session!.status).toBe("completed");
+  });
+
+  it("restarts from the root when the next asset reuses the same requirement", async () => {
+    const twoAssets = baseSession({
+      device: {
+        id: "DEV-1",
+        name: "Device",
+        operatingSystem: "OS",
+        description: "desc",
+        assets: [
+          { id: "AS-1", name: "Asset 1", type: "network", description: "d", sensitive: false, requirements: ["ACM-1"] },
+          { id: "AS-2", name: "Asset 2", type: "security", description: "d", sensitive: true, requirements: ["ACM-1"] },
+        ],
+      },
+      evaluations: [
+        { assetId: "AS-1", requirementId: "ACM-1", status: "not_evaluated" },
+        { assetId: "AS-2", requirementId: "ACM-1", status: "not_evaluated" },
+      ],
+      current: { assetId: "AS-1", requirementId: "ACM-1", nodeId: "n1" },
+    });
+    useSessionStore.getState().resume(twoAssets);
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText("Domanda 1?")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Sì" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Prossimo requisito" })).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Prossimo requisito" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Sì" })).toBeInTheDocument(),
+    );
     expect(screen.getByText("Domanda 1?")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Prossimo requisito" })).toBeNull();
   });
 
-  it("renders the full graph and highlights the current node and visited path (UC-22.2)", async () => {
+  it("resumes a saved session on the node reached by its recorded path", async () => {
+    useSessionStore.getState().resume(
+      baseSession({
+        evaluations: [
+          {
+            assetId: "AS-1",
+            requirementId: "ACM-1",
+            status: "in_progress",
+            path: [{ nodeId: "n1", answer: "yes" }],
+          },
+        ],
+        current: { assetId: "AS-1", requirementId: "ACM-1", nodeId: "n2" },
+      }),
+    );
     renderPage();
 
-    await waitFor(() => expect(screen.getByRole("button", { name: "Sì" })).toBeInTheDocument());
-
-    expect(screen.getByText(/n1 —/)).toBeInTheDocument();
-    expect(screen.getByText(/n2 —/)).toBeInTheDocument();
-    expect(screen.getByText(/n3 —/)).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Sì" }));
-
-    await waitFor(() => expect(useTreeStore.getState().currentNodeId).toBe("n2"));
-    expect(useTreeStore.getState().history).toEqual([{ nodeId: "n1", answer: "yes" }]);
-  });
-
-  it("lets the user go back without losing the answer, and forward to restore it", async () => {
-    renderPage();
-    await waitFor(() => expect(screen.getByRole("button", { name: "Sì" })).toBeInTheDocument());
-
-    fireEvent.click(screen.getByRole("button", { name: "Sì" }));
-    await waitFor(() => expect(useTreeStore.getState().currentNodeId).toBe("n2"));
-
-    fireEvent.click(screen.getByRole("button", { name: "Indietro" }));
-
-    expect(useTreeStore.getState().currentNodeId).toBe("n1");
-    expect(useTreeStore.getState().history).toEqual([{ nodeId: "n1", answer: "yes" }]);
-    expect(screen.getByText("Risposta data in precedenza: Sì")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Avanti" }));
-
-    expect(useTreeStore.getState().currentNodeId).toBe("n2");
-  });
-
-  it("discards the future when a past answer is changed to a different value", async () => {
-    renderPage();
-    await waitFor(() => expect(screen.getByRole("button", { name: "Sì" })).toBeInTheDocument());
-
-    fireEvent.click(screen.getByRole("button", { name: "Sì" }));
-    await waitFor(() => expect(useTreeStore.getState().currentNodeId).toBe("n2"));
-    fireEvent.click(screen.getByRole("button", { name: "Indietro" }));
-
-    fireEvent.click(screen.getByRole("button", { name: "No" }));
-
-    expect(useTreeStore.getState().history).toEqual([{ nodeId: "n1", answer: "no" }]);
-    expect(useTreeStore.getState().currentNodeId).toBe("n3");
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Prossimo requisito" })).toBeInTheDocument(),
+    );
+    expect(screen.getByText("PASS")).toBeInTheDocument();
   });
 });

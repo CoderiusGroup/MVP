@@ -2,16 +2,13 @@
 // riallinea il percorso a ogni risposta e avanza fino al completamento.
 import { useEffect, useState } from "react";
 
-import { DecisionTreeSchema } from "../domain/entities/DecisionTree";
 import { currentOutcome, nodeById, type Outcome } from "../domain/rules/treeRules";
-import { FetchApiClient } from "../infrastructure/FetchApiClient";
+import { decisionTreeService } from "../services/DecisionTreeService";
 import { downloadSession } from "../services/SessionService";
 import { useSessionStore } from "../store/SessionStore";
 import { useTreeStore } from "../store/TreeStore";
 
 type Status = "idle" | "loading" | "error";
-
-const apiClient = new FetchApiClient();
 
 export function useSessionRunner() {
   const session = useSessionStore((state) => state.session);
@@ -40,13 +37,12 @@ export function useSessionRunner() {
     let cancelled = false;
     setStatus("loading");
 
-    apiClient
-      .get<unknown>(`/decision-trees/${requirementId}`)
-      .then((data) => {
+    decisionTreeService
+      .getTree(requirementId)
+      .then((loaded) => {
         if (cancelled) {
           return;
         }
-        const loaded = DecisionTreeSchema.parse(data);
         const recordedPath =
           useSessionStore
             .getState()
@@ -107,6 +103,9 @@ export function useSessionRunner() {
     isCompleted: session?.status === "completed",
     asset,
     requirementId,
+    tree,
+    currentNodeId,
+    path,
     currentNode,
     outcome,
     progress: { done, total },

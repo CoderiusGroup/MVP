@@ -1,94 +1,117 @@
-// Scope attuale: gestisce la navigazione di UN SOLO decision tree/requisito per volta.
-// L'orchestrazione dell'intera sessione (più asset, più requisiti in sequenza) implicata
-// dal nome ufficiale della pagina è lavoro futuro, non implementata in questo branch.
-import { useParams } from "react-router-dom";
-import { useDecisionTree } from "../hooks/useDecisionTree";
-import { useTreeStore } from "../store/TreeStore";
+import { useNavigate } from "react-router-dom";
+
+import { Esito } from "../components/Esito";
+import { GrafoDecisionTree } from "../components/GrafoDecisionTree";
+import { useSessionRunner } from "../hooks/useSessionRunner";
 
 export function SessionRunnerPage() {
-  const { requirementId } = useParams<{ requirementId: string }>();
-  const { status } = useDecisionTree(requirementId ?? "");
-  const tree = useTreeStore((state) => state.tree);
-  const currentNodeId = useTreeStore((state) => state.currentNodeId);
-  const history = useTreeStore((state) => state.history);
-  const cursor = useTreeStore((state) => state.cursor);
-  const answer = useTreeStore((state) => state.answer);
-  const goBack = useTreeStore((state) => state.goBack);
-  const goForward = useTreeStore((state) => state.goForward);
+  const navigate = useNavigate();
+  const {
+    status,
+    session,
+    isCompleted,
+    asset,
+    requirementId,
+    tree,
+    currentNodeId,
+    path,
+    currentNode,
+    outcome,
+    progress,
+    answer,
+    goBack,
+    canGoBack,
+    goToNext,
+    saveSession,
+  } = useSessionRunner();
 
-  if (status === "error") {
-    return <p role="alert">Impossibile caricare l'albero decisionale.</p>;
+  if (!session) {
+    return (
+      <div style={{ padding: "1rem" }}>
+        <p role="alert">Nessuna sessione attiva.</p>
+        <button type="button" onClick={() => navigate("/")}>
+          Torna alla Home
+        </button>
+      </div>
+    );
   }
 
-  if (status === "loading" || !tree || !currentNodeId) {
-    return <p>Caricamento albero decisionale...</p>;
+  if (isCompleted) {
+    return (
+      <div style={{ padding: "1rem" }}>
+        <h1>Valutazione completata</h1>
+        <ul>
+          {session.evaluations.map((evaluation) => (
+            <li key={`${evaluation.assetId}-${evaluation.requirementId}`}>
+              {evaluation.assetId} — {evaluation.requirementId}:{" "}
+              {evaluation.outcome ? <Esito outcome={evaluation.outcome} /> : "—"}
+            </li>
+          ))}
+        </ul>
+        <button type="button" onClick={saveSession}>
+          Salva sessione
+        </button>
+        <button type="button" onClick={() => navigate("/session/modify")}>
+          Modifica sessione
+        </button>
+        <button type="button" onClick={() => navigate("/")}>
+          Torna alla Home
+        </button>
+      </div>
+    );
   }
-
-  const visitedNodeIds = history.slice(0, cursor).map((step) => step.nodeId);
-  const currentNode = tree.nodes.find((node) => node.id === currentNodeId);
-  const recordedStep = history[cursor];
-  const previousAnswer =
-    recordedStep && recordedStep.nodeId === currentNodeId ? recordedStep.answer : null;
 
   return (
-    <div>
-      <section aria-label="Nodo corrente">
-        {currentNode?.type === "question" ? (
-          <>
-            <p>
-              Nodo: <strong>{currentNode.id}</strong>
-            </p>
-            <p>{currentNode.text}</p>
-            {previousAnswer ? (
-              <p>Risposta data in precedenza: {previousAnswer === "yes" ? "Sì" : "No"}</p>
-            ) : null}
-            <button type="button" onClick={() => answer(true)}>
-              Sì
-            </button>
-            <button type="button" onClick={() => answer(false)}>
-              No
-            </button>
-          </>
-        ) : currentNode?.type === "leaf" ? (
-          <>
-            <p>
-              Nodo: <strong>{currentNode.id}</strong>
-            </p>
-            <p>Esito: {currentNode.outcome}</p>
-          </>
-        ) : null}
+    <div style={{ padding: "1rem" }}>
+      <p>
+        Avanzamento: {progress.done} / {progress.total}
+      </p>
+      <p>
+        <strong>Asset:</strong> {asset ? asset.name : "—"} &nbsp;
+        <strong>Requisito:</strong> {requirementId}
+      </p>
 
-        <button type="button" onClick={goBack} disabled={cursor === 0}>
+      {status === "error" ? (
+        <p role="alert">Impossibile caricare l'albero decisionale.</p>
+      ) : status === "loading" || !currentNode ? (
+        <p>Caricamento albero decisionale...</p>
+      ) : currentNode.type === "question" ? (
+        <section aria-label="Domanda corrente">
+          <p>{currentNode.text}</p>
+          <button type="button" onClick={() => answer(true)}>
+            Sì
+          </button>
+          <button type="button" onClick={() => answer(false)}>
+            No
+          </button>
+        </section>
+      ) : (
+        <section aria-label="Esito requisito">
+          <p>
+            Esito: {outcome ? <Esito outcome={outcome} /> : null}
+          </p>
+          {currentNode.text ? <p>{currentNode.text}</p> : null}
+          <button type="button" onClick={goToNext}>
+            Prossimo requisito
+          </button>
+        </section>
+      )}
+
+      {tree && currentNodeId ? (
+        <GrafoDecisionTree tree={tree} currentNodeId={currentNodeId} path={path} />
+      ) : null}
+
+      <div style={{ marginTop: "1rem" }}>
+        <button type="button" onClick={goBack} disabled={!canGoBack}>
           Indietro
         </button>
-        <button type="button" onClick={goForward} disabled={cursor >= history.length}>
-          Avanti
+        <button type="button" onClick={saveSession}>
+          Salva sessione
         </button>
-      </section>
-
-      <section aria-label="Grafo decision tree">
-        <ul>
-          {tree.nodes.map((node) => {
-            const isCurrent = node.id === currentNodeId;
-            const isVisited = visitedNodeIds.includes(node.id);
-            const label = node.type === "question" ? node.text : `Esito: ${node.outcome}`;
-
-            return (
-              <li
-                key={node.id}
-                data-current={isCurrent}
-                data-visited={isVisited}
-                style={{
-                  fontWeight: isCurrent ? "bold" : "normal",
-                  opacity: isVisited || isCurrent ? 1 : 0.5,
-                }}
-              >
-                {node.id} — {label}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+        <button type="button" onClick={() => navigate("/session/modify")}>
+          Modifica sessione
+        </button>
+      </div>
     </div>
   );
 }
