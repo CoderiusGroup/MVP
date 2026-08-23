@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
 import type { Session } from "../domain/entities/Session";
+import { queryClient } from "../infrastructure/queryClient";
 import { useSessionStore } from "../store/SessionStore";
 import { useTreeStore } from "../store/TreeStore";
 import { SessionRunnerPage } from "./SessionRunnerPage";
@@ -54,6 +55,7 @@ function renderPage() {
 }
 
 beforeEach(() => {
+  queryClient.clear();
   useSessionStore.getState().reset();
   useTreeStore.getState().reset();
   vi.stubGlobal(

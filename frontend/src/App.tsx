@@ -7,6 +7,7 @@ import DeviceAssetManagementPage from "./pages/DeviceAssetManagementPage";
 import AssetFormPage from "./pages/AssetFormPage";
 import { SessionRunnerPage } from "./pages/SessionRunnerPage";
 import { ModifySessionPage } from "./pages/ModifySessionPage";
+import { RequireSession } from "./components/RequireSession";
 import type { Device } from "./domain/entities/Device.ts";
 import type { Session } from "./domain/entities/Session.ts";
 import { useDeviceStore } from "./store/DeviceStore";
@@ -38,8 +39,22 @@ function App() {
       <Routes>
         <Route path="/" element={<HomeRoute />} />
         <Route path="/device" element={<DeviceSummaryPage />} />
-        <Route path="/session" element={<SessionRunnerPage />} />
-        <Route path="/session/modify" element={<ModifySessionPage />} />
+        <Route
+          path="/session"
+          element={
+            <RequireSession>
+              <SessionRunnerPage />
+            </RequireSession>
+          }
+        />
+        <Route
+          path="/session/modify"
+          element={
+            <RequireSession>
+              <ModifySessionPage />
+            </RequireSession>
+          }
+        />
         <Route path="/device/assets" element={<DeviceAssetManagementPage />} />
         <Route path="/device/assets/new" element={<AssetFormPage />} />
       </Routes>

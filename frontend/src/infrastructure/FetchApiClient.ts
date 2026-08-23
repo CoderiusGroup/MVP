@@ -1,3 +1,4 @@
+import { ApiError } from "./ApiError";
 import type { ApiClientService } from "./ApiClientService";
 
 export class FetchApiClient implements ApiClientService {
@@ -11,39 +12,42 @@ export class FetchApiClient implements ApiClientService {
     return `${this.baseUrl}${path}`;
   }
 
-  private async handleResponse<T>(response: Response): Promise<T> {
+  private async request<T>(path: string, init: RequestInit): Promise<T> {
+    let response: Response;
+    try {
+      response = await fetch(this.buildUrl(path), init);
+    } catch {
+      throw new ApiError("Errore di rete: impossibile contattare il server");
+    }
+
     const text = await response.text();
     if (!response.ok) {
-      throw new Error(text || response.statusText);
+      throw new ApiError(text || response.statusText, response.status);
     }
     return text ? (JSON.parse(text) as T) : (undefined as unknown as T);
   }
 
   get<T>(path: string): Promise<T> {
-    return fetch(this.buildUrl(path), { method: "GET" }).then((response) =>
-      this.handleResponse<T>(response),
-    );
+    return this.request<T>(path, { method: "GET" });
   }
 
   post<T>(path: string, body: unknown): Promise<T> {
-    return fetch(this.buildUrl(path), {
+    return this.request<T>(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    }).then((response) => this.handleResponse<T>(response));
+    });
   }
 
   put<T>(path: string, body: unknown): Promise<T> {
-    return fetch(this.buildUrl(path), {
+    return this.request<T>(path, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    }).then((response) => this.handleResponse<T>(response));
+    });
   }
 
   delete<T>(path: string): Promise<T> {
-    return fetch(this.buildUrl(path), { method: "DELETE" }).then((response) =>
-      this.handleResponse<T>(response),
-    );
+    return this.request<T>(path, { method: "DELETE" });
   }
 }

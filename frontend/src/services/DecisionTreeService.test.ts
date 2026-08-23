@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import type { ApiClientService } from "../infrastructure/ApiClientService";
+import { queryClient } from "../infrastructure/queryClient";
 import { DecisionTreeService } from "./DecisionTreeService";
 
 const rawTree = {
@@ -19,6 +20,10 @@ function fakeApi(data: unknown): ApiClientService {
     delete: async () => data,
   } as ApiClientService;
 }
+
+beforeEach(() => {
+  queryClient.clear();
+});
 
 describe("DecisionTreeService", () => {
   it("carica e normalizza un decision tree valido", async () => {

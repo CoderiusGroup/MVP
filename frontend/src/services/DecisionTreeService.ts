@@ -1,6 +1,7 @@
 import { DecisionTreeSchema, type DecisionTree } from "../domain/entities/DecisionTree";
 import type { ApiClientService } from "../infrastructure/ApiClientService";
 import { FetchApiClient } from "../infrastructure/FetchApiClient";
+import { queryClient } from "../infrastructure/queryClient";
 
 export class DecisionTreeService {
   private readonly api: ApiClientService;
@@ -10,8 +11,13 @@ export class DecisionTreeService {
   }
 
   async getTree(requirementId: string): Promise<DecisionTree> {
-    const data = await this.api.get<unknown>(`/decision-trees/${requirementId}`);
-    return DecisionTreeSchema.parse(data);
+    return queryClient.fetchQuery({
+      queryKey: ["decision-tree", requirementId],
+      queryFn: async () => {
+        const data = await this.api.get<unknown>(`/decision-trees/${requirementId}`);
+        return DecisionTreeSchema.parse(data);
+      },
+    });
   }
 }
 
