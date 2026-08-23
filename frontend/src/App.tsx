@@ -57,6 +57,7 @@ function App() {
         />
         <Route path="/device/assets" element={<DeviceAssetManagementPage />} />
         <Route path="/device/assets/new" element={<AssetFormPage />} />
+        <Route path="/device/assets/:assetId/edit" element={<AssetFormPage />} />
       </Routes>
     </BrowserRouter>
   );

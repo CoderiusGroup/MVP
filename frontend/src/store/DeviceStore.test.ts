@@ -82,6 +82,24 @@ describe("DeviceStore", () => {
     expect(useDeviceStore.getState().device).toBeNull();
   });
 
+  it("updateAsset replaces only the matching asset", () => {
+    const secondAsset: Asset = { ...sampleAsset, id: "AS-2", name: "Registro accessi" };
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useDeviceStore.getState().addAsset(sampleAsset);
+    useDeviceStore.getState().addAsset(secondAsset);
+
+    const updated: Asset = { ...sampleAsset, name: "Credenziali aggiornate" };
+    useDeviceStore.getState().updateAsset(updated);
+
+    expect(useDeviceStore.getState().device?.assets).toEqual([updated, secondAsset]);
+  });
+
+  it("updateAsset does nothing when there is no device", () => {
+    useDeviceStore.getState().updateAsset(sampleAsset);
+
+    expect(useDeviceStore.getState().device).toBeNull();
+  });
+
   it("removeAsset removes only the matching asset", () => {
     const secondAsset: Asset = { ...sampleAsset, id: "AS-2", name: "Registro accessi" };
     useDeviceStore.getState().setDevice(sampleDevice, {});

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import type { Asset } from "../domain/entities/Asset";
 import {
   getAssetStatus,
   getEvaluationStatus,
@@ -8,10 +9,12 @@ import {
 import { useDeviceStore } from "../store/DeviceStore";
 import { useSessionStore } from "../store/SessionStore";
 
+const EMPTY_ASSETS: Asset[] = [];
+
 export default function DeviceAssetManagementPage() {
   const navigate = useNavigate();
   const device = useDeviceStore((state) => state.device);
-  const assets = useDeviceStore((state) => state.device?.assets ?? []);
+  const assets = useDeviceStore((state) => state.device?.assets ?? EMPTY_ASSETS);
   const removeAsset = useDeviceStore((state) => state.removeAsset);
   const session = useSessionStore((state) => state.session);
   const [expandedAssetId, setExpandedAssetId] = useState<string | null>(null);
@@ -47,6 +50,9 @@ export default function DeviceAssetManagementPage() {
               <li key={asset.id}>
                 <button aria-expanded={isExpanded} onClick={() => toggleExpanded(asset.id)}>
                   <strong>{asset.name}</strong> — {asset.type} — {STATUS_LABELS[assetStatus]}
+                </button>
+                <button onClick={() => navigate(`/device/assets/${asset.id}/edit`)}>
+                  Modifica
                 </button>
                 <button onClick={() => handleRemove(asset.id)}>Rimuovi</button>
 

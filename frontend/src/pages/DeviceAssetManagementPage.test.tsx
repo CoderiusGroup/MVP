@@ -33,6 +33,7 @@ function renderPage() {
       <Routes>
         <Route path="/device/assets" element={<DeviceAssetManagementPage />} />
         <Route path="/device/assets/new" element={<p>Pagina nuovo asset</p>} />
+        <Route path="/device/assets/:assetId/edit" element={<p>Pagina modifica asset</p>} />
         <Route path="/device" element={<p>Pagina device</p>} />
       </Routes>
     </MemoryRouter>,
@@ -170,6 +171,16 @@ describe("DeviceAssetManagementPage", () => {
     await userEvent.click(screen.getByRole("button", { name: /Credenziali utente/ }));
 
     expect(screen.getByText("Nessuno")).toBeInTheDocument();
+  });
+
+  it("navigates to the edit form for the selected asset (RF-D15-19)", async () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useDeviceStore.getState().addAsset(sampleAsset);
+
+    renderPage();
+    await userEvent.click(screen.getByRole("button", { name: "Modifica" }));
+
+    expect(await screen.findByText("Pagina modifica asset")).toBeInTheDocument();
   });
 
   it("removes an asset after confirmation (UC-18)", async () => {

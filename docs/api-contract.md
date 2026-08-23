@@ -196,6 +196,15 @@ Errori:
 - `400` — corpo non valido, oppure `name`/`type`/`description`/`sensitive` mancante,
   vuoto o di tipo errato; `type` fuori dai valori ammessi
 
+### Riuso per la modifica di un asset (UC-16)
+
+Non esiste un `PUT`/`PATCH /assets/{id}` dedicato. La modifica di un asset esistente è
+gestita interamente lato client (nessuna chiamata) **tranne quando cambia `type`**: in
+quel caso il frontend chiama di nuovo `POST /assets`, passando l'`id` dell'asset esistente
+e **omettendo** `requirements`, così il backend lo ri-deriva dal nuovo `type` con la stessa
+logica della creazione. Nessuna modifica al backend è stata necessaria: `create_asset`
+accetta già un `id` fornito dal client e lo rispetta invece di generarne uno nuovo.
+
 ## Session (forma dati, endpoint non ancora implementato)
 
 Autoconsistente per dispositivo, asset, esiti e percorsi; i decision tree non sono

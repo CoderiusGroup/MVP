@@ -9,6 +9,7 @@ interface DeviceState {
   payload: unknown;
   setDevice: (device: Device, payload: unknown) => void;
   addAsset: (asset: Asset) => void;
+  updateAsset: (asset: Asset) => void;
   removeAsset: (assetId: string) => void;
   reset: () => void;
 }
@@ -26,6 +27,21 @@ export const useDeviceStore = create<DeviceState>((set) => ({
     set((state) =>
       state.device
         ? { device: { ...state.device, assets: [...state.device.assets, asset] } }
+        : state,
+    );
+  },
+
+  updateAsset: (asset) => {
+    set((state) =>
+      state.device
+        ? {
+            device: {
+              ...state.device,
+              assets: state.device.assets.map((existing) =>
+                existing.id === asset.id ? asset : existing,
+              ),
+            },
+          }
         : state,
     );
   },
