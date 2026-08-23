@@ -1,5 +1,6 @@
+import { useNavigate } from "react-router-dom";
 import { NotificationManager } from "../infrastructure/NotificationManager";
-import { importDeviceFromJson, createDeviceManually } from "../services/DeviceService";
+import { importDeviceFromJson } from "../services/DeviceService";
 import { loadSessionFromJson } from "../services/SessionService";
 import type { Device } from "../domain/entities/Device";
 import type { Session } from "../domain/entities/Session";
@@ -12,6 +13,7 @@ type Props = {
 const notification = new NotificationManager();
 
 export default function HomePage({onDeviceSaved, onSessionResumed}: Props){
+    const navigate = useNavigate();
 
     const resumeSessionOnUpload = async (uploadedFile?: File) => {
         if(!uploadedFile){
@@ -40,57 +42,33 @@ export default function HomePage({onDeviceSaved, onSessionResumed}: Props){
             onDeviceSaved(device, payload);
             notification.success("Dispositivo caricato correttamente");
         }catch(e){
-            console.error("Uploade error", e)
+            console.error("Upload error", e)
             notification.errorJsonLoading(e instanceof Error ? e.message : "Errore durante il caricamento del file");
         }
     }
 
-    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const form = e.currentTarget;
-        const formData =  new FormData(form);
+    return (
+        <div className="space-y-4" style={{ padding: "1rem" }}>
+            <h1>Gestione Valutazione Dispositivi</h1>
+            
+            <h2>1. Nuovo Dispositivo</h2>
+            <button onClick={() => navigate("/device/new")}>Crea nuovo dispositivo</button>
 
-        const device = {
-            name: formData.get("name")?.toString().trim() ?? "",
-            operatingSystem: formData.get("operatingSystem")?.toString().trim() ?? "",
-            description: formData.get("description")?.toString().trim() ?? "",
-        };
+            <h2>2. Importa Dispositivo da JSON</h2>
+            <input
+                type="file"
+                aria-label="Carica file JSON dispositivo"
+                accept=".json,application/json"
+                onChange={(e) => readFileOnUpload(e.target.files?.[0])}
+            />
 
-        try{
-            const { device: savedDevice, payload } = await createDeviceManually(device);
-            onDeviceSaved(savedDevice, payload);
-            notification.success("Dispositivo creato correttamente");
-            form.reset();
-        }catch(e){
-            console.error("Errore creazione dispositivo", e);
-            notification.errorJsonLoading(e instanceof Error ? e.message : "Errore durante la creazione del dispositivo");
-        }
-    }
-
-return (
-    <div className="space-y-4">
-        <h2>Bottone per inserire un file JSOn</h2>
-        <input
-        type="file"
-        aria-label="Carica file JSON dispositivo"
-        accept = "application/json,.json"
-        onChange={(e) => readFileOnUpload(e.target.files?.[0])}/>
-        <h2>Form per creare un dispositivo</h2>
-        <form onSubmit={handleFormSubmit}>
-            <p>Nome:</p>
-            <input name="name" placeholder="Nome"/>
-            <p>Sistema Operativo:</p>
-            <input name="operatingSystem" placeholder="Sistema Operativo"/>
-            <p>Descrizione:</p>
-            <input name="description" placeholder="Descrizione"/>
-            <button type="submit">Invia</button>
-        </form>
-        <h2>Riprendi una sessione salvata</h2>
-        <input
-        type="file"
-        aria-label="Riprendi sessione da file"
-        accept="application/json,.json"
-        onChange={(e) => resumeSessionOnUpload(e.target.files?.[0])}/>
-    </div>
-);
+            <h2>3. Riprendi una Sessione Salvata</h2>
+            <input
+                type="file"
+                aria-label="Riprendi sessione da file"
+                accept=".json,application/json"
+                onChange={(e) => resumeSessionOnUpload(e.target.files?.[0])}
+            />
+        </div>
+    );
 }

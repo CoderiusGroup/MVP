@@ -2,6 +2,7 @@ import { Toaster } from "react-hot-toast";
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import "./App.css";
 import HomePage from "./pages/HomePage";
+import DeviceFormPage from "./pages/DeviceFormPage";
 import DeviceSummaryPage from "./pages/DeviceSummaryPage";
 import DeviceAssetManagementPage from "./pages/DeviceAssetManagementPage";
 import AssetFormPage from "./pages/AssetFormPage";
@@ -20,7 +21,7 @@ function HomeRoute() {
 
   const handleDeviceSaved = (device: Device, payload: unknown) => {
     setDevice(device, payload);
-    navigate("/device");
+    navigate("/device/assets"); 
   };
 
   const handleSessionResumed = (session: Session) => {
@@ -36,7 +37,8 @@ function App() {
     <BrowserRouter>
       <Toaster />
       <Routes>
-        <Route path="/" element={<HomeRoute />} />
+        <Route path="/" element={<HomeRoute />} /> {}
+        <Route path="/device/new" element={<DeviceFormPage />} /> 
         <Route path="/device" element={<DeviceSummaryPage />} />
         <Route path="/session" element={<SessionPage />} />
         <Route path="/session/modify" element={<ModifySessionPage />} />
