@@ -9,7 +9,7 @@ vi.mock("../infrastructure/FetchApiClient");
 
 const mockSetDevice = vi.fn();
 vi.mock("../store/DeviceStore", () => ({
-    useDeviceStore: (selector: any) => {
+    useDeviceStore: (selector: (state: { setDevice: typeof mockSetDevice }) => unknown) => {
         return selector({ setDevice: mockSetDevice });
     }
 }));
