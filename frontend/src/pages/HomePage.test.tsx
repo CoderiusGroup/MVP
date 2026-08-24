@@ -3,8 +3,18 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import HomePage from "./HomePage";
 import { FetchApiClient } from "../infrastructure/FetchApiClient";
+import { BrowserRouter } from "react-router-dom";
 
 vi.mock("../infrastructure/FetchApiClient");
+
+const mockedNavigate = vi.fn();
+vi.mock("react-router-dom", async () => {
+    const actual = await vi.importActual("react-router-dom");
+    return {
+        ...actual,
+        useNavigate: () => mockedNavigate,
+    };
+});
 
 describe("HomePage", () =>{
     const onDeviceSaved = vi.fn();
@@ -14,35 +24,19 @@ describe("HomePage", () =>{
         vi.clearAllMocks();
     });
 
-    it("crea un dispositivo tramite il form", async () =>{
-        const mockDevice = {id:"1", name:"Router1", operatingSystem:"Linux", description:"Router per la casa", assets: []};
-        vi.mocked(FetchApiClient.prototype.post).mockResolvedValue(mockDevice);
-
-        render(<HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/>);
-
-        await userEvent.type(screen.getByPlaceholderText("Nome"), "Router1");
-        await userEvent.type(screen.getByPlaceholderText("Sistema Operativo"), "Linux");
-        await userEvent.type(screen.getByPlaceholderText("Descrizione"), "Router per la casa");
-        await userEvent.click(screen.getByRole("button", {name: "Invia"}));
-
-        await waitFor(() =>{
-            expect(onDeviceSaved).toHaveBeenCalledWith(mockDevice, expect.objectContaining({name: "Router1"}));
-        });
-    });
-
-    it("mostra un errore se il nome è mancante nel form", async() =>{
-        render(<HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/>);
-
-        await userEvent.click(screen.getByRole("button", {name:"Invia"}));
-
-        expect(onDeviceSaved).not.toHaveBeenCalled();
+    it("naviga alla pagina di creazione dispositivo quando si clicca il bottone", async () => {
+        render(<BrowserRouter><HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/></BrowserRouter>);
+        
+        await userEvent.click(screen.getByRole("button", {name: "Crea nuovo dispositivo"}));
+        
+        expect(mockedNavigate).toHaveBeenCalledWith("/device/new");
     });
 
     it("carica un dispositivo da un file JSON valido", async () =>{
         const mockDevice = {id:"1", name:"Server1", operatingSystem:"Windows", description:"minecraft server", assets: []};
         vi.mocked(FetchApiClient.prototype.post).mockResolvedValue(mockDevice);
 
-        render(<HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/>);
+        render(<BrowserRouter><HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/></BrowserRouter>);
 
         const file = new File(
             [JSON.stringify({name:"Server1", operatingSystem: "Windows"})],
@@ -50,7 +44,7 @@ describe("HomePage", () =>{
             {type: "application/json"}
         );
 
-        const input = screen.getByLabelText(/JSON/i) as HTMLInputElement;
+        const input = screen.getByLabelText(/Carica file JSON/i) as HTMLInputElement;
         await userEvent.upload(input, file);
 
         await waitFor(() =>{
@@ -59,7 +53,7 @@ describe("HomePage", () =>{
     });
 
     it("rifiuta un file JSON che contiene un array", async () =>{
-        render(<HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/>);
+        render(<BrowserRouter><HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/></BrowserRouter>);
 
         const file = new File(
             [JSON.stringify([{name:"Server1", operatingSystem: "Windows"}])],
@@ -67,7 +61,7 @@ describe("HomePage", () =>{
             {type: "application/json"}
         );
 
-        const input = screen.getByLabelText(/JSON/i) as HTMLInputElement;
+        const input = screen.getByLabelText(/Carica file JSON/i) as HTMLInputElement;
         await userEvent.upload(input, file);
 
         await waitFor(() =>{
@@ -76,7 +70,7 @@ describe("HomePage", () =>{
     });
 
     it("riprende una sessione da un file JSON valido", async () =>{
-        render(<HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/>);
+        render(<BrowserRouter><HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/></BrowserRouter>);
 
         const session = {
             id: "SES-1",
@@ -97,7 +91,7 @@ describe("HomePage", () =>{
     });
 
     it("rifiuta un file sessione non valido", async () =>{
-        render(<HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/>);
+        render(<BrowserRouter><HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/></BrowserRouter>);
 
         const file = new File([JSON.stringify({foo: "bar"})], "sessione.json", {type: "application/json"});
 

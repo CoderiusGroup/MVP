@@ -31,6 +31,7 @@ function renderPage() {
   return render(
     <MemoryRouter initialEntries={["/device/assets"]}>
       <Routes>
+        <Route path="/" element={<p>Pagina Home</p>} />
         <Route path="/device/assets" element={<DeviceAssetManagementPage />} />
         <Route path="/device/assets/new" element={<p>Pagina nuovo asset</p>} />
         <Route path="/device/assets/:assetId/edit" element={<p>Pagina modifica asset</p>} />
@@ -56,6 +57,29 @@ describe("DeviceAssetManagementPage", () => {
     renderPage();
 
     expect(screen.getByText("Nessun asset presente.")).toBeInTheDocument();
+  });
+
+  it("disables the summary button when there are no assets, and navigates to Home on cancel", async () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    renderPage();
+
+    const summaryButton = screen.getByRole("button", { name: /Vai al Riepilogo Finale/i });
+    expect(summaryButton).toBeDisabled();
+
+    await userEvent.click(screen.getByRole("button", { name: /Annulla e vai alla Home/i }));
+    expect(await screen.findByText("Pagina Home")).toBeInTheDocument();
+  });
+
+  it("enables the summary button when an asset is present and navigates to summary", async () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useDeviceStore.getState().addAsset(sampleAsset);
+    renderPage();
+
+    const summaryButton = screen.getByRole("button", { name: /Vai al Riepilogo Finale/i });
+    expect(summaryButton).not.toBeDisabled();
+
+    await userEvent.click(summaryButton);
+    expect(await screen.findByText("Pagina device")).toBeInTheDocument();
   });
 
   it("lists the name and type of each asset (UC-14.1)", () => {

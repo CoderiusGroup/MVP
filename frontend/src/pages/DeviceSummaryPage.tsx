@@ -20,10 +20,10 @@ export default function DeviceSummaryPage() {
     };
 
     return (
-        <div style={{padding: "1rem"}}>
-        <button onClick={() => navigate("/")}>Torna indietro</button>
+      <div style={{padding: "1rem"}}> {}
+      <button onClick={() => navigate("/device/assets")}>Torna alla Gestione Asset</button>
 
-        <h1>Dettaglio Dispositivo</h1>
+      <h1>Dettaglio Dispositivo (Riepilogo)</h1>
 
         {device ? (
         <>
