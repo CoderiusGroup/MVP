@@ -54,27 +54,27 @@ describe("SessionStore", () => {
     expect(first.path).toEqual([{ nodeId: "n1", answer: "yes" }]);
   });
 
-  it("completeCurrent records the outcome and advance moves to the next pair", () => {
+  it("completeCurrent records the outcome on the current pair without completing the session", () => {
     useSessionStore.getState().start(device);
     useSessionStore.getState().completeCurrent("PASS", [{ nodeId: "n1", answer: "yes" }]);
-    useSessionStore.getState().advance();
 
     const session = useSessionStore.getState().session!;
     expect(session.evaluations[0]).toMatchObject({ status: "completed", outcome: "PASS" });
-    expect(session.current).toMatchObject({ assetId: "AS-1", requirementId: "ACM-2" });
+    expect(session.status).toBe("in_progress");
   });
 
   it("completes the session once every pair is evaluated", () => {
-    const store = useSessionStore.getState();
-    store.start(device);
-    for (let i = 0; i < 3; i += 1) {
+    useSessionStore.getState().start(device);
+    const pairs = useSessionStore
+      .getState()
+      .session!.evaluations.map((e) => ({ assetId: e.assetId, requirementId: e.requirementId }));
+    for (const pair of pairs) {
+      useSessionStore.getState().select(pair.assetId, pair.requirementId);
       useSessionStore.getState().completeCurrent("PASS", []);
-      useSessionStore.getState().advance();
     }
 
     const session = useSessionStore.getState().session!;
     expect(session.status).toBe("completed");
-    expect(session.current).toBeUndefined();
     expect(session.evaluations.every((e) => e.status === "completed")).toBe(true);
   });
 
@@ -102,9 +102,12 @@ describe("SessionStore", () => {
 
   it("reopen resets the chosen requirement and the given dependents, per asset", () => {
     useSessionStore.getState().start(device);
-    for (let i = 0; i < 3; i += 1) {
+    const pairs = useSessionStore
+      .getState()
+      .session!.evaluations.map((e) => ({ assetId: e.assetId, requirementId: e.requirementId }));
+    for (const pair of pairs) {
+      useSessionStore.getState().select(pair.assetId, pair.requirementId);
       useSessionStore.getState().completeCurrent("PASS", []);
-      useSessionStore.getState().advance();
     }
 
     useSessionStore.getState().reopen("AS-1", "ACM-1", ["ACM-2"]);
@@ -117,5 +120,55 @@ describe("SessionStore", () => {
     expect(find("AS-2", "AUM-1-1")).toMatchObject({ status: "completed" });
     expect(session.status).toBe("in_progress");
     expect(session.current).toMatchObject({ assetId: "AS-1", requirementId: "ACM-1" });
+  });
+
+  it("ensureSession crea una sessione quando non ce n'è una", () => {
+    useSessionStore.getState().ensureSession(device);
+
+    const session = useSessionStore.getState().session!;
+    expect(session.status).toBe("in_progress");
+    expect(session.evaluations).toHaveLength(3);
+    expect(session.device.id).toBe("DEV-1");
+  });
+
+  it("ensureSession riprende la sessione dello stesso device con lo stesso piano", () => {
+    useSessionStore.getState().start(device);
+    useSessionStore.getState().completeCurrent("PASS", []);
+
+    useSessionStore.getState().ensureSession(device);
+
+    const session = useSessionStore.getState().session!;
+    const acm1 = session.evaluations.find(
+      (e) => e.assetId === "AS-1" && e.requirementId === "ACM-1",
+    );
+    expect(acm1).toMatchObject({ status: "completed", outcome: "PASS" });
+  });
+
+  it("ensureSession riparte quando il piano del device è cambiato", () => {
+    useSessionStore.getState().start(device);
+    useSessionStore.getState().completeCurrent("PASS", []);
+
+    const changed = {
+      ...device,
+      assets: device.assets.map((asset) =>
+        asset.id === "AS-1" ? { ...asset, requirements: ["ACM-1"] } : asset,
+      ),
+    };
+    useSessionStore.getState().ensureSession(changed);
+
+    const session = useSessionStore.getState().session!;
+    expect(session.evaluations).toHaveLength(2);
+    expect(session.evaluations.every((e) => e.status === "not_evaluated")).toBe(true);
+  });
+
+  it("ensureSession crea una sessione nuova se il device è diverso", () => {
+    useSessionStore.getState().start(device);
+    useSessionStore.getState().completeCurrent("PASS", []);
+
+    useSessionStore.getState().ensureSession({ ...device, id: "DEV-2" });
+
+    const session = useSessionStore.getState().session!;
+    expect(session.device.id).toBe("DEV-2");
+    expect(session.evaluations.every((e) => e.status === "not_evaluated")).toBe(true);
   });
 });

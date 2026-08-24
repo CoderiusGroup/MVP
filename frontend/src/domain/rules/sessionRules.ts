@@ -104,6 +104,57 @@ export function createInitialSession(
   };
 }
 
+// Vera se le valutazioni della sessione coprono esattamente il piano del device
+// (stesse coppie asset-requisito): in tal caso la sessione è riprendibile così com'è.
+export function matchesPlan(session: Session, device: Device): boolean {
+  const plan = buildPlan(device);
+  if (plan.length !== session.evaluations.length) {
+    return false;
+  }
+  return plan.every((pair) =>
+    session.evaluations.some(
+      (evaluation) =>
+        evaluation.assetId === pair.assetId && evaluation.requirementId === pair.requirementId,
+    ),
+  );
+}
+
+export interface EvaluationProgress {
+  assetsDone: number;
+  assetsTotal: number;
+  reqDone: number;
+  reqTotal: number;
+}
+
+function assetRequirementsDone(session: Session, asset: Asset): number {
+  return (asset.requirements ?? []).filter((requirementId) =>
+    session.evaluations.some(
+      (evaluation) =>
+        evaluation.assetId === asset.id &&
+        evaluation.requirementId === requirementId &&
+        evaluation.status === "completed",
+    ),
+  ).length;
+}
+
+// UC-19.1: progresso della sessione — asset completati sul totale e, per l'asset
+// corrente, requisiti completati sul totale.
+export function getEvaluationProgress(session: Session, assetId?: string): EvaluationProgress {
+  const assets = session.device.assets;
+  const assetsDone = assets.filter((asset) => {
+    const total = (asset.requirements ?? []).length;
+    return total === 0 || assetRequirementsDone(session, asset) === total;
+  }).length;
+
+  const current = assetId ? assets.find((asset) => asset.id === assetId) : undefined;
+  return {
+    assetsDone,
+    assetsTotal: assets.length,
+    reqDone: current ? assetRequirementsDone(session, current) : 0,
+    reqTotal: current ? (current.requirements ?? []).length : 0,
+  };
+}
+
 export type DisplayStatus =
   | "FAIL"
   | "in_progress"

@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import type { Asset } from "../entities/Asset";
+import type { Device } from "../entities/Device";
 import type { Session } from "../entities/Session";
 import {
   getAssetStatus,
   getDeviceStatus,
+  getEvaluationProgress,
   getEvaluationStatus,
+  matchesPlan,
   reopenEvaluation,
   selectEvaluation,
   transitiveDependents,
@@ -199,5 +202,87 @@ describe("sessionRules — stato di valutazione", () => {
     expect(getDeviceStatus(emptyDeviceSession, emptyDeviceSession.device)).toBe(
       "no_requirements",
     );
+  });
+});
+
+describe("sessionRules — getEvaluationProgress", () => {
+  it("conta gli asset completati sul totale e i requisiti dell'asset indicato", () => {
+    expect(getEvaluationProgress(completedSession(), "AS-1")).toEqual({
+      assetsDone: 2,
+      assetsTotal: 2,
+      reqDone: 3,
+      reqTotal: 3,
+    });
+  });
+
+  it("considera completato un asset senza requisiti", () => {
+    const base = completedSession();
+    const session: Session = {
+      ...base,
+      device: {
+        ...base.device,
+        assets: [
+          ...base.device.assets,
+          { id: "AS-3", name: "A3", type: "financial", description: "d", sensitive: false, requirements: [] },
+        ],
+      },
+    };
+
+    expect(getEvaluationProgress(session)).toMatchObject({ assetsDone: 3, assetsTotal: 3 });
+  });
+
+  it("non conta un asset con requisiti ancora aperti", () => {
+    const base = completedSession();
+    const session: Session = {
+      ...base,
+      evaluations: base.evaluations.map((evaluation) =>
+        evaluation.assetId === "AS-1" && evaluation.requirementId === "ACM-2"
+          ? { assetId: evaluation.assetId, requirementId: evaluation.requirementId, status: "not_evaluated" }
+          : evaluation,
+      ),
+    };
+
+    expect(getEvaluationProgress(session, "AS-1")).toMatchObject({
+      assetsDone: 1,
+      reqDone: 2,
+      reqTotal: 3,
+    });
+  });
+});
+
+describe("sessionRules — matchesPlan", () => {
+  const deviceWith = (requirements: string[]): Device => ({
+    id: "DEV-1",
+    name: "Device",
+    operatingSystem: "OS",
+    description: "d",
+    assets: [
+      { id: "AS-1", name: "A1", type: "network", description: "d", sensitive: false, requirements },
+    ],
+  });
+
+  const sessionWith = (requirements: string[]): Session => ({
+    id: "SES-1",
+    savedAt: "2026-08-19T10:00:00Z",
+    status: "in_progress",
+    device: deviceWith(requirements),
+    evaluations: requirements.map((requirementId) => ({
+      assetId: "AS-1",
+      requirementId,
+      status: "not_evaluated" as const,
+    })),
+    current: undefined,
+  });
+
+  it("vero quando le coppie coincidono con il piano del device", () => {
+    expect(matchesPlan(sessionWith(["ACM-1", "ACM-2"]), deviceWith(["ACM-1", "ACM-2"]))).toBe(true);
+  });
+
+  it("falso quando un requisito è cambiato", () => {
+    expect(matchesPlan(sessionWith(["ACM-1", "ACM-2"]), deviceWith(["ACM-1", "AUM-1-1"]))).toBe(false);
+  });
+
+  it("falso quando il numero di coppie differisce", () => {
+    expect(matchesPlan(sessionWith(["ACM-1", "ACM-2"]), deviceWith(["ACM-1"]))).toBe(false);
   });
 });

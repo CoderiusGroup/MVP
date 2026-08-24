@@ -7,7 +7,7 @@ export default function DeviceSummaryPage() {
     const navigate = useNavigate();
     const device = useDeviceStore((state) => state.device);
     const session = useSessionStore((state) => state.session);
-    const startSession = useSessionStore((state) => state.start);
+    const ensureSession = useSessionStore((state) => state.ensureSession);
 
     const hasAssets = !!device && device.assets.length > 0;
 
@@ -15,7 +15,7 @@ export default function DeviceSummaryPage() {
         if (!device) {
             return;
         }
-        startSession(device);
+        ensureSession(device);
         navigate("/session");
     };
 
