@@ -1,11 +1,15 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 
+import type { Device } from "../domain/entities/Device";
+import type { Session } from "../domain/entities/Session";
+import { queryClient } from "../infrastructure/queryClient";
+import { useSessionStore } from "../store/SessionStore";
 import { useTreeStore } from "../store/TreeStore";
 import { SessionRunnerPage } from "./SessionRunnerPage";
 
-const sampleTreeResponse = {
+const acmTree = {
   requirementId: "ACM-1",
   requirementName: "Sample",
   rootNode: "n1",
@@ -16,23 +20,60 @@ const sampleTreeResponse = {
   ],
 };
 
-function renderPage(requirementId = "ACM-1") {
+const dependentTree = {
+  requirementId: "ACM-2",
+  requirementName: "Dependent",
+  rootNode: "n1",
+  dependencies: ["ACM-1"],
+  nodes: [
+    { id: "n1", type: "question", text: "Domanda 2?", branches: { yes: "n2", no: "n3" } },
+    { id: "n2", type: "leaf", outcome: "PASS" },
+    { id: "n3", type: "leaf", outcome: "FAIL" },
+  ],
+};
+
+function device(assets: Device["assets"]): Device {
+  return { id: "DEV-1", name: "Device", operatingSystem: "OS", description: "desc", assets };
+}
+
+const asset = (id: string, requirements: string[]): Device["assets"][number] => ({
+  id,
+  name: `Asset ${id}`,
+  type: "network",
+  description: "d",
+  sensitive: false,
+  requirements,
+});
+
+function baseSession(overrides: Partial<Session> = {}): Session {
+  return {
+    id: "SES-1",
+    savedAt: "2026-08-19T10:00:00Z",
+    status: "in_progress",
+    device: device([asset("AS-1", ["ACM-1"])]),
+    evaluations: [{ assetId: "AS-1", requirementId: "ACM-1", status: "not_evaluated" }],
+    current: { assetId: "AS-1", requirementId: "ACM-1", nodeId: "n1" },
+    ...overrides,
+  };
+}
+
+function renderPage() {
   return render(
-    <MemoryRouter initialEntries={[`/decision-tree/${requirementId}`]}>
-      <Routes>
-        <Route path="/decision-tree/:requirementId" element={<SessionRunnerPage />} />
-      </Routes>
+    <MemoryRouter initialEntries={["/session"]}>
+      <SessionRunnerPage />
     </MemoryRouter>,
   );
 }
 
 beforeEach(() => {
+  queryClient.clear();
+  useSessionStore.getState().reset();
   useTreeStore.getState().reset();
   vi.stubGlobal(
     "fetch",
-    vi.fn().mockResolvedValue({
-      ok: true,
-      text: () => Promise.resolve(JSON.stringify(sampleTreeResponse)),
+    vi.fn().mockImplementation((url: string) => {
+      const body = String(url).includes("ACM-2") ? dependentTree : acmTree;
+      return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify(body)) });
     }),
   );
 });
@@ -42,57 +83,124 @@ afterEach(() => {
 });
 
 describe("SessionRunnerPage", () => {
-  it("shows the code and text of the current node (UC-22.1)", async () => {
+  it("blocca l'accesso senza una sessione attiva (route guard)", () => {
     renderPage();
-
-    await waitFor(() => expect(screen.getByText("n1")).toBeInTheDocument());
-    expect(screen.getByText("Domanda 1?")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Nessuna sessione attiva");
   });
 
-  it("renders the full graph and highlights the current node and visited path (UC-22.2)", async () => {
+  it("guida dalla dashboard all'esito, torna alla vista asset e completa la sessione", async () => {
+    useSessionStore.getState().resume(
+      baseSession({
+        device: device([asset("AS-1", ["ACM-1"]), asset("AS-2", ["ACM-1"])]),
+        evaluations: [
+          { assetId: "AS-1", requirementId: "ACM-1", status: "not_evaluated" },
+          { assetId: "AS-2", requirementId: "ACM-1", status: "not_evaluated" },
+        ],
+      }),
+    );
     renderPage();
 
-    await waitFor(() => expect(screen.getByRole("button", { name: "Sì" })).toBeInTheDocument());
+    // Dashboard: progresso e lista asset.
+    expect(screen.getByText("Asset completati: 0 / 2")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Valuta" })[0]);
 
-    expect(screen.getByText(/n1 —/)).toBeInTheDocument();
-    expect(screen.getByText(/n2 —/)).toBeInTheDocument();
-    expect(screen.getByText(/n3 —/)).toBeInTheDocument();
+    // Vista asset: info e requisiti con stato.
+    const assetView = screen.getByLabelText("Asset in valutazione");
+    expect(within(assetView).getByRole("heading", { name: "Asset AS-1" })).toBeInTheDocument();
+    expect(assetView).toHaveTextContent("ACM-1 — Non valutato");
+    fireEvent.click(within(assetView).getByRole("button", { name: "Apri" }));
 
+    // Dettaglio requisito: codice + nome.
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "ACM-1 — Sample" })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Avvia decision tree" }));
+
+    // Albero: codice nodo + domanda, poi foglia.
+    await waitFor(() => expect(screen.getByText("Domanda 1?")).toBeInTheDocument());
+    expect(screen.getByLabelText("Domanda corrente")).toHaveTextContent(/Nodo:\s*n1/);
     fireEvent.click(screen.getByRole("button", { name: "Sì" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Conferma esito" })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Conferma esito" }));
 
-    await waitFor(() => expect(useTreeStore.getState().currentNodeId).toBe("n2"));
-    expect(useTreeStore.getState().history).toEqual([{ nodeId: "n1", answer: "yes" }]);
+    // Ritorno alla vista asset con l'esito registrato.
+    const afterAsset = screen.getByLabelText("Asset in valutazione");
+    expect(afterAsset).toHaveTextContent("ACM-1 — PASS");
+    fireEvent.click(within(afterAsset).getByRole("button", { name: "Torna alla dashboard" }));
+    expect(screen.getByText("Asset completati: 1 / 2")).toBeInTheDocument();
+
+    // Valuta il secondo asset fino al completamento della sessione.
+    fireEvent.click(screen.getAllByRole("button", { name: "Valuta" })[1]);
+    fireEvent.click(screen.getByRole("button", { name: "Apri" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Avvia decision tree" })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Avvia decision tree" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Sì" })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Sì" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Conferma esito" })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Conferma esito" }));
+
+    await waitFor(() => expect(screen.getByText("Valutazione completata")).toBeInTheDocument());
+    expect(useSessionStore.getState().session!.status).toBe("completed");
   });
 
-  it("lets the user go back without losing the answer, and forward to restore it", async () => {
+  it("mostra le dipendenze del requisito con il loro stato prima dell'avvio (RF-Ob52)", async () => {
+    useSessionStore.getState().resume(
+      baseSession({
+        device: device([asset("AS-1", ["ACM-1", "ACM-2"])]),
+        evaluations: [
+          { assetId: "AS-1", requirementId: "ACM-1", status: "completed", outcome: "PASS" },
+          { assetId: "AS-1", requirementId: "ACM-2", status: "not_evaluated" },
+        ],
+        current: { assetId: "AS-1", requirementId: "ACM-2", nodeId: "" },
+      }),
+    );
     renderPage();
-    await waitFor(() => expect(screen.getByRole("button", { name: "Sì" })).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole("button", { name: "Sì" }));
-    await waitFor(() => expect(useTreeStore.getState().currentNodeId).toBe("n2"));
+    fireEvent.click(screen.getByRole("button", { name: "Valuta" }));
+    const assetView = screen.getByLabelText("Asset in valutazione");
+    fireEvent.click(within(assetView).getAllByRole("button", { name: "Apri" })[1]);
 
-    fireEvent.click(screen.getByRole("button", { name: "Indietro" }));
-
-    expect(useTreeStore.getState().currentNodeId).toBe("n1");
-    expect(useTreeStore.getState().history).toEqual([{ nodeId: "n1", answer: "yes" }]);
-    expect(screen.getByText("Risposta data in precedenza: Sì")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Avanti" }));
-
-    expect(useTreeStore.getState().currentNodeId).toBe("n2");
+    const detail = await screen.findByLabelText("Dettaglio requisito");
+    expect(within(detail).getByRole("heading", { name: "ACM-2 — Dependent" })).toBeInTheDocument();
+    expect(detail).toHaveTextContent("ACM-1 — PASS");
   });
 
-  it("discards the future when a past answer is changed to a different value", async () => {
+  it("riprende una sessione interrotta entrando direttamente nell'albero (UC-26)", async () => {
+    useSessionStore.getState().resume(
+      baseSession({
+        evaluations: [
+          {
+            assetId: "AS-1",
+            requirementId: "ACM-1",
+            status: "in_progress",
+            path: [{ nodeId: "n1", answer: "yes" }],
+          },
+        ],
+        current: { assetId: "AS-1", requirementId: "ACM-1", nodeId: "n2" },
+      }),
+    );
     renderPage();
-    await waitFor(() => expect(screen.getByRole("button", { name: "Sì" })).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole("button", { name: "Sì" }));
-    await waitFor(() => expect(useTreeStore.getState().currentNodeId).toBe("n2"));
-    fireEvent.click(screen.getByRole("button", { name: "Indietro" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Conferma esito" })).toBeInTheDocument(),
+    );
+    expect(screen.getByText("PASS")).toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByRole("button", { name: "No" }));
+  it("permette l'uscita anticipata scartando la sessione (RF-Ob69)", () => {
+    useSessionStore.getState().resume(baseSession());
+    renderPage();
 
-    expect(useTreeStore.getState().history).toEqual([{ nodeId: "n1", answer: "no" }]);
-    expect(useTreeStore.getState().currentNodeId).toBe("n3");
+    fireEvent.click(screen.getByRole("button", { name: "Esci dal test" }));
+    fireEvent.click(screen.getByRole("button", { name: "Esci senza salvare" }));
+
+    expect(useSessionStore.getState().session).toBeNull();
+    expect(useTreeStore.getState().tree).toBeNull();
   });
 });

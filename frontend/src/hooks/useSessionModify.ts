@@ -1,11 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { DecisionTreeSchema } from "../domain/entities/DecisionTree";
 import { transitiveDependents, type DependencyMap } from "../domain/rules/sessionRules";
-import { FetchApiClient } from "../infrastructure/FetchApiClient";
+import { decisionTreeService } from "../services/DecisionTreeService";
 import { useSessionStore } from "../store/SessionStore";
-
-const apiClient = new FetchApiClient();
 
 export function useSessionModify() {
   const session = useSessionStore((state) => state.session);
@@ -30,12 +27,7 @@ export function useSessionModify() {
     let cancelled = false;
 
     Promise.all(
-      requirementIds.map((id) =>
-        apiClient
-          .get<unknown>(`/decision-trees/${id}`)
-          .then((data) => DecisionTreeSchema.parse(data))
-          .catch(() => null),
-      ),
+      requirementIds.map((id) => decisionTreeService.getTree(id).catch(() => null)),
     ).then((trees) => {
       if (cancelled) {
         return;

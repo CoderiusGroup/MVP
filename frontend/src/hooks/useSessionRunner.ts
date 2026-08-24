@@ -1,23 +1,43 @@
-// Orchestra la sessione: carica l'albero della coppia (asset, requisito) corrente,
-// riallinea il percorso a ogni risposta e avanza fino al completamento.
+// Orchestra la sessione guidata: dashboard → asset → dettaglio requisito → esecuzione
+// dell'albero. La fase è stato di navigazione locale; l'albero viene caricato e idratato
+// solo durante la fase "tree".
 import { useEffect, useState } from "react";
 
-import { DecisionTreeSchema } from "../domain/entities/DecisionTree";
+import { getEvaluationProgress } from "../domain/rules/sessionRules";
+import type { Session } from "../domain/entities/Session";
 import { currentOutcome, nodeById, type Outcome } from "../domain/rules/treeRules";
-import { FetchApiClient } from "../infrastructure/FetchApiClient";
+import { decisionTreeService } from "../services/DecisionTreeService";
 import { downloadSession } from "../services/SessionService";
 import { useSessionStore } from "../store/SessionStore";
 import { useTreeStore } from "../store/TreeStore";
 
 type Status = "idle" | "loading" | "error";
+type Phase = "dashboard" | "asset" | "requirement" | "tree";
 
-const apiClient = new FetchApiClient();
+interface RequirementDetail {
+  name: string;
+  dependencies: string[];
+}
+
+// UC-26: riprendendo una sessione interrotta a metà di un albero si rientra nel tree;
+// altrimenti si parte dalla dashboard.
+function initialPhase(session: Session | null): Phase {
+  const current = session?.current;
+  if (!current) {
+    return "dashboard";
+  }
+  const evaluation = session.evaluations.find(
+    (e) => e.assetId === current.assetId && e.requirementId === current.requirementId,
+  );
+  return evaluation?.status === "in_progress" ? "tree" : "dashboard";
+}
 
 export function useSessionRunner() {
   const session = useSessionStore((state) => state.session);
   const syncProgress = useSessionStore((state) => state.syncProgress);
   const completeCurrent = useSessionStore((state) => state.completeCurrent);
-  const advance = useSessionStore((state) => state.advance);
+  const select = useSessionStore((state) => state.select);
+  const resetSession = useSessionStore((state) => state.reset);
 
   const tree = useTreeStore((state) => state.tree);
   const currentNodeId = useTreeStore((state) => state.currentNodeId);
@@ -26,34 +46,41 @@ export function useSessionRunner() {
   const answer = useTreeStore((state) => state.answer);
   const goBack = useTreeStore((state) => state.goBack);
   const hydrate = useTreeStore((state) => state.hydrate);
+  const resetTree = useTreeStore((state) => state.reset);
 
   const [status, setStatus] = useState<Status>("idle");
+  const initialSession = useSessionStore.getState().session;
+  const [phase, setPhase] = useState<Phase>(() => initialPhase(initialSession));
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(
+    () => initialSession?.current?.assetId ?? null,
+  );
+  const [selectedRequirementId, setSelectedRequirementId] = useState<string | null>(
+    () => initialSession?.current?.requirementId ?? null,
+  );
+  const [requirementDetail, setRequirementDetail] = useState<RequirementDetail | null>(null);
 
-  const current = session?.current ?? null;
-  const requirementId = current?.requirementId ?? null;
-  const assetId = current?.assetId ?? null;
+  // Coppia in esecuzione: la coppia corrente della sessione, attivata da select().
+  const treeAssetId = session?.current?.assetId ?? null;
+  const treeRequirementId = session?.current?.requirementId ?? null;
 
   useEffect(() => {
-    if (!assetId || !requirementId) {
+    if (phase !== "tree" || !treeAssetId || !treeRequirementId) {
       return;
     }
     let cancelled = false;
     setStatus("loading");
 
-    apiClient
-      .get<unknown>(`/decision-trees/${requirementId}`)
-      .then((data) => {
+    decisionTreeService
+      .getTree(treeRequirementId)
+      .then((loaded) => {
         if (cancelled) {
           return;
         }
-        const loaded = DecisionTreeSchema.parse(data);
         const recordedPath =
           useSessionStore
             .getState()
             .session?.evaluations.find(
-              (evaluation) =>
-                evaluation.assetId === assetId &&
-                evaluation.requirementId === requirementId,
+              (e) => e.assetId === treeAssetId && e.requirementId === treeRequirementId,
             )?.path ?? [];
         hydrate(loaded, recordedPath);
         setStatus("idle");
@@ -67,32 +94,87 @@ export function useSessionRunner() {
     return () => {
       cancelled = true;
     };
-  }, [assetId, requirementId, hydrate]);
+  }, [phase, treeAssetId, treeRequirementId, hydrate]);
 
   useEffect(() => {
-    if (status !== "idle" || !tree || !currentNodeId || !requirementId) {
+    if (phase !== "tree" || status !== "idle" || !tree || !currentNodeId || !treeRequirementId) {
       return;
     }
-    if (tree.requirementId !== requirementId) {
+    if (tree.requirementId !== treeRequirementId) {
       return;
     }
     syncProgress(currentNodeId, history.slice(0, cursor));
-  }, [status, tree, currentNodeId, history, cursor, requirementId, syncProgress]);
+  }, [phase, status, tree, currentNodeId, history, cursor, treeRequirementId, syncProgress]);
+
+  // UC-21/21.1: nel dettaglio requisito servono nome e dipendenze; li leggo dall'albero
+  // (fetch cached, riusato poi dalla fase tree) senza toccare il TreeStore.
+  useEffect(() => {
+    if (phase !== "requirement" || !selectedRequirementId) {
+      return;
+    }
+    let cancelled = false;
+    setRequirementDetail(null);
+
+    decisionTreeService
+      .getTree(selectedRequirementId)
+      .then((loaded) => {
+        if (!cancelled) {
+          setRequirementDetail({ name: loaded.requirementName, dependencies: loaded.dependencies ?? [] });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRequirementDetail(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [phase, selectedRequirementId]);
 
   const currentNode = tree && currentNodeId ? nodeById(tree, currentNodeId) : undefined;
   const path = history.slice(0, cursor);
   const outcome: Outcome | null = tree ? currentOutcome(tree, path) : null;
 
-  const total = session?.evaluations.length ?? 0;
-  const done = session?.evaluations.filter((e) => e.status === "completed").length ?? 0;
-  const asset = session?.device.assets.find((a) => a.id === assetId) ?? null;
+  const treeAsset = session?.device.assets.find((a) => a.id === treeAssetId) ?? null;
+  const selectedAsset = session?.device.assets.find((a) => a.id === selectedAssetId) ?? null;
+  const progress = session
+    ? getEvaluationProgress(session, session.current?.assetId)
+    : { assetsDone: 0, assetsTotal: 0, reqDone: 0, reqTotal: 0 };
 
-  const goToNext = () => {
+  const openAsset = (assetId: string) => {
+    setSelectedAssetId(assetId);
+    setPhase("asset");
+  };
+
+  const openRequirement = (assetId: string, requirementId: string) => {
+    setSelectedAssetId(assetId);
+    setSelectedRequirementId(requirementId);
+    setPhase("requirement");
+  };
+
+  const startRequirement = () => {
+    if (!selectedAssetId || !selectedRequirementId) {
+      return;
+    }
+    // Azzera l'albero precedente: due coppie con lo stesso codice requisito
+    // condividono requirementId e l'albero stale contaminerebbe la nuova coppia.
+    resetTree();
+    select(selectedAssetId, selectedRequirementId);
+    setPhase("tree");
+  };
+
+  const backToDashboard = () => setPhase("dashboard");
+  const backToAsset = () => setPhase("asset");
+
+  // UC-23: registrato l'esito della foglia si torna alla vista asset per il prossimo requisito.
+  const confirmOutcome = () => {
     if (!tree || outcome === null) {
       return;
     }
     completeCurrent(outcome, path);
-    advance();
+    setPhase("asset");
   };
 
   const saveSession = () => {
@@ -101,19 +183,38 @@ export function useSessionRunner() {
     }
   };
 
+  // UC-24: uscita anticipata — termina la sessione scartandone lo stato in memoria.
+  const endSession = () => {
+    resetTree();
+    resetSession();
+  };
+
   return {
+    phase,
     status,
     session,
     isCompleted: session?.status === "completed",
-    asset,
-    requirementId,
+    progress,
+    selectedAsset,
+    selectedRequirementId,
+    requirementDetail,
+    asset: treeAsset,
+    requirementId: treeRequirementId,
+    tree,
+    currentNodeId,
+    path,
     currentNode,
     outcome,
-    progress: { done, total },
     answer,
     goBack,
     canGoBack: cursor > 0,
-    goToNext,
+    openAsset,
+    openRequirement,
+    startRequirement,
+    backToDashboard,
+    backToAsset,
+    confirmOutcome,
     saveSession,
+    endSession,
   };
 }

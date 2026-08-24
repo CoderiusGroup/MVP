@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { Asset } from "../domain/entities/Asset";
 import type { Device } from "../domain/entities/Device";
 import { useDeviceStore } from "./DeviceStore";
+import { useSessionStore } from "./SessionStore";
 
 const sampleDevice: Device = {
   id: "DEV-1",
@@ -23,6 +24,7 @@ const sampleAsset: Asset = {
 
 beforeEach(() => {
   useDeviceStore.getState().reset();
+  useSessionStore.getState().reset();
 });
 
 describe("DeviceStore", () => {
@@ -47,6 +49,16 @@ describe("DeviceStore", () => {
     expect(useDeviceStore.getState().device?.assets).toEqual([]);
   });
 
+  it("setDevice resets an existing session", () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useSessionStore.getState().start(sampleDevice);
+    expect(useSessionStore.getState().session).not.toBeNull();
+
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+
+    expect(useSessionStore.getState().session).toBeNull();
+  });
+
   it("addAsset appends an asset to the device", () => {
     useDeviceStore.getState().setDevice(sampleDevice, {});
     useDeviceStore.getState().addAsset(sampleAsset);
@@ -66,6 +78,24 @@ describe("DeviceStore", () => {
 
   it("addAsset does nothing when there is no device", () => {
     useDeviceStore.getState().addAsset(sampleAsset);
+
+    expect(useDeviceStore.getState().device).toBeNull();
+  });
+
+  it("updateAsset replaces only the matching asset", () => {
+    const secondAsset: Asset = { ...sampleAsset, id: "AS-2", name: "Registro accessi" };
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useDeviceStore.getState().addAsset(sampleAsset);
+    useDeviceStore.getState().addAsset(secondAsset);
+
+    const updated: Asset = { ...sampleAsset, name: "Credenziali aggiornate" };
+    useDeviceStore.getState().updateAsset(updated);
+
+    expect(useDeviceStore.getState().device?.assets).toEqual([updated, secondAsset]);
+  });
+
+  it("updateAsset does nothing when there is no device", () => {
+    useDeviceStore.getState().updateAsset(sampleAsset);
 
     expect(useDeviceStore.getState().device).toBeNull();
   });

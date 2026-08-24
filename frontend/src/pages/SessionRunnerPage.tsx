@@ -1,94 +1,222 @@
-// Scope attuale: gestisce la navigazione di UN SOLO decision tree/requisito per volta.
-// L'orchestrazione dell'intera sessione (più asset, più requisiti in sequenza) implicata
-// dal nome ufficiale della pagina è lavoro futuro, non implementata in questo branch.
-import { useParams } from "react-router-dom";
-import { useDecisionTree } from "../hooks/useDecisionTree";
-import { useTreeStore } from "../store/TreeStore";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { Esito } from "../components/Esito";
+import { GrafoDecisionTree } from "../components/GrafoDecisionTree";
+import { getAssetStatus, getEvaluationStatus, STATUS_LABELS } from "../domain/rules/sessionRules";
+import { useSessionRunner } from "../hooks/useSessionRunner";
+import { ResultPage } from "./ResultPage";
 
 export function SessionRunnerPage() {
-  const { requirementId } = useParams<{ requirementId: string }>();
-  const { status } = useDecisionTree(requirementId ?? "");
-  const tree = useTreeStore((state) => state.tree);
-  const currentNodeId = useTreeStore((state) => state.currentNodeId);
-  const history = useTreeStore((state) => state.history);
-  const cursor = useTreeStore((state) => state.cursor);
-  const answer = useTreeStore((state) => state.answer);
-  const goBack = useTreeStore((state) => state.goBack);
-  const goForward = useTreeStore((state) => state.goForward);
+  const navigate = useNavigate();
+  const [confirmingExit, setConfirmingExit] = useState(false);
+  const {
+    phase,
+    status,
+    session,
+    isCompleted,
+    progress,
+    selectedAsset,
+    selectedRequirementId,
+    requirementDetail,
+    asset,
+    requirementId,
+    tree,
+    currentNodeId,
+    path,
+    currentNode,
+    outcome,
+    answer,
+    goBack,
+    canGoBack,
+    openAsset,
+    openRequirement,
+    startRequirement,
+    backToDashboard,
+    backToAsset,
+    confirmOutcome,
+    saveSession,
+    endSession,
+  } = useSessionRunner();
 
-  if (status === "error") {
-    return <p role="alert">Impossibile caricare l'albero decisionale.</p>;
+  if (!session) {
+    return (
+      <div style={{ padding: "1rem" }}>
+        <p role="alert">Nessuna sessione attiva.</p>
+        <button type="button" onClick={() => navigate("/")}>
+          Torna alla Home
+        </button>
+      </div>
+    );
   }
 
-  if (status === "loading" || !tree || !currentNodeId) {
-    return <p>Caricamento albero decisionale...</p>;
+  if (isCompleted) {
+    return <ResultPage />;
   }
 
-  const visitedNodeIds = history.slice(0, cursor).map((step) => step.nodeId);
-  const currentNode = tree.nodes.find((node) => node.id === currentNodeId);
-  const recordedStep = history[cursor];
-  const previousAnswer =
-    recordedStep && recordedStep.nodeId === currentNodeId ? recordedStep.answer : null;
+  // UC-24: uscita anticipata dal test.
+  const exitDiscarding = () => {
+    endSession();
+    navigate("/");
+  };
+  const exitSaving = () => {
+    saveSession();
+    endSession();
+    navigate("/");
+  };
+
+  const currentAsset = session.current
+    ? session.device.assets.find((a) => a.id === session.current?.assetId)
+    : undefined;
 
   return (
-    <div>
-      <section aria-label="Nodo corrente">
-        {currentNode?.type === "question" ? (
-          <>
+    <div style={{ padding: "1rem" }}>
+      {phase === "dashboard" ? (
+        <section aria-label="Dashboard di valutazione">
+          <h1>Valutazione dispositivo</h1>
+          <p>
+            Asset completati: {progress.assetsDone} / {progress.assetsTotal}
+          </p>
+          {session.current && currentAsset ? (
             <p>
-              Nodo: <strong>{currentNode.id}</strong>
+              In esame: {currentAsset.name} — {session.current.requirementId} (requisiti:{" "}
+              {progress.reqDone} / {progress.reqTotal})
             </p>
-            <p>{currentNode.text}</p>
-            {previousAnswer ? (
-              <p>Risposta data in precedenza: {previousAnswer === "yes" ? "Sì" : "No"}</p>
-            ) : null}
-            <button type="button" onClick={() => answer(true)}>
-              Sì
-            </button>
-            <button type="button" onClick={() => answer(false)}>
-              No
-            </button>
-          </>
-        ) : currentNode?.type === "leaf" ? (
-          <>
-            <p>
-              Nodo: <strong>{currentNode.id}</strong>
-            </p>
-            <p>Esito: {currentNode.outcome}</p>
-          </>
-        ) : null}
-
-        <button type="button" onClick={goBack} disabled={cursor === 0}>
-          Indietro
-        </button>
-        <button type="button" onClick={goForward} disabled={cursor >= history.length}>
-          Avanti
-        </button>
-      </section>
-
-      <section aria-label="Grafo decision tree">
-        <ul>
-          {tree.nodes.map((node) => {
-            const isCurrent = node.id === currentNodeId;
-            const isVisited = visitedNodeIds.includes(node.id);
-            const label = node.type === "question" ? node.text : `Esito: ${node.outcome}`;
-
-            return (
-              <li
-                key={node.id}
-                data-current={isCurrent}
-                data-visited={isVisited}
-                style={{
-                  fontWeight: isCurrent ? "bold" : "normal",
-                  opacity: isVisited || isCurrent ? 1 : 0.5,
-                }}
-              >
-                {node.id} — {label}
+          ) : null}
+          <ul>
+            {session.device.assets.map((a) => (
+              <li key={a.id}>
+                {a.name} — {a.type} — {STATUS_LABELS[getAssetStatus(session, a)]}{" "}
+                <button type="button" onClick={() => openAsset(a.id)}>
+                  Valuta
+                </button>
               </li>
-            );
-          })}
-        </ul>
-      </section>
+            ))}
+          </ul>
+        </section>
+      ) : phase === "asset" && selectedAsset ? (
+        <section aria-label="Asset in valutazione">
+          <button type="button" onClick={backToDashboard}>
+            Torna alla dashboard
+          </button>
+          <h1>{selectedAsset.name}</h1>
+          <p>Tipo: {selectedAsset.type}</p>
+          <p>Descrizione: {selectedAsset.description}</p>
+          <p>Sensibilità: {selectedAsset.sensitive ? "Sensibile" : "Non sensibile"}</p>
+          <p>Stato: {STATUS_LABELS[getAssetStatus(session, selectedAsset)]}</p>
+          <h2>Requisiti</h2>
+          <ul>
+            {(selectedAsset.requirements ?? []).map((r) => (
+              <li key={r}>
+                {r} — {STATUS_LABELS[getEvaluationStatus(session, selectedAsset.id, r)]}{" "}
+                <button type="button" onClick={() => openRequirement(selectedAsset.id, r)}>
+                  Apri
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : phase === "requirement" && selectedAsset && selectedRequirementId ? (
+        <section aria-label="Dettaglio requisito">
+          <button type="button" onClick={backToAsset}>
+            Indietro
+          </button>
+          <h1>
+            {selectedRequirementId}
+            {requirementDetail ? ` — ${requirementDetail.name}` : ""}
+          </h1>
+          <h2>Dipendenze</h2>
+          {requirementDetail ? (
+            requirementDetail.dependencies.length === 0 ? (
+              <p>Nessuna dipendenza.</p>
+            ) : (
+              <ul>
+                {requirementDetail.dependencies.map((dep) => (
+                  <li key={dep}>
+                    {dep} — {STATUS_LABELS[getEvaluationStatus(session, selectedAsset.id, dep)]}
+                  </li>
+                ))}
+              </ul>
+            )
+          ) : (
+            <p>Caricamento dettagli requisito...</p>
+          )}
+          <button type="button" onClick={startRequirement}>
+            Avvia decision tree
+          </button>
+        </section>
+      ) : (
+        <section aria-label="Esecuzione decision tree">
+          <p>
+            <strong>Asset:</strong> {asset ? asset.name : "—"} &nbsp;
+            <strong>Requisito:</strong> {requirementId}
+          </p>
+
+          {status === "error" ? (
+            <p role="alert">Impossibile caricare l'albero decisionale.</p>
+          ) : status === "loading" || !currentNode ? (
+            <p>Caricamento albero decisionale...</p>
+          ) : currentNode.type === "question" ? (
+            <section aria-label="Domanda corrente">
+              <p>
+                <strong>Nodo:</strong> {currentNode.id}
+              </p>
+              <p>{currentNode.text}</p>
+              <button type="button" onClick={() => answer(true)}>
+                Sì
+              </button>
+              <button type="button" onClick={() => answer(false)}>
+                No
+              </button>
+            </section>
+          ) : (
+            <section aria-label="Esito requisito">
+              <p>Esito: {outcome ? <Esito outcome={outcome} /> : null}</p>
+              {currentNode.text ? <p>{currentNode.text}</p> : null}
+              <button type="button" onClick={confirmOutcome}>
+                Conferma esito
+              </button>
+            </section>
+          )}
+
+          {tree && currentNodeId ? (
+            <GrafoDecisionTree tree={tree} currentNodeId={currentNodeId} path={path} />
+          ) : null}
+
+          <div style={{ marginTop: "1rem" }}>
+            <button type="button" onClick={goBack} disabled={!canGoBack}>
+              Indietro
+            </button>
+          </div>
+        </section>
+      )}
+
+      <div style={{ marginTop: "1rem" }}>
+        <button type="button" onClick={saveSession}>
+          Salva sessione
+        </button>
+        <button type="button" onClick={() => navigate("/session/modify")}>
+          Modifica sessione
+        </button>
+        <button type="button" onClick={() => setConfirmingExit(true)}>
+          Esci dal test
+        </button>
+      </div>
+
+      {confirmingExit ? (
+        <section aria-label="Conferma uscita dal test" style={{ marginTop: "1rem" }}>
+          <p>Vuoi salvare la sessione prima di uscire?</p>
+          <button type="button" onClick={exitSaving}>
+            Salva ed esci
+          </button>
+          <button type="button" onClick={exitDiscarding}>
+            Esci senza salvare
+          </button>
+          <button type="button" onClick={() => setConfirmingExit(false)}>
+            Annulla
+          </button>
+        </section>
+      ) : null}
     </div>
   );
 }

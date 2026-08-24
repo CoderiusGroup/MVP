@@ -62,6 +62,25 @@ export async function createAsset(payload: AssetCreate): Promise<Asset> {
   return AssetSchema.parse(raw);
 }
 
+export async function updateAsset(existingAsset: Asset, payload: AssetCreate): Promise<Asset> {
+  const result = AssetCreateSchema.safeParse(payload);
+  if (!result.success) {
+    throw new Error("Dati asset non validi");
+  }
+
+  if (result.data.type === existingAsset.type) {
+    return { ...existingAsset, ...result.data };
+  }
+  const raw = await apiClient.post<unknown>("/assets", {
+    id: existingAsset.id,
+    name: result.data.name,
+    type: result.data.type,
+    description: result.data.description,
+    sensitive: result.data.sensitive,
+  });
+  return AssetSchema.parse(raw);
+}
+
 async function saveDevice(payload: DeviceCreate): Promise<DeviceSaveResult> {
   const raw = await apiClient.post<unknown>("/devices", payload);
   const device = DeviceSchema.parse(raw);

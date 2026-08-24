@@ -5,7 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Asset } from "../domain/entities/Asset";
 import type { Device } from "../domain/entities/Device";
+import type { Session } from "../domain/entities/Session";
 import { useDeviceStore } from "../store/DeviceStore";
+import { useSessionStore } from "../store/SessionStore";
 import DeviceAssetManagementPage from "./DeviceAssetManagementPage";
 
 const sampleDevice: Device = {
@@ -32,6 +34,7 @@ function renderPage() {
         <Route path="/" element={<p>Pagina Home</p>} />
         <Route path="/device/assets" element={<DeviceAssetManagementPage />} />
         <Route path="/device/assets/new" element={<p>Pagina nuovo asset</p>} />
+        <Route path="/device/assets/:assetId/edit" element={<p>Pagina modifica asset</p>} />
         <Route path="/device" element={<p>Pagina device</p>} />
       </Routes>
     </MemoryRouter>,
@@ -40,6 +43,7 @@ function renderPage() {
 
 beforeEach(() => {
   useDeviceStore.getState().reset();
+  useSessionStore.getState().reset();
 });
 
 afterEach(() => {
@@ -88,6 +92,34 @@ describe("DeviceAssetManagementPage", () => {
     expect(screen.getByText(/security/)).toBeInTheDocument();
   });
 
+  it("shows 'Non valutato' next to each asset when no session exists (RF-Ob35)", () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useDeviceStore.getState().addAsset(sampleAsset);
+
+    renderPage();
+
+    expect(screen.getByText(/Non valutato/)).toBeInTheDocument();
+  });
+
+  it("shows the asset status derived from the session (RF-Ob35)", () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useDeviceStore.getState().addAsset(sampleAsset);
+    const session: Session = {
+      id: "SES-1",
+      savedAt: "2026-08-21T10:00:00Z",
+      status: "in_progress",
+      device: { ...sampleDevice, assets: [sampleAsset] },
+      evaluations: [
+        { assetId: sampleAsset.id, requirementId: "ACM-1", status: "completed", outcome: "FAIL" },
+      ],
+    };
+    useSessionStore.getState().resume(session);
+
+    renderPage();
+
+    expect(screen.getByText(/FAIL/)).toBeInTheDocument();
+  });
+
   it("navigates to the asset form when adding a new asset", async () => {
     useDeviceStore.getState().setDevice(sampleDevice, {});
 
@@ -122,6 +154,26 @@ describe("DeviceAssetManagementPage", () => {
     expect(screen.getByText("ACM-1", { exact: false })).toBeInTheDocument();
   });
 
+  it("shows the status of each requirement in the detail view (RF-Ob43)", async () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useDeviceStore.getState().addAsset(sampleAsset);
+    const session: Session = {
+      id: "SES-1",
+      savedAt: "2026-08-21T10:00:00Z",
+      status: "in_progress",
+      device: { ...sampleDevice, assets: [sampleAsset] },
+      evaluations: [
+        { assetId: sampleAsset.id, requirementId: "ACM-1", status: "completed", outcome: "PASS" },
+      ],
+    };
+    useSessionStore.getState().resume(session);
+
+    renderPage();
+    await userEvent.click(screen.getByRole("button", { name: /Credenziali utente/ }));
+
+    expect(screen.getByText(/ACM-1.*PASS/)).toBeInTheDocument();
+  });
+
   it("collapses the detail again on a second selection", async () => {
     useDeviceStore.getState().setDevice(sampleDevice, {});
     useDeviceStore.getState().addAsset(sampleAsset);
@@ -143,6 +195,16 @@ describe("DeviceAssetManagementPage", () => {
     await userEvent.click(screen.getByRole("button", { name: /Credenziali utente/ }));
 
     expect(screen.getByText("Nessuno")).toBeInTheDocument();
+  });
+
+  it("navigates to the edit form for the selected asset (RF-D15-19)", async () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useDeviceStore.getState().addAsset(sampleAsset);
+
+    renderPage();
+    await userEvent.click(screen.getByRole("button", { name: "Modifica" }));
+
+    expect(await screen.findByText("Pagina modifica asset")).toBeInTheDocument();
   });
 
   it("removes an asset after confirmation (UC-18)", async () => {

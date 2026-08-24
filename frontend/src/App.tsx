@@ -7,8 +7,8 @@ import DeviceSummaryPage from "./pages/DeviceSummaryPage";
 import DeviceAssetManagementPage from "./pages/DeviceAssetManagementPage";
 import AssetFormPage from "./pages/AssetFormPage";
 import { SessionRunnerPage } from "./pages/SessionRunnerPage";
-import { SessionPage } from "./pages/SessionPage";
 import { ModifySessionPage } from "./pages/ModifySessionPage";
+import { RequireSession } from "./components/RequireSession";
 import type { Device } from "./domain/entities/Device.ts";
 import type { Session } from "./domain/entities/Session.ts";
 import { useDeviceStore } from "./store/DeviceStore";
@@ -25,6 +25,7 @@ function HomeRoute() {
   };
 
   const handleSessionResumed = (session: Session) => {
+    setDevice(session.device, null);
     resumeSession(session);
     navigate("/session");
   };
@@ -40,11 +41,25 @@ function App() {
         <Route path="/" element={<HomeRoute />} /> {}
         <Route path="/device/new" element={<DeviceFormPage />} /> 
         <Route path="/device" element={<DeviceSummaryPage />} />
-        <Route path="/session" element={<SessionPage />} />
-        <Route path="/session/modify" element={<ModifySessionPage />} />
+        <Route
+          path="/session"
+          element={
+            <RequireSession>
+              <SessionRunnerPage />
+            </RequireSession>
+          }
+        />
+        <Route
+          path="/session/modify"
+          element={
+            <RequireSession>
+              <ModifySessionPage />
+            </RequireSession>
+          }
+        />
         <Route path="/device/assets" element={<DeviceAssetManagementPage />} />
         <Route path="/device/assets/new" element={<AssetFormPage />} />
-        <Route path="/decision-tree/:requirementId" element={<SessionRunnerPage />} />
+        <Route path="/device/assets/:assetId/edit" element={<AssetFormPage />} />
       </Routes>
     </BrowserRouter>
   );

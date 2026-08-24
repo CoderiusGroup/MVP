@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "./ApiError";
 import { FetchApiClient } from "./FetchApiClient";
 
 describe("FetchApiClient", () => {
@@ -56,5 +57,27 @@ describe("FetchApiClient", () => {
     const client = new FetchApiClient();
 
     await expect(client.post("/devices", {})).rejects.toThrow();
+  });
+
+  it("mappa una risposta non ok in un ApiError tipizzato con lo status", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, status: 404, text: () => Promise.resolve("not found") }),
+    );
+
+    const client = new FetchApiClient();
+
+    await expect(client.get("/decision-trees/missing")).rejects.toMatchObject({
+      name: "ApiError",
+      status: 404,
+    });
+  });
+
+  it("mappa un fallimento di rete in un ApiError", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("network down")));
+
+    const client = new FetchApiClient();
+
+    await expect(client.get("/decision-trees/t1")).rejects.toBeInstanceOf(ApiError);
   });
 });

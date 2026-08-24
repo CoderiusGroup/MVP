@@ -5,6 +5,7 @@ import type { Outcome } from "../domain/rules/treeRules";
 import type { PathStep, Session } from "../domain/entities/Session";
 import {
   createInitialSession,
+  matchesPlan,
   reopenEvaluation,
   selectEvaluation,
 } from "../domain/rules/sessionRules";
@@ -18,10 +19,10 @@ function newSessionId(): string {
 interface SessionState {
   session: Session | null;
   start: (device: Device) => void;
+  ensureSession: (device: Device) => void;
   resume: (session: Session) => void;
   syncProgress: (nodeId: string, path: PathStep[]) => void;
   completeCurrent: (outcome: Outcome, path: PathStep[]) => void;
-  advance: () => void;
   select: (assetId: string, requirementId: string) => void;
   reopen: (assetId: string, requirementId: string, dependents: string[]) => void;
   reset: () => void;
@@ -32,6 +33,20 @@ export const useSessionStore = create<SessionState>((set) => ({
 
   start: (device) => {
     set({ session: createInitialSession(device, newSessionId(), new Date().toISOString()) });
+  },
+
+  ensureSession: (device) => {
+    set((state) => {
+      const { session } = state;
+      // Riprende la sessione solo se è dello stesso device e il piano non è cambiato;
+      // altrimenti ne avvia una nuova. Aggiorna comunque lo snapshot del device.
+      if (!session || session.device.id !== device.id || !matchesPlan(session, device)) {
+        return {
+          session: createInitialSession(device, newSessionId(), new Date().toISOString()),
+        };
+      }
+      return { session: { ...session, device } };
+    });
   },
 
   resume: (session) => {
@@ -68,46 +83,17 @@ export const useSessionStore = create<SessionState>((set) => ({
         return state;
       }
       const { assetId, requirementId } = session.current;
-      return {
-        session: {
-          ...session,
-          evaluations: session.evaluations.map((evaluation) =>
-            evaluation.assetId === assetId && evaluation.requirementId === requirementId
-              ? { ...evaluation, status: "completed", outcome, path }
-              : evaluation,
-          ),
-        },
-      };
-    });
-  },
-
-  advance: () => {
-    set((state) => {
-      const { session } = state;
-      if (!session) {
-        return state;
-      }
-      const next = session.evaluations.find(
-        (evaluation) => evaluation.status !== "completed",
+      const evaluations = session.evaluations.map((evaluation) =>
+        evaluation.assetId === assetId && evaluation.requirementId === requirementId
+          ? { ...evaluation, status: "completed" as const, outcome, path }
+          : evaluation,
       );
-      if (!next) {
-        return {
-          session: {
-            ...session,
-            status: "completed",
-            current: undefined,
-          },
-        };
-      }
+      const allCompleted = evaluations.every((evaluation) => evaluation.status === "completed");
       return {
         session: {
           ...session,
-          status: "in_progress",
-          current: {
-            assetId: next.assetId,
-            requirementId: next.requirementId,
-            nodeId: "",
-          },
+          evaluations,
+          status: allCompleted ? "completed" : session.status,
         },
       };
     });
