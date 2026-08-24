@@ -7,6 +7,6 @@ describe("App", () => {
   it("shows HomePage on the default route", () => {
     render(<App />);
 
-    expect(screen.getByText("Bottone per inserire un file JSOn")).toBeInTheDocument();
+    expect(screen.getByText("Gestione Valutazione Dispositivi")).toBeInTheDocument();
   });
 });
