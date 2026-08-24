@@ -28,3 +28,21 @@ export function currentOutcome(tree: DecisionTree, steps: PathStep[]): Outcome |
 export function isRequirementComplete(tree: DecisionTree, steps: PathStep[]): boolean {
   return currentOutcome(tree, steps) !== null;
 }
+
+export interface PathQuestion {
+  nodeId: string;
+  text: string;
+  answer: "yes" | "no";
+}
+
+// UC-27.1.1.1: sequenza ordinata domande→risposte di un requisito completato.
+export function describePath(tree: DecisionTree, steps: PathStep[]): PathQuestion[] {
+  return steps.map((step) => {
+    const node = nodeById(tree, step.nodeId);
+    return {
+      nodeId: step.nodeId,
+      text: node && node.type === "question" ? node.text : step.nodeId,
+      answer: step.answer,
+    };
+  });
+}
