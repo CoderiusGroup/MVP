@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { getDeviceStatus, STATUS_LABELS } from "../domain/rules/sessionRules";
+import { exportDevice } from "../services/DeviceService";
+import { csvDeviceFormat, jsonDeviceFormat } from "../services/deviceFileFormats";
 import { useDeviceStore } from "../store/DeviceStore";
 import { useSessionStore } from "../store/SessionStore";
 
@@ -32,6 +34,13 @@ export default function DeviceSummaryPage() {
           <p><strong>Sistema operativo:</strong> {device.operatingSystem}</p>
           <p><strong>Descrizione:</strong> {device.description}</p>
           <p><strong>Stato:</strong> {STATUS_LABELS[getDeviceStatus(session, device)]}</p>
+
+          <button type="button" onClick={() => exportDevice(device, jsonDeviceFormat)}>
+            Esporta in JSON
+          </button>
+          <button type="button" onClick={() => exportDevice(device, csvDeviceFormat)}>
+            Esporta in CSV
+          </button>
 
           <button type="button" onClick={handleStart} disabled={!hasAssets}>
             Avvia valutazione

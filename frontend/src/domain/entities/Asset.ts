@@ -20,6 +20,12 @@ export const AssetCreateSchema = z.object({
   requirements: z.array(requirementCode).optional(),
 });
 
+export const AssetImportSchema = AssetCreateSchema.extend({
+  id: identifier.optional(),
+});
+
 export type Asset = z.infer<typeof AssetSchema>;
 
 export type AssetCreate = z.infer<typeof AssetCreateSchema>;
+
+export type AssetImport = z.infer<typeof AssetImportSchema>;
