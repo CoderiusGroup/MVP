@@ -16,15 +16,22 @@ const tree: DecisionTree = {
 };
 
 describe("GrafoDecisionTree", () => {
-  it("mostra tutti i nodi del grafo", () => {
+  it("disegna un nodo per ogni elemento dell'albero", () => {
     render(<GrafoDecisionTree tree={tree} currentNodeId="n1" path={[]} />);
 
-    expect(screen.getByText(/n1 —/)).toBeInTheDocument();
-    expect(screen.getByText(/n2 —/)).toBeInTheDocument();
-    expect(screen.getByText(/n3 —/)).toBeInTheDocument();
+    expect(screen.getByText("n1")).toBeInTheDocument();
+    expect(screen.getByText("n2")).toBeInTheDocument();
+    expect(screen.getByText("n3")).toBeInTheDocument();
   });
 
-  it("evidenzia il nodo corrente e i nodi visitati del percorso", () => {
+  it("mostra le etichette Sì/No degli archi", () => {
+    render(<GrafoDecisionTree tree={tree} currentNodeId="n1" path={[]} />);
+
+    expect(screen.getByText("Sì")).toBeInTheDocument();
+    expect(screen.getByText("No")).toBeInTheDocument();
+  });
+
+  it("evidenzia il nodo corrente e i nodi del percorso visitato", () => {
     render(
       <GrafoDecisionTree
         tree={tree}
@@ -33,7 +40,7 @@ describe("GrafoDecisionTree", () => {
       />,
     );
 
-    expect(screen.getByText(/n1 —/).closest("li")).toHaveAttribute("data-visited", "true");
-    expect(screen.getByText(/n2 —/).closest("li")).toHaveAttribute("data-current", "true");
+    expect(screen.getByText("n1").closest("g")).toHaveAttribute("data-visited", "true");
+    expect(screen.getByText("n2").closest("g")).toHaveAttribute("data-current", "true");
   });
 });
