@@ -61,7 +61,7 @@ function App() {
         <Route path="/device/assets" element={<DeviceAssetManagementPage />} />
         <Route path="/device/assets/new" element={<AssetFormPage />} />
         <Route path="/device/assets/:assetId/edit" element={<AssetFormPage />} />
-        <Route path="/decision-trees" element={<DecisionTreeCatalogPage />} />
+        <Route path="/decision-tree-catalog" element={<DecisionTreeCatalogPage />} />
       </Routes>
     </BrowserRouter>
   );

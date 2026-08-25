@@ -50,6 +50,11 @@ describe("DecisionTreeCatalogPage", () => {
     await waitFor(() => {
       expect(screen.getByText(/Grafo decision tree/i)).toBeInTheDocument();
     });
+
+    expect(screen.getByText("Versione").closest("div")).toHaveTextContent("1.0.0");
+    expect(screen.getByText("Applicabile a").closest("div")).toHaveTextContent("security");
+    expect(screen.getByLabelText("Legenda esiti")).toBeInTheDocument();
+    expect(screen.getAllByText(/Question 1\?/i).length).toBeGreaterThan(0);
   });
 
   it("esporta il tree JSON quando clicco il bottone appropriato", async () => {

@@ -9,9 +9,9 @@ type Props = {
 };
 
 const COL_W = 156;
-const ROW_H = 92;
-const NODE_W = 128;
-const NODE_H = 46;
+const ROW_H = 126;
+const NODE_W = 220;
+const NODE_H = 92;
 const PAD = 18;
 
 // Tinta delle foglie per esito.
@@ -25,6 +25,23 @@ const LEAF_STROKE: Record<string, string> = {
   FAIL: "#b23a52",
   NOT_APPLICABLE: "#8b95a4",
 };
+
+function textLines(text: string, maxLength = 30) {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (line && candidate.length > maxLength) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = candidate;
+    }
+  }
+  if (line) lines.push(line);
+  return lines.slice(0, 4);
+}
 
 export function GrafoDecisionTree({ tree, currentNodeId, path }: Props) {
   const layout = layoutTree(tree);
@@ -102,7 +119,8 @@ export function GrafoDecisionTree({ tree, currentNodeId, path }: Props) {
               stroke = "#2f6db5";
             }
             const dim = !isCurrent && !isVisited;
-            const fullText = node.type === "question" ? node.text : `Esito: ${node.outcome}`;
+            const fullText = node.type === "question" ? node.text : node.text ?? `Esito: ${node.outcome}`;
+            const lines = textLines(fullText);
 
             return (
               <g
@@ -125,14 +143,19 @@ export function GrafoDecisionTree({ tree, currentNodeId, path }: Props) {
                 />
                 <text
                   x={x + NODE_W / 2}
-                  y={y + NODE_H / 2}
+                  y={y + 20}
                   textAnchor="middle"
-                  dominantBaseline="central"
-                  fontSize="11"
+                  fontSize="10"
                   fontWeight={isCurrent ? 700 : 500}
                   fill="#1a2230"
                 >
-                  {id}
+                  <tspan x={x + NODE_W / 2} fontWeight="700">{id}</tspan>
+                  {isLeaf && <tspan x={x + NODE_W / 2} dy="15">{node.outcome}</tspan>}
+                  {lines.map((line, index) => (
+                    <tspan key={`${id}-line-${index}`} x={x + NODE_W / 2} dy="14">
+                      {line}
+                    </tspan>
+                  ))}
                 </text>
               </g>
             );

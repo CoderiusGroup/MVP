@@ -71,7 +71,7 @@ export default function HomePage({onDeviceSaved, onSessionResumed}: Props){
             />
 
             <h2>4. Gestione Decision Tree</h2>
-            <button type="button" onClick={() => navigate("/decision-trees")}>
+            <button type="button" onClick={() => navigate("/decision-tree-catalog")}>
                 Apri catalogo decision tree
             </button>
         </div>

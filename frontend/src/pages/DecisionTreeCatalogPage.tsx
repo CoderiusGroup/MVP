@@ -85,6 +85,7 @@ export function DecisionTreeCatalogPage() {
         <p role="alert">{error}</p>
       ) : (
         <>
+          <p>Seleziona un requisito per visualizzare la struttura completa del suo albero decisionale.</p>
           <ul>
             {trees.map((treeSummary) => (
               <li key={treeSummary.requirementId}>
@@ -98,6 +99,13 @@ export function DecisionTreeCatalogPage() {
           {selectedRequirementId && tree ? (
             <section aria-label="Dettaglio decision tree">
               <h2>{tree.requirementId} — {tree.requirementName}</h2>
+
+              <dl>
+                <div><dt><strong>Versione</strong></dt><dd>{tree.version ?? "Non specificata"}</dd></div>
+                <div><dt><strong>Applicabile a</strong></dt><dd>{tree.appliesTo?.join(", ") ?? "Non specificato"}</dd></div>
+                <div><dt><strong>Nodo radice</strong></dt><dd>{tree.rootNode}</dd></div>
+                <div><dt><strong>Numero nodi</strong></dt><dd>{tree.nodes.length}</dd></div>
+              </dl>
 
               <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
                 <button type="button" onClick={() => handleExport("json")}>Export JSON</button>
@@ -119,6 +127,15 @@ export function DecisionTreeCatalogPage() {
               ) : (
                 <p>Nessuna dipendenza.</p>
               )}
+
+              <div aria-label="Legenda esiti">
+                <h3>Legenda</h3>
+                <ul>
+                  <li><span aria-hidden="true">●</span> PASS — requisito soddisfatto</li>
+                  <li><span aria-hidden="true">●</span> FAIL — requisito non soddisfatto</li>
+                  <li><span aria-hidden="true">●</span> NOT_APPLICABLE — requisito non applicabile</li>
+                </ul>
+              </div>
 
               <h3>Grafo decision tree</h3>
               <GrafoDecisionTree tree={tree} currentNodeId={tree.rootNode} path={[]} />
