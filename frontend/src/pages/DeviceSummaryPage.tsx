@@ -8,6 +8,7 @@ import { useSessionStore } from "../store/SessionStore";
 export default function DeviceSummaryPage() {
     const navigate = useNavigate();
     const device = useDeviceStore((state) => state.device);
+    const resetDevice = useDeviceStore((state) => state.reset);
     const session = useSessionStore((state) => state.session);
     const ensureSession = useSessionStore((state) => state.ensureSession);
 
@@ -19,6 +20,24 @@ export default function DeviceSummaryPage() {
         }
         ensureSession(device);
         navigate("/session");
+    };
+
+    const handleDelete = () => {
+        if (window.confirm("Confermi l'eliminazione definitiva del dispositivo? L'operazione non è reversibile.")) {
+            resetDevice();
+            navigate("/");
+        }
+    };
+
+    const handleDeleteWithBackup = () => {
+        if (!device) {
+            return;
+        }
+        if (window.confirm("Confermi l'eliminazione del dispositivo? Verrà scaricato prima un backup in JSON.")) {
+            exportDevice(device, jsonDeviceFormat);
+            resetDevice();
+            navigate("/");
+        }
     };
 
     return (
@@ -35,6 +54,10 @@ export default function DeviceSummaryPage() {
           <p><strong>Descrizione:</strong> {device.description}</p>
           <p><strong>Stato:</strong> {STATUS_LABELS[getDeviceStatus(session, device)]}</p>
 
+          <button type="button" onClick={() => navigate("/device/edit")}>
+            Modifica dispositivo
+          </button>
+
           <button type="button" onClick={() => exportDevice(device, jsonDeviceFormat)}>
             Esporta in JSON
           </button>
@@ -49,6 +72,13 @@ export default function DeviceSummaryPage() {
             <p>Nessun asset da valutare: aggiungi almeno un asset prima di avviare.</p>
           ) : null}
           <button onClick={() => navigate("/device/assets")}>Gestisci asset</button>
+
+          <button type="button" onClick={handleDelete}>
+            Elimina dispositivo
+          </button>
+          <button type="button" onClick={handleDeleteWithBackup}>
+            Elimina con backup
+          </button>
         </>
         ) : (
             <p>Nessun dispositivo disponibile.</p>

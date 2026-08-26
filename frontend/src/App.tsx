@@ -39,7 +39,8 @@ function App() {
       <Toaster />
       <Routes>
         <Route path="/" element={<HomeRoute />} /> {}
-        <Route path="/device/new" element={<DeviceFormPage />} /> 
+        <Route path="/device/new" element={<DeviceFormPage />} />
+        <Route path="/device/edit" element={<DeviceFormPage />} />
         <Route path="/device" element={<DeviceSummaryPage />} />
         <Route
           path="/session"
