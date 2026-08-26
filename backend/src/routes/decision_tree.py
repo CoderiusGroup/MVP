@@ -42,20 +42,22 @@ def _serialize_tree(tree):
 def _tree_to_csv(tree):
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow([
-        "requirementId",
-        "requirementName",
-        "version",
-        "appliesTo",
-        "dependencies",
-        "rootNode",
-        "nodeId",
-        "nodeType",
-        "nodeText",
-        "outcome",
-        "branchesYes",
-        "branchesNo",
-    ])
+    writer.writerow(
+        [
+            "requirementId",
+            "requirementName",
+            "version",
+            "appliesTo",
+            "dependencies",
+            "rootNode",
+            "nodeId",
+            "nodeType",
+            "nodeText",
+            "outcome",
+            "branchesYes",
+            "branchesNo",
+        ]
+    )
 
     for node in tree.nodes:
         row = [

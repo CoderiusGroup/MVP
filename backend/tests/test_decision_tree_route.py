@@ -69,7 +69,9 @@ def test_list_decision_trees_returns_requirement_summaries():
     other["decisionTree"]["requirementName"] = "Access management"
 
     app = Flask(__name__)
-    repo = FakeDecisionTreeRepository({raw["decisionTree"]["requirementId"]: raw, other["decisionTree"]["requirementId"]: other})
+    repo = FakeDecisionTreeRepository(
+        {raw["decisionTree"]["requirementId"]: raw, other["decisionTree"]["requirementId"]: other}
+    )
     app.register_blueprint(create_decision_tree_blueprint(DecisionTreeService(repo)))
     client = app.test_client()
 
@@ -78,8 +80,14 @@ def test_list_decision_trees_returns_requirement_summaries():
 
     assert response.status_code == 200
     assert body == [
-        {"requirementId": raw["decisionTree"]["requirementId"], "requirementName": raw["decisionTree"]["requirementName"]},
-        {"requirementId": other["decisionTree"]["requirementId"], "requirementName": other["decisionTree"]["requirementName"]},
+        {
+            "requirementId": raw["decisionTree"]["requirementId"],
+            "requirementName": raw["decisionTree"]["requirementName"],
+        },
+        {
+            "requirementId": other["decisionTree"]["requirementId"],
+            "requirementName": other["decisionTree"]["requirementName"],
+        },
     ]
 
 
@@ -90,8 +98,12 @@ def test_export_decision_tree_supports_json_and_csv():
     app.register_blueprint(create_decision_tree_blueprint(DecisionTreeService(repo)))
     client = app.test_client()
 
-    json_response = client.get(f"/decision-trees/{raw['decisionTree']['requirementId']}/export?format=json")
-    csv_response = client.get(f"/decision-trees/{raw['decisionTree']['requirementId']}/export?format=csv")
+    json_response = client.get(
+        f"/decision-trees/{raw['decisionTree']['requirementId']}/export?format=json"
+    )
+    csv_response = client.get(
+        f"/decision-trees/{raw['decisionTree']['requirementId']}/export?format=csv"
+    )
 
     assert json_response.status_code == 200
     assert json_response.get_json()["requirementId"] == raw["decisionTree"]["requirementId"]

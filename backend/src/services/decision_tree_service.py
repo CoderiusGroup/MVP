@@ -53,10 +53,12 @@ class DecisionTreeService:
         trees = []
         for tree_id in sorted(self._repository.list()):
             tree = self.get_tree(tree_id)
-            trees.append({
-                "requirementId": tree.requirement_id,
-                "requirementName": tree.requirement_name,
-            })
+            trees.append(
+                {
+                    "requirementId": tree.requirement_id,
+                    "requirementName": tree.requirement_name,
+                }
+            )
         return trees
 
     def list_requirement_ids_for_type(self, asset_type: str) -> list[str]:
