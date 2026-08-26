@@ -8,6 +8,7 @@ import DeviceAssetManagementPage from "./pages/DeviceAssetManagementPage";
 import AssetFormPage from "./pages/AssetFormPage";
 import { SessionRunnerPage } from "./pages/SessionRunnerPage";
 import { ModifySessionPage } from "./pages/ModifySessionPage";
+import { DecisionTreeCatalogPage } from "./pages/DecisionTreeCatalogPage";
 import { RequireSession } from "./components/RequireSession";
 import type { Device } from "./domain/entities/Device.ts";
 import type { Session } from "./domain/entities/Session.ts";
@@ -60,6 +61,7 @@ function App() {
         <Route path="/device/assets" element={<DeviceAssetManagementPage />} />
         <Route path="/device/assets/new" element={<AssetFormPage />} />
         <Route path="/device/assets/:assetId/edit" element={<AssetFormPage />} />
+        <Route path="/decision-trees" element={<DecisionTreeCatalogPage />} />
       </Routes>
     </BrowserRouter>
   );

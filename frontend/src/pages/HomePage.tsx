@@ -50,7 +50,7 @@ export default function HomePage({onDeviceSaved, onSessionResumed}: Props){
     return (
         <div className="space-y-4" style={{ padding: "1rem" }}>
             <h1>Gestione Valutazione Dispositivi</h1>
-            
+
             <h2>1. Nuovo Dispositivo</h2>
             <button onClick={() => navigate("/device/new")}>Crea nuovo dispositivo</button>
 
@@ -69,6 +69,11 @@ export default function HomePage({onDeviceSaved, onSessionResumed}: Props){
                 accept=".json,application/json"
                 onChange={(e) => resumeSessionOnUpload(e.target.files?.[0])}
             />
+
+            <h2>4. Gestione Decision Tree</h2>
+            <button type="button" onClick={() => navigate("/decision-trees")}>
+                Apri catalogo decision tree
+            </button>
         </div>
     );
 }
