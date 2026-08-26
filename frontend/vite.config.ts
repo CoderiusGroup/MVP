@@ -6,10 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/devices': 'http://127.0.0.1:5000',
-      '^/assets$': 'http://127.0.0.1:5000',
-      '/decision-trees': 'http://127.0.0.1:5000',
-      '/health': 'http://127.0.0.1:5000',
+      '/devices': 'http://localhost:5000',
+      '^/assets$': 'http://localhost:5000',
+      '/decision-trees': 'http://localhost:5000',
+      '/health': 'http://localhost:5000',
     },
   },
   test: {

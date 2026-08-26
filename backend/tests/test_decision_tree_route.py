@@ -102,4 +102,4 @@ def test_export_decision_tree_supports_json_and_csv():
     csv_text = csv_response.get_data(as_text=True)
     assert "requirementId" in csv_text
     assert raw["decisionTree"]["rootNode"] in csv_text
-    assert "yes" in csv_text
+    assert "branchesYes" in csv_text
