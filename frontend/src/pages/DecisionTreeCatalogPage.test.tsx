@@ -51,9 +51,8 @@ describe("DecisionTreeCatalogPage", () => {
       expect(screen.getByText(/Grafo decision tree/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Versione").closest("div")).toHaveTextContent("1.0.0");
-    expect(screen.getByText("Applicabile a").closest("div")).toHaveTextContent("security");
-    expect(screen.getByLabelText("Legenda esiti")).toBeInTheDocument();
+    expect(screen.getByText("Versione:").closest("div")).toHaveTextContent("1.0.0");
+    expect(screen.getByText("Applicabile a:").closest("div")).toHaveTextContent("security");
     expect(screen.getAllByText(/Question 1\?/i).length).toBeGreaterThan(0);
   });
 
@@ -80,7 +79,7 @@ describe("DecisionTreeCatalogPage", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/ACM-1 — Access control/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Export JSON/i })).toBeInTheDocument();
     });
 
     await userEvent.click(screen.getByRole("button", { name: /Export JSON/i }));

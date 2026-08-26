@@ -8,7 +8,7 @@ type Props = {
   path: PathStep[];
 };
 
-const COL_W = 156;
+const COL_W = 260;
 const ROW_H = 126;
 const NODE_W = 220;
 const NODE_H = 92;

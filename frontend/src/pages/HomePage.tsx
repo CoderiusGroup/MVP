@@ -70,7 +70,7 @@ export default function HomePage({onDeviceSaved, onSessionResumed}: Props){
                 onChange={(e) => resumeSessionOnUpload(e.target.files?.[0])}
             />
 
-            <h2>4. Gestione Decision Tree</h2>
+            <h2>4. Catalogo Decision Tree</h2>
             <button type="button" onClick={() => navigate("/decision-tree-catalog")}>
                 Apri catalogo decision tree
             </button>
