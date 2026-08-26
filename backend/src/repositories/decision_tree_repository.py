@@ -47,4 +47,4 @@ class JsonDecisionTreeRepository(IDecisionTreeRepository):
     def list(self):
         if not self._data_dir.exists():
             return []
-        return [path.stem for path in self._data_dir.glob("*.json")]
+        return sorted(path.stem for path in self._data_dir.glob("*.json"))
