@@ -31,6 +31,14 @@ describe("GrafoDecisionTree", () => {
     expect(screen.getByText("No")).toBeInTheDocument();
   });
 
+  it("mostra il testo della domanda e gli esiti dentro i nodi", () => {
+    render(<GrafoDecisionTree tree={tree} currentNodeId="n1" path={[]} />);
+
+    expect(screen.getByText("Domanda 1?")).toBeInTheDocument();
+    expect(screen.getByText("PASS")).toBeInTheDocument();
+    expect(screen.getByText("FAIL")).toBeInTheDocument();
+  });
+
   it("evidenzia il nodo corrente e i nodi del percorso visitato", () => {
     render(
       <GrafoDecisionTree

@@ -49,6 +49,18 @@ class DecisionTreeService:
             raise DecisionTreeNotFoundError(requirement_id)
         return normalize_tree(raw)
 
+    def list_trees(self) -> list[dict[str, str]]:
+        trees = []
+        for tree_id in sorted(self._repository.list()):
+            tree = self.get_tree(tree_id)
+            trees.append(
+                {
+                    "requirementId": tree.requirement_id,
+                    "requirementName": tree.requirement_name,
+                }
+            )
+        return trees
+
     def list_requirement_ids_for_type(self, asset_type: str) -> list[str]:
         requirement_ids = []
         for tree_id in self._repository.list():

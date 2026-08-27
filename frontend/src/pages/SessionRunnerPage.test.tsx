@@ -117,7 +117,11 @@ describe("SessionRunnerPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Avvia decision tree" }));
 
     // Albero: codice nodo + domanda, poi foglia.
-    await waitFor(() => expect(screen.getByText("Domanda 1?")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(
+        within(screen.getByLabelText("Domanda corrente")).getByText("Domanda 1?"),
+      ).toBeInTheDocument(),
+    );
     expect(screen.getByLabelText("Domanda corrente")).toHaveTextContent(/Nodo:\s*n1/);
     fireEvent.click(screen.getByRole("button", { name: "Sì" }));
     await waitFor(() =>
@@ -190,7 +194,7 @@ describe("SessionRunnerPage", () => {
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Conferma esito" })).toBeInTheDocument(),
     );
-    expect(screen.getByText("PASS")).toBeInTheDocument();
+    expect(within(screen.getByLabelText("Esito requisito")).getByText("PASS"),).toBeInTheDocument();
   });
 
   it("permette l'uscita anticipata scartando la sessione (RF-Ob69)", () => {
