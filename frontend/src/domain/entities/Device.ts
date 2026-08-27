@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { AssetSchema } from "./Asset";
+import { AssetImportSchema, AssetSchema } from "./Asset";
 
 const identifier = z.string().min(1).max(64);
 
@@ -18,6 +18,16 @@ export const DeviceCreateSchema = z.object({
   description: z.string().optional().default(""),
 });
 
+export const DeviceImportSchema = z.object({
+  id: identifier.optional(),
+  name: z.string().min(1).max(100),
+  operatingSystem: z.string().min(1).max(100),
+  description: z.string().min(1).max(1000),
+  assets: z.array(AssetImportSchema).default([]),
+});
+
 export type Device = z.infer<typeof DeviceSchema>;
 
 export type DeviceCreate = z.infer<typeof DeviceCreateSchema>;
+
+export type DeviceImport = z.infer<typeof DeviceImportSchema>;

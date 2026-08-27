@@ -39,7 +39,7 @@ describe("HomePage", () =>{
         render(<BrowserRouter><HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/></BrowserRouter>);
 
         const file = new File(
-            [JSON.stringify({name:"Server1", operatingSystem: "Windows"})],
+            [JSON.stringify({name:"Server1", operatingSystem: "Windows", description: "minecraft server"})],
             "device.json",
             {type: "application/json"}
         );
@@ -48,6 +48,58 @@ describe("HomePage", () =>{
         await userEvent.upload(input, file);
 
         await waitFor(() =>{
+            expect(onDeviceSaved).toHaveBeenCalled();
+        });
+    });
+
+    it("importa un dispositivo JSON conservando i suoi asset", async () => {
+        const mockDeviceShell = {id: "1", name: "Coffee Machine", operatingSystem: "Linux", description: "macchina", assets: []};
+        const mockAsset = {id: "AS-1", name: "Modulo Wi-Fi", type: "network", description: "d", sensitive: false, requirements: ["ACM-1"]};
+        vi.mocked(FetchApiClient.prototype.post).mockImplementation(async (path: unknown) => {
+            return path === "/devices" ? mockDeviceShell : mockAsset;
+        });
+
+        render(<BrowserRouter><HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/></BrowserRouter>);
+
+        const fileContent = {
+            id: "1",
+            name: "Coffee Machine",
+            operatingSystem: "Linux",
+            description: "macchina",
+            assets: [mockAsset],
+        };
+        const file = new File([JSON.stringify(fileContent)], "device.json", {type: "application/json"});
+
+        const input = screen.getByLabelText(/Carica file JSON/i) as HTMLInputElement;
+        await userEvent.upload(input, file);
+
+        await waitFor(() => {
+            expect(onDeviceSaved).toHaveBeenCalled();
+        });
+        const [savedDevice] = onDeviceSaved.mock.calls[0];
+        expect(savedDevice.assets).toEqual([mockAsset]);
+        expect(FetchApiClient.prototype.post).toHaveBeenCalledWith(
+            "/assets",
+            expect.objectContaining({ id: "AS-1" }),
+        );
+    });
+
+    it("importa un dispositivo da un file CSV valido", async () => {
+        const mockDeviceShell = {id: "1", name: "Router", operatingSystem: "OpenWRT", description: "router di casa", assets: []};
+        vi.mocked(FetchApiClient.prototype.post).mockResolvedValue(mockDeviceShell);
+
+        render(<BrowserRouter><HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/></BrowserRouter>);
+
+        const csv = [
+            "device.id,device.name,device.operatingSystem,device.description,asset.id,asset.name,asset.type,asset.description,asset.sensitive,asset.requirements",
+            ",Router,OpenWRT,router di casa,,,,,,",
+        ].join("\n");
+        const file = new File([csv], "device.csv", {type: "text/csv"});
+
+        const input = screen.getByLabelText(/Carica file JSON/i) as HTMLInputElement;
+        await userEvent.upload(input, file);
+
+        await waitFor(() => {
             expect(onDeviceSaved).toHaveBeenCalled();
         });
     });

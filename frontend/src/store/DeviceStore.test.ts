@@ -59,6 +59,49 @@ describe("DeviceStore", () => {
     expect(useSessionStore.getState().session).toBeNull();
   });
 
+  it("updateDeviceDetails updates name/operatingSystem/description preserving id and assets (RF-D11-14)", () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useDeviceStore.getState().addAsset(sampleAsset);
+
+    useDeviceStore.getState().updateDeviceDetails({
+      name: "Router aggiornato",
+      operatingSystem: "OpenWRT",
+      description: "Nuova descrizione",
+    });
+
+    expect(useDeviceStore.getState().device).toEqual({
+      ...sampleDevice,
+      name: "Router aggiornato",
+      operatingSystem: "OpenWRT",
+      description: "Nuova descrizione",
+      assets: [sampleAsset],
+    });
+  });
+
+  it("updateDeviceDetails resets an existing session too, coerente con setDevice/reset", () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useSessionStore.getState().start(sampleDevice);
+    expect(useSessionStore.getState().session).not.toBeNull();
+
+    useDeviceStore.getState().updateDeviceDetails({
+      name: "Router aggiornato",
+      operatingSystem: "OpenWRT",
+      description: "Nuova descrizione",
+    });
+
+    expect(useSessionStore.getState().session).toBeNull();
+  });
+
+  it("updateDeviceDetails does nothing when there is no device", () => {
+    useDeviceStore.getState().updateDeviceDetails({
+      name: "x",
+      operatingSystem: "x",
+      description: "x",
+    });
+
+    expect(useDeviceStore.getState().device).toBeNull();
+  });
+
   it("addAsset appends an asset to the device", () => {
     useDeviceStore.getState().setDevice(sampleDevice, {});
     useDeviceStore.getState().addAsset(sampleAsset);
@@ -128,5 +171,15 @@ describe("DeviceStore", () => {
 
     expect(useDeviceStore.getState().device).toBeNull();
     expect(useDeviceStore.getState().payload).toBeNull();
+  });
+
+  it("reset clears an existing session too (RF-Ob22)", () => {
+    useDeviceStore.getState().setDevice(sampleDevice, {});
+    useSessionStore.getState().start(sampleDevice);
+    expect(useSessionStore.getState().session).not.toBeNull();
+
+    useDeviceStore.getState().reset();
+
+    expect(useSessionStore.getState().session).toBeNull();
   });
 });

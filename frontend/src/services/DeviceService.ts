@@ -4,6 +4,7 @@ import {
   DeviceCreateSchema,
   type Device,
   type DeviceCreate,
+  type DeviceImport,
 } from "../domain/entities/Device";
 import {
   AssetSchema,
@@ -11,36 +12,58 @@ import {
   type Asset,
   type AssetCreate,
 } from "../domain/entities/Asset";
+import { formatForFile, type DeviceFileFormat } from "./deviceFileFormats";
 
 const apiClient = new FetchApiClient();
 
 export interface DeviceSaveResult {
   device: Device;
-  payload: DeviceCreate;
+  payload: DeviceImport | DeviceCreate;
 }
 
-export async function importDeviceFromJson(file: File): Promise<DeviceSaveResult> {
-  const isJsonFile =
-    file.name.toLowerCase().endsWith(".json") || file.type === "application/json";
-  if (!isJsonFile) {
-    throw new Error("Il file caricato non è un JSON valido");
+export async function importDeviceFromFile(file: File): Promise<DeviceSaveResult> {
+  const format = formatForFile(file);
+  if (!format) {
+    throw new Error("Formato file non supportato: usa JSON o CSV");
   }
 
   const text = await readFileAsText(file);
+  const parsed = format.parse(text);
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    throw new Error("Il file non è in formato Json");
-  }
+  const deviceRaw = await apiClient.post<unknown>("/devices", {
+    id: parsed.id,
+    name: parsed.name,
+    operatingSystem: parsed.operatingSystem,
+    description: parsed.description,
+  });
+  const deviceShell = DeviceSchema.parse(deviceRaw);
 
-  const result = DeviceCreateSchema.safeParse(parsed);
-  if (!result.success) {
-    throw new Error("Il file deve contenere un singolo dispositivo");
-  }
+  const assets = await Promise.all(
+    parsed.assets.map(async (asset) => {
+      const assetRaw = await apiClient.post<unknown>("/assets", {
+        id: asset.id,
+        name: asset.name,
+        type: asset.type,
+        description: asset.description,
+        sensitive: asset.sensitive,
+        requirements: asset.requirements,
+      });
+      return AssetSchema.parse(assetRaw);
+    }),
+  );
 
-  return saveDevice(result.data);
+  return { device: { ...deviceShell, assets }, payload: parsed };
+}
+
+export function exportDevice(device: Device, format: DeviceFileFormat): void {
+  const content = format.serialize(device);
+  const blob = new Blob([content], { type: format.mimeType });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `${device.id}${format.extension}`;
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function createDeviceManually(payload: DeviceCreate): Promise<DeviceSaveResult> {

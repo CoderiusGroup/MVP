@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { NotificationManager } from "../infrastructure/NotificationManager";
-import { importDeviceFromJson } from "../services/DeviceService";
+import { importDeviceFromFile } from "../services/DeviceService";
 import { loadSessionFromJson } from "../services/SessionService";
 import type { Device } from "../domain/entities/Device";
 import type { Session } from "../domain/entities/Session";
@@ -38,7 +38,7 @@ export default function HomePage({onDeviceSaved, onSessionResumed}: Props){
         }
 
         try{
-            const { device, payload } = await importDeviceFromJson(uploadedFile);
+            const { device, payload } = await importDeviceFromFile(uploadedFile);
             onDeviceSaved(device, payload);
             notification.success("Dispositivo caricato correttamente");
         }catch(e){
@@ -54,11 +54,11 @@ export default function HomePage({onDeviceSaved, onSessionResumed}: Props){
             <h2>1. Nuovo Dispositivo</h2>
             <button onClick={() => navigate("/device/new")}>Crea nuovo dispositivo</button>
 
-            <h2>2. Importa Dispositivo da JSON</h2>
+            <h2>2. Importa Dispositivo da JSON o CSV</h2>
             <input
                 type="file"
-                aria-label="Carica file JSON dispositivo"
-                accept=".json,application/json"
+                aria-label="Carica file JSON o CSV dispositivo"
+                accept=".json,application/json,.csv,text/csv"
                 onChange={(e) => readFileOnUpload(e.target.files?.[0])}
             />
 
