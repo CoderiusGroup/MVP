@@ -1,4 +1,5 @@
 import json
+from io import BytesIO
 from pathlib import Path
 
 from flask import Flask
@@ -18,7 +19,8 @@ class FakeDecisionTreeRepository(IDecisionTreeRepository):
         return self._trees.get(id)
 
     def save(self, decision_tree):
-        raise NotImplementedError
+        requirement_id = decision_tree["decisionTree"]["requirementId"]
+        self._trees[requirement_id] = decision_tree
 
     def delete(self, id):
         raise NotImplementedError
@@ -115,3 +117,89 @@ def test_export_decision_tree_supports_json_and_csv():
     assert "requirementId" in csv_text
     assert raw["decisionTree"]["rootNode"] in csv_text
     assert "branchesYes" in csv_text
+
+
+def test_import_decision_tree_accepts_json_and_updates_catalog():
+    app, decision_tree = _build_app()
+    client = app.test_client()
+    imported = json.loads(FIXTURE_PATH.read_text())
+    imported["decisionTree"]["requirementId"] = "TST-1"
+
+    response = client.post(
+        "/decision-trees/import",
+        data={"file": (BytesIO(json.dumps(imported).encode()), "tree.json")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201
+    assert response.get_json()["requirementId"] == "TST-1"
+    assert client.get("/decision-trees/TST-1").status_code == 200
+    assert any(
+        item["requirementId"] == "TST-1" for item in client.get("/decision-trees").get_json()
+    )
+    assert decision_tree["requirementId"] in [
+        item["requirementId"] for item in client.get("/decision-trees").get_json()
+    ]
+
+
+def test_import_decision_tree_accepts_export_json_without_envelope():
+    app, decision_tree = _build_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/decision-trees/import",
+        data={"file": (BytesIO(json.dumps(decision_tree).encode()), "tree.json")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201
+    assert response.get_json()["requirementId"] == decision_tree["requirementId"]
+
+
+def test_import_decision_tree_accepts_csv():
+    app, _ = _build_app()
+    client = app.test_client()
+    csv_payload = """requirementId,requirementName,version,appliesTo,dependencies,rootNode,nodeId,nodeType,nodeText,outcome,branchesYes,branchesNo
+TST-2,Imported tree,1.0.0,security,,N1,N1,question,Is it enabled?,,L1,L2
+TST-2,Imported tree,1.0.0,security,,N1,L1,leaf,Yes,PASS,,
+TST-2,Imported tree,1.0.0,security,,N1,L2,leaf,No,FAIL,,
+"""
+
+    response = client.post(
+        "/decision-trees/import",
+        data={"file": (BytesIO(csv_payload.encode()), "tree.csv")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201
+    assert response.get_json()["requirementId"] == "TST-2"
+    assert client.get("/decision-trees/TST-2").get_json()["nodes"][0]["id"] == "N1"
+
+
+def test_import_decision_tree_rejects_unsupported_format():
+    app, _ = _build_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/decision-trees/import",
+        data={"file": (BytesIO(b"content"), "tree.txt")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    assert "error" in response.get_json()
+
+
+def test_import_decision_tree_rejects_invalid_structure():
+    app, _ = _build_app()
+    client = app.test_client()
+    invalid = {"decisionTree": {"requirementId": "TST-3", "nodes": []}}
+
+    response = client.post(
+        "/decision-trees/import",
+        data={"file": (BytesIO(json.dumps(invalid).encode()), "tree.json")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    assert "error" in response.get_json()

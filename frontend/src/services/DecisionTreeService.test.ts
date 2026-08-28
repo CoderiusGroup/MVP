@@ -16,6 +16,7 @@ function fakeApi(data: unknown): ApiClientService {
   return {
     get: async () => data,
     post: async () => data,
+    postFormData: async () => data,
     put: async () => data,
     delete: async () => data,
   } as ApiClientService;
@@ -38,5 +39,12 @@ describe("DecisionTreeService", () => {
     const service = new DecisionTreeService(fakeApi({ foo: "bar" }));
 
     await expect(service.getTree("ACM-1")).rejects.toThrow();
+  });
+
+  it("importa un decision tree e invalida la lista", async () => {
+    const service = new DecisionTreeService(fakeApi(rawTree));
+    const file = new File([JSON.stringify(rawTree)], "tree.json", { type: "application/json" });
+
+    await expect(service.importTree(file)).resolves.toMatchObject({ requirementId: "ACM-1" });
   });
 });

@@ -39,6 +39,15 @@ export class DecisionTreeService {
     });
   }
 
+  async importTree(file: File): Promise<DecisionTree> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const tree = await this.api.postFormData<DecisionTree>("/decision-trees/import", formData);
+    const parsedTree = DecisionTreeSchema.parse(tree);
+    await queryClient.invalidateQueries({ queryKey: ["decision-trees"] });
+    return parsedTree;
+  }
+
   async exportTree(requirementId: string, format: "json" | "csv"): Promise<void> {
     const response = await fetch(`/decision-trees/${requirementId}/export?format=${format}`);
     if (!response.ok) {

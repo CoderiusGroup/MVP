@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { GrafoDecisionTree } from "../components/GrafoDecisionTree";
@@ -11,7 +11,9 @@ export function DecisionTreeCatalogPage() {
   const [selectedRequirementId, setSelectedRequirementId] = useState<string | null>(null);
   const [tree, setTree] = useState<DecisionTree | null>(null);
   const [loading, setLoading] = useState(true);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -72,6 +74,24 @@ export function DecisionTreeCatalogPage() {
     }
   };
 
+  const handleImport = async (file?: File) => {
+    if (!file) return;
+    setImporting(true);
+    setError(null);
+    try {
+      const importedTree = await decisionTreeService.importTree(file);
+      const updatedTrees = await decisionTreeService.listTrees();
+      setTrees(updatedTrees);
+      setSelectedRequirementId(importedTree.requirementId);
+      setTree(importedTree);
+    } catch {
+      setError("Impossibile importare il decision tree. Verificare il formato e la struttura del file.");
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div style={{ padding: "1rem" }}>
       <button type="button" onClick={() => navigate("/")}>
@@ -86,6 +106,17 @@ export function DecisionTreeCatalogPage() {
       ) : (
         <>
           <p>Seleziona un requisito per visualizzare la struttura completa del DT.</p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,.csv,application/json,text/csv"
+            aria-label="Seleziona decision tree da importare"
+            onChange={(event) => handleImport(event.target.files?.[0])}
+            style={{ display: "none" }}
+          />
+          <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+            {importing ? "Importazione..." : "Importa decision tree"}
+          </button>
           <ul className="decision-tree-list">
             {trees.map((treeSummary) => (
               <li key={treeSummary.requirementId}>
