@@ -12,6 +12,7 @@ export const DecisionTreeSchema = z.object({
   dependencies: z.array(requirementCode).optional(),
   rootNode: z.string().min(1).max(32),
   nodes: z.array(NodeSchema),
+  message: z.string().optional(),
 });
 
 export type DecisionTree = z.infer<typeof DecisionTreeSchema>;

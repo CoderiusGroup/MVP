@@ -39,6 +39,10 @@ export class FetchApiClient implements ApiClientService {
     });
   }
 
+  postFormData<T>(path: string, body: FormData): Promise<T> {
+    return this.request<T>(path, { method: "POST", body });
+  }
+
   put<T>(path: string, body: unknown): Promise<T> {
     return this.request<T>(path, {
       method: "PUT",

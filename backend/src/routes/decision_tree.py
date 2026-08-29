@@ -6,7 +6,11 @@ import io
 from flask import Blueprint, Response, jsonify, request
 
 from src.domain.node import QuestionNode
-from src.services.decision_tree_service import DecisionTreeNotFoundError, DecisionTreeService
+from src.services.decision_tree_service import (
+    DecisionTreeNotFoundError,
+    DecisionTreeService,
+    InvalidDecisionTreeError,
+)
 
 
 def _serialize_node(node):
@@ -84,6 +88,19 @@ def create_decision_tree_blueprint(service: DecisionTreeService) -> Blueprint:
     @blueprint.get("/decision-trees")
     def list_decision_trees():
         return jsonify(service.list_trees())
+
+    @blueprint.post("/decision-trees/import")
+    def import_decision_tree():
+        uploaded_file = request.files.get("file")
+        if uploaded_file is None or not uploaded_file.filename:
+            return jsonify({"error": "Selezionare un file JSON o CSV"}), 400
+        try:
+            tree, message = service.import_tree(uploaded_file.read(), uploaded_file.filename)
+        except InvalidDecisionTreeError as error:
+            return jsonify({"error": str(error)}), 400
+        payload = _serialize_tree(tree)
+        payload["message"] = message
+        return jsonify(payload), 201
 
     @blueprint.get("/decision-trees/<requirement_id>")
     def get_decision_tree(requirement_id: str):

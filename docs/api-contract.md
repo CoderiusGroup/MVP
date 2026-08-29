@@ -64,6 +64,21 @@ Risposta `200`:
 Errori:
 - `404` — nessun decision tree con quel `requirementId`
 
+### `POST /decision-trees/import` — importazione decision tree
+
+Richiesta `multipart/form-data` con un campo `file` in formato JSON o CSV. Il JSON può
+essere un file esportato dall'endpoint oppure un file nel formato con envelope
+`decisionTree` usato dai dati iniziali. Il CSV deve usare le colonne generate
+dall'esportazione del decision tree.
+
+Il sistema valida la struttura dell'albero, lo salva e restituisce il decision tree
+normalizzato nel formato della risposta `GET /decision-trees/{requirementId}`.
+
+Risposta `201`: decision tree importato.
+
+Errori:
+- `400` — file mancante, formato non supportato o struttura del decision tree non valida
+
 ## Device
 
 ### `POST /devices` — creazione device (stateless)

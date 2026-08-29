@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { GrafoDecisionTree } from "../components/GrafoDecisionTree";
+import { NotificationManager } from "../infrastructure/NotificationManager";
 import { decisionTreeService, type DecisionTreeSummary } from "../services/DecisionTreeService";
 import type { DecisionTree } from "../domain/entities/DecisionTree";
+
+const notification = new NotificationManager();
 
 export function DecisionTreeCatalogPage() {
   const navigate = useNavigate();
@@ -11,7 +14,9 @@ export function DecisionTreeCatalogPage() {
   const [selectedRequirementId, setSelectedRequirementId] = useState<string | null>(null);
   const [tree, setTree] = useState<DecisionTree | null>(null);
   const [loading, setLoading] = useState(true);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -72,6 +77,26 @@ export function DecisionTreeCatalogPage() {
     }
   };
 
+  const handleImport = async (file?: File) => {
+    if (!file) return;
+    setImporting(true);
+    setError(null);
+    try {
+      const importedTree = await decisionTreeService.importTree(file);
+      const updatedTrees = await decisionTreeService.listTrees();
+      const message = importedTree.message ?? "Decision Tree importato correttamente";
+      setTrees(updatedTrees);
+      setSelectedRequirementId(importedTree.requirementId);
+      setTree(importedTree);
+      notification.success(message);
+    } catch {
+      setError("Impossibile importare il decision tree. Verificare il formato e la struttura del file.");
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div style={{ padding: "1rem" }}>
       <button type="button" onClick={() => navigate("/")}>
@@ -86,6 +111,17 @@ export function DecisionTreeCatalogPage() {
       ) : (
         <>
           <p>Seleziona un requisito per visualizzare la struttura completa del DT.</p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,.csv,application/json,text/csv"
+            aria-label="Seleziona decision tree da importare"
+            onChange={(event) => handleImport(event.target.files?.[0])}
+            style={{ display: "none" }}
+          />
+          <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+            {importing ? "Importazione..." : "Importa decision tree"}
+          </button>
           <ul className="decision-tree-list">
             {trees.map((treeSummary) => (
               <li key={treeSummary.requirementId}>
@@ -135,7 +171,7 @@ export function DecisionTreeCatalogPage() {
               </dl>
 
               <h3>Grafo decision tree</h3>
-              <GrafoDecisionTree tree={tree} currentNodeId={tree.rootNode} path={[]} />
+              <GrafoDecisionTree tree={tree} currentNodeId={tree.rootNode} path={[]} readOnly />
               
               <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
                 <button type="button" onClick={() => handleExport("json")}>Export JSON</button>
