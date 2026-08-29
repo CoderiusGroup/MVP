@@ -133,6 +133,7 @@ def test_import_decision_tree_accepts_json_and_updates_catalog():
 
     assert response.status_code == 201
     assert response.get_json()["requirementId"] == "TST-1"
+    assert response.get_json()["message"] == "Decision Tree importato correttamente"
     assert client.get("/decision-trees/TST-1").status_code == 200
     assert any(
         item["requirementId"] == "TST-1" for item in client.get("/decision-trees").get_json()
@@ -140,6 +141,23 @@ def test_import_decision_tree_accepts_json_and_updates_catalog():
     assert decision_tree["requirementId"] in [
         item["requirementId"] for item in client.get("/decision-trees").get_json()
     ]
+
+
+def test_import_decision_tree_reports_existing_tree_as_updated():
+    raw = json.loads(FIXTURE_PATH.read_text())
+    app = Flask(__name__)
+    repo = FakeDecisionTreeRepository({raw["decisionTree"]["requirementId"]: raw})
+    app.register_blueprint(create_decision_tree_blueprint(DecisionTreeService(repo)))
+    client = app.test_client()
+
+    response = client.post(
+        "/decision-trees/import",
+        data={"file": (BytesIO(json.dumps(raw).encode()), "tree.json")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201
+    assert response.get_json()["message"] == "Decision Tree presente e aggiornato"
 
 
 def test_import_decision_tree_accepts_export_json_without_envelope():

@@ -239,7 +239,7 @@ class DecisionTreeService:
                 requirement_ids.append(tree.requirement_id)
         return requirement_ids
 
-    def import_tree(self, content: bytes, filename: str) -> DecisionTree:
+    def import_tree(self, content: bytes, filename: str) -> tuple[DecisionTree, str]:
         try:
             text = content.decode("utf-8-sig")
             if filename.lower().endswith(".json"):
@@ -254,5 +254,11 @@ class DecisionTreeService:
             raise InvalidDecisionTreeError("Il file non contiene dati validi") from error
 
         _validate_raw_tree(raw)
+        requirement_id = raw["decisionTree"]["requirementId"]
+        message = (
+            "Decision Tree presente e aggiornato"
+            if self._repository.get(requirement_id) is not None
+            else "Decision Tree importato correttamente"
+        )
         self._repository.save(raw)
-        return normalize_tree(raw)
+        return normalize_tree(raw), message

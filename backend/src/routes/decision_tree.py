@@ -95,10 +95,12 @@ def create_decision_tree_blueprint(service: DecisionTreeService) -> Blueprint:
         if uploaded_file is None or not uploaded_file.filename:
             return jsonify({"error": "Selezionare un file JSON o CSV"}), 400
         try:
-            tree = service.import_tree(uploaded_file.read(), uploaded_file.filename)
+            tree, message = service.import_tree(uploaded_file.read(), uploaded_file.filename)
         except InvalidDecisionTreeError as error:
             return jsonify({"error": str(error)}), 400
-        return jsonify(_serialize_tree(tree)), 201
+        payload = _serialize_tree(tree)
+        payload["message"] = message
+        return jsonify(payload), 201
 
     @blueprint.get("/decision-trees/<requirement_id>")
     def get_decision_tree(requirement_id: str):

@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { GrafoDecisionTree } from "../components/GrafoDecisionTree";
+import { NotificationManager } from "../infrastructure/NotificationManager";
 import { decisionTreeService, type DecisionTreeSummary } from "../services/DecisionTreeService";
 import type { DecisionTree } from "../domain/entities/DecisionTree";
+
+const notification = new NotificationManager();
 
 export function DecisionTreeCatalogPage() {
   const navigate = useNavigate();
@@ -81,9 +84,11 @@ export function DecisionTreeCatalogPage() {
     try {
       const importedTree = await decisionTreeService.importTree(file);
       const updatedTrees = await decisionTreeService.listTrees();
+      const message = importedTree.message ?? "Decision Tree importato correttamente";
       setTrees(updatedTrees);
       setSelectedRequirementId(importedTree.requirementId);
       setTree(importedTree);
+      notification.success(message);
     } catch {
       setError("Impossibile importare il decision tree. Verificare il formato e la struttura del file.");
     } finally {
@@ -166,7 +171,7 @@ export function DecisionTreeCatalogPage() {
               </dl>
 
               <h3>Grafo decision tree</h3>
-              <GrafoDecisionTree tree={tree} currentNodeId={tree.rootNode} path={[]} />
+              <GrafoDecisionTree tree={tree} currentNodeId={tree.rootNode} path={[]} readOnly />
               
               <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
                 <button type="button" onClick={() => handleExport("json")}>Export JSON</button>

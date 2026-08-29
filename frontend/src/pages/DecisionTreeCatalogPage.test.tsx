@@ -6,6 +6,19 @@ import { BrowserRouter } from "react-router-dom";
 import { DecisionTreeCatalogPage } from "./DecisionTreeCatalogPage";
 import { decisionTreeService } from "../services/DecisionTreeService";
 
+const { successToastMock, errorToastMock } = vi.hoisted(() => ({
+  successToastMock: vi.fn(),
+  errorToastMock: vi.fn(),
+}));
+
+vi.mock("../infrastructure/NotificationManager", () => ({
+  NotificationManager: class {
+    success = successToastMock;
+    error = errorToastMock;
+    errorJsonLoading = vi.fn();
+  },
+}));
+
 vi.mock("../services/DecisionTreeService", () => ({
   decisionTreeService: {
     listTrees: vi.fn(),
@@ -57,6 +70,37 @@ describe("DecisionTreeCatalogPage", () => {
     expect(screen.getAllByText(/Question 1\?/i).length).toBeGreaterThan(0);
   });
 
+  it("mostra tutti i nodi evidenziati in modalità catalogo", async () => {
+    const tree = {
+      requirementId: "ACM-1",
+      requirementName: "Access control",
+      rootNode: "N1",
+      nodes: [
+        { id: "N1", type: "question" as const, text: "Question 1?", branches: { yes: "L1", no: "L2" } },
+        { id: "L1", type: "leaf" as const, outcome: "PASS" as const },
+        { id: "L2", type: "leaf" as const, outcome: "FAIL" as const },
+      ],
+    };
+    vi.mocked(decisionTreeService.listTrees).mockResolvedValue([
+      { requirementId: "ACM-1", requirementName: "Access control" },
+    ]);
+    vi.mocked(decisionTreeService.getTree).mockResolvedValue(tree);
+
+    render(
+      <BrowserRouter>
+        <DecisionTreeCatalogPage />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Grafo decision tree")).toBeInTheDocument();
+    });
+
+    const graph = screen.getByLabelText("Grafo decision tree");
+    expect(graph.querySelectorAll('[data-current="true"]').length).toBe(0);
+    expect(graph.querySelectorAll('[opacity="0.5"]').length).toBe(0);
+  });
+
   it("esporta il tree JSON quando clicco il bottone appropriato", async () => {
     vi.mocked(decisionTreeService.listTrees).mockResolvedValue([
       { requirementId: "ACM-1", requirementName: "Access control" },
@@ -99,11 +143,12 @@ describe("DecisionTreeCatalogPage", () => {
         { id: "L2", type: "leaf" as const, outcome: "FAIL" as const },
       ],
     };
+    const importedTreeWithMessage = { ...importedTree, message: "Decision Tree già presente e aggiornato" };
     vi.mocked(decisionTreeService.listTrees)
       .mockResolvedValueOnce([{ requirementId: "ACM-1", requirementName: "Access control" }])
       .mockResolvedValueOnce([{ requirementId: "ACM-1", requirementName: "Access control" }, importedTree]);
     vi.mocked(decisionTreeService.getTree).mockResolvedValue(importedTree);
-    vi.mocked(decisionTreeService.importTree).mockResolvedValue(importedTree);
+    vi.mocked(decisionTreeService.importTree).mockResolvedValue(importedTreeWithMessage);
 
     render(
       <BrowserRouter>
@@ -122,6 +167,7 @@ describe("DecisionTreeCatalogPage", () => {
       expect(decisionTreeService.importTree).toHaveBeenCalledWith(file);
       expect(screen.getAllByText(/TST-1 — Imported tree/i)).toHaveLength(2);
       expect(screen.getByText("Question?")).toBeInTheDocument();
+      expect(successToastMock).toHaveBeenCalledWith(expect.stringMatching(/Decision Tree.*aggiornato/i));
     });
   });
 });

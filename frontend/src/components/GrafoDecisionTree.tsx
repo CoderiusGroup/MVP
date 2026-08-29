@@ -4,8 +4,9 @@ import { layoutTree } from "../domain/rules/treeLayout";
 
 type Props = {
   tree: DecisionTree;
-  currentNodeId: string;
-  path: PathStep[];
+  currentNodeId?: string;
+  path?: PathStep[];
+  readOnly?: boolean;
 };
 
 const COL_W = 260;
@@ -43,7 +44,7 @@ function textLines(text: string, maxLength = 30) {
   return lines.slice(0, 4);
 }
 
-export function GrafoDecisionTree({ tree, currentNodeId, path }: Props) {
+export function GrafoDecisionTree({ tree, currentNodeId, path = [], readOnly = false }: Props) {
   const layout = layoutTree(tree);
   const pos = new Map(layout.nodes.map((n) => [n.id, n]));
   const visited = new Set(path.map((s) => s.nodeId));
@@ -102,7 +103,7 @@ export function GrafoDecisionTree({ tree, currentNodeId, path }: Props) {
 
           {/* nodi */}
           {layout.nodes.map(({ id, node, col, depth }) => {
-            const isCurrent = id === currentNodeId;
+            const isCurrent = !readOnly && id === currentNodeId;
             const isVisited = visited.has(id);
             const isLeaf = node.type === "leaf";
             const x = cx(col) - NODE_W / 2;
@@ -118,7 +119,11 @@ export function GrafoDecisionTree({ tree, currentNodeId, path }: Props) {
               fill = "#eaf1fa";
               stroke = "#2f6db5";
             }
-            const dim = !isCurrent && !isVisited;
+            if (readOnly) {
+              fill = isLeaf ? LEAF_FILL[node.outcome] ?? "#eef1f5" : "#eaf1fa";
+              stroke = isLeaf ? LEAF_STROKE[node.outcome] ?? "#8b95a4" : "#2f6db5";
+            }
+            const dim = !readOnly && !isCurrent && !isVisited;
             const fullText = node.type === "question" ? node.text : node.text ?? `Esito: ${node.outcome}`;
             const lines = textLines(fullText);
 
