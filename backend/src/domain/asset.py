@@ -101,7 +101,8 @@ class Asset:
 
         requirements = data.get("requirements")
         if requirements is not None and (
-            not isinstance(requirements, list) or not all(isinstance(item, str) for item in requirements)
+            not isinstance(requirements, list)
+            or not all(isinstance(item, str) for item in requirements)
         ):
             raise InvalidAssetDataError("Campo requirements non valido")
 
