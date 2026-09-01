@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { DecisionTreeSchema, type DecisionTree } from "../domain/entities/DecisionTree";
+import { DecisionTree } from "../domain/entities/DecisionTree";
 import type { ApiClientService } from "../infrastructure/ApiClientService";
 import { FetchApiClient } from "../infrastructure/FetchApiClient";
 import { queryClient } from "../infrastructure/queryClient";
@@ -34,7 +34,7 @@ export class DecisionTreeService {
       queryKey: ["decision-tree", requirementId],
       queryFn: async () => {
         const data = await this.api.get<unknown>(`/decision-trees/${requirementId}`);
-        return DecisionTreeSchema.parse(data);
+        return DecisionTree.create(data);
       },
     });
   }
@@ -42,8 +42,8 @@ export class DecisionTreeService {
   async importTree(file: File): Promise<DecisionTree> {
     const formData = new FormData();
     formData.append("file", file);
-    const tree = await this.api.postFormData<DecisionTree>("/decision-trees/import", formData);
-    const parsedTree = DecisionTreeSchema.parse(tree);
+    const tree = await this.api.postFormData<unknown>("/decision-trees/import", formData);
+    const parsedTree = DecisionTree.create(tree);
     await queryClient.invalidateQueries({ queryKey: ["decision-trees"] });
     return parsedTree;
   }

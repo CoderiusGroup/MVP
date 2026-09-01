@@ -1,10 +1,10 @@
-import { SessionSchema, type Session } from "../domain/entities/Session";
+import { Session } from "../domain/entities/Session";
 
 export { buildPlan } from "../domain/rules/sessionRules";
 export type { EvaluationPair } from "../domain/rules/sessionRules";
 
 export function toSessionFile(session: Session): Session {
-  return { ...session, savedAt: new Date().toISOString() };
+  return session.withSavedAt(new Date().toISOString());
 }
 
 export function parseSessionFile(text: string): Session {
@@ -15,11 +15,11 @@ export function parseSessionFile(text: string): Session {
     throw new Error("Il file non è in formato JSON");
   }
 
-  const result = SessionSchema.safeParse(parsed);
-  if (!result.success) {
+  try {
+    return Session.parse(parsed);
+  } catch {
     throw new Error("Il file non contiene una sessione valida");
   }
-  return result.data;
 }
 
 export function downloadSession(session: Session): void {

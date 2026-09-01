@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type { Device } from "../domain/entities/Device";
-import type { Session } from "../domain/entities/Session";
+import { Device } from "../domain/entities/Device";
+import { Session } from "../domain/entities/Session";
 import { buildPlan, parseSessionFile, toSessionFile } from "./SessionService";
 
-const device: Device = {
+const device = Device.create({
   id: "DEV-1",
   name: "Device",
   operatingSystem: "OS",
@@ -27,16 +27,16 @@ const device: Device = {
       requirements: ["AUM-1-1"],
     },
   ],
-};
+});
 
-const session: Session = {
+const session = Session.parse({
   id: "SES-1",
   savedAt: "2020-01-01T00:00:00Z",
   status: "in_progress",
-  device,
+  device: device.toJSON(),
   evaluations: [],
   current: { assetId: "AS-1", requirementId: "ACM-1", nodeId: "n1" },
-};
+});
 
 describe("SessionService", () => {
   it("buildPlan enumerates assets then requirements in order", () => {

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
-import type { Session } from "../domain/entities/Session";
+import { Session } from "../domain/entities/Session";
 import { queryClient } from "../infrastructure/queryClient";
 import { useSessionStore } from "../store/SessionStore";
 import { ModifySessionPage } from "./ModifySessionPage";
@@ -25,7 +25,7 @@ const trees: Record<string, unknown> = {
 };
 
 function completedSession(): Session {
-  return {
+  return Session.parse({
     id: "SES-1",
     savedAt: "2026-08-19T10:00:00Z",
     status: "completed",
@@ -49,7 +49,7 @@ function completedSession(): Session {
       { assetId: "AS-01", requirementId: "ACM-1", status: "completed", outcome: "PASS", path: [] },
       { assetId: "AS-01", requirementId: "ACM-2", status: "completed", outcome: "FAIL", path: [] },
     ],
-  };
+  });
 }
 
 function renderPage() {

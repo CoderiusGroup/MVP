@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import type { DecisionTree } from "../entities/DecisionTree";
+import { DecisionTree } from "../entities/DecisionTree";
 import { layoutTree } from "./treeLayout";
 
-const tree: DecisionTree = {
+const tree = DecisionTree.create({
   requirementId: "ACM-1",
   requirementName: "Sample",
   rootNode: "n1",
@@ -12,7 +12,7 @@ const tree: DecisionTree = {
     { id: "n2", type: "leaf", outcome: "PASS" },
     { id: "n3", type: "leaf", outcome: "FAIL" },
   ],
-};
+});
 
 const by = (layout: ReturnType<typeof layoutTree>, id: string) =>
   layout.nodes.find((n) => n.id === id)!;

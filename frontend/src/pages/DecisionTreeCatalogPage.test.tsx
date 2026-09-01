@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { BrowserRouter } from "react-router-dom";
 
+import { DecisionTree } from "../domain/entities/DecisionTree";
 import { DecisionTreeCatalogPage } from "./DecisionTreeCatalogPage";
 import { decisionTreeService } from "../services/DecisionTreeService";
 
@@ -34,19 +35,21 @@ describe("DecisionTreeCatalogPage", () => {
       { requirementId: "ACM-1", requirementName: "Access control" },
       { requirementId: "AUM-2", requirementName: "Authentication" },
     ]);
-    vi.mocked(decisionTreeService.getTree).mockResolvedValue({
-      requirementId: "ACM-1",
-      requirementName: "Access control",
-      rootNode: "N1",
-      version: "1.0.0",
-      appliesTo: ["security"],
-      dependencies: [],
-      nodes: [
-        { id: "N1", type: "question", text: "Question 1?", branches: { yes: "L1", no: "L2" } },
-        { id: "L1", type: "leaf", outcome: "PASS", text: "Ok" },
-        { id: "L2", type: "leaf", outcome: "FAIL", text: "No" },
-      ],
-    });
+    vi.mocked(decisionTreeService.getTree).mockResolvedValue(
+      DecisionTree.create({
+        requirementId: "ACM-1",
+        requirementName: "Access control",
+        rootNode: "N1",
+        version: "1.0.0",
+        appliesTo: ["security"],
+        dependencies: [],
+        nodes: [
+          { id: "N1", type: "question", text: "Question 1?", branches: { yes: "L1", no: "L2" } },
+          { id: "L1", type: "leaf", outcome: "PASS", text: "Ok" },
+          { id: "L2", type: "leaf", outcome: "FAIL", text: "No" },
+        ],
+      }),
+    );
 
     render(
       <BrowserRouter>
@@ -71,7 +74,7 @@ describe("DecisionTreeCatalogPage", () => {
   });
 
   it("mostra tutti i nodi evidenziati in modalità catalogo", async () => {
-    const tree = {
+    const tree = DecisionTree.create({
       requirementId: "ACM-1",
       requirementName: "Access control",
       rootNode: "N1",
@@ -80,7 +83,7 @@ describe("DecisionTreeCatalogPage", () => {
         { id: "L1", type: "leaf" as const, outcome: "PASS" as const },
         { id: "L2", type: "leaf" as const, outcome: "FAIL" as const },
       ],
-    };
+    });
     vi.mocked(decisionTreeService.listTrees).mockResolvedValue([
       { requirementId: "ACM-1", requirementName: "Access control" },
     ]);
@@ -105,16 +108,18 @@ describe("DecisionTreeCatalogPage", () => {
     vi.mocked(decisionTreeService.listTrees).mockResolvedValue([
       { requirementId: "ACM-1", requirementName: "Access control" },
     ]);
-    vi.mocked(decisionTreeService.getTree).mockResolvedValue({
-      requirementId: "ACM-1",
-      requirementName: "Access control",
-      rootNode: "N1",
-      nodes: [
-        { id: "N1", type: "question", text: "Question 1?", branches: { yes: "L1", no: "L2" } },
-        { id: "L1", type: "leaf", outcome: "PASS", text: "Ok" },
-        { id: "L2", type: "leaf", outcome: "FAIL", text: "No" },
-      ],
-    });
+    vi.mocked(decisionTreeService.getTree).mockResolvedValue(
+      DecisionTree.create({
+        requirementId: "ACM-1",
+        requirementName: "Access control",
+        rootNode: "N1",
+        nodes: [
+          { id: "N1", type: "question", text: "Question 1?", branches: { yes: "L1", no: "L2" } },
+          { id: "L1", type: "leaf", outcome: "PASS", text: "Ok" },
+          { id: "L2", type: "leaf", outcome: "FAIL", text: "No" },
+        ],
+      }),
+    );
     vi.mocked(decisionTreeService.exportTree).mockResolvedValue();
 
     render(
@@ -133,7 +138,7 @@ describe("DecisionTreeCatalogPage", () => {
   });
 
   it("importa un decision tree e aggiorna il catalogo", async () => {
-    const importedTree = {
+    const importedTreeRaw = {
       requirementId: "TST-1",
       requirementName: "Imported tree",
       rootNode: "N1",
@@ -143,10 +148,17 @@ describe("DecisionTreeCatalogPage", () => {
         { id: "L2", type: "leaf" as const, outcome: "FAIL" as const },
       ],
     };
-    const importedTreeWithMessage = { ...importedTree, message: "Decision Tree già presente e aggiornato" };
+    const importedTree = DecisionTree.create(importedTreeRaw);
+    const importedTreeWithMessage = DecisionTree.create({
+      ...importedTreeRaw,
+      message: "Decision Tree già presente e aggiornato",
+    });
     vi.mocked(decisionTreeService.listTrees)
       .mockResolvedValueOnce([{ requirementId: "ACM-1", requirementName: "Access control" }])
-      .mockResolvedValueOnce([{ requirementId: "ACM-1", requirementName: "Access control" }, importedTree]);
+      .mockResolvedValueOnce([
+        { requirementId: "ACM-1", requirementName: "Access control" },
+        { requirementId: importedTree.requirementId, requirementName: importedTree.requirementName },
+      ]);
     vi.mocked(decisionTreeService.getTree).mockResolvedValue(importedTree);
     vi.mocked(decisionTreeService.importTree).mockResolvedValue(importedTreeWithMessage);
 
@@ -160,7 +172,7 @@ describe("DecisionTreeCatalogPage", () => {
       expect(screen.getByRole("button", { name: /Importa decision tree/i })).toBeInTheDocument();
     });
 
-    const file = new File([JSON.stringify(importedTree)], "tree.json", { type: "application/json" });
+    const file = new File([JSON.stringify(importedTreeRaw)], "tree.json", { type: "application/json" });
     await userEvent.upload(screen.getByLabelText("Seleziona decision tree da importare"), file);
 
     await waitFor(() => {

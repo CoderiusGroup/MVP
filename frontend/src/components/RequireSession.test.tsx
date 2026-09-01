@@ -2,17 +2,17 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 
-import type { Session } from "../domain/entities/Session";
+import { Session } from "../domain/entities/Session";
 import { useSessionStore } from "../store/SessionStore";
 import { RequireSession } from "./RequireSession";
 
-const session: Session = {
+const session = Session.parse({
   id: "SES-1",
   savedAt: "2026-08-19T10:00:00Z",
   status: "in_progress",
   device: { id: "DEV-1", name: "D", operatingSystem: "OS", description: "d", assets: [] },
   evaluations: [],
-};
+});
 
 function renderGuarded() {
   return render(

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { DecisionTree } from "../domain/entities/DecisionTree";
+import { DecisionTree } from "../domain/entities/DecisionTree";
 import { useTreeStore } from "./TreeStore";
 
-const sampleTree: DecisionTree = {
+const sampleTree = DecisionTree.create({
   requirementId: "ACM-1",
   requirementName: "Sample",
   rootNode: "n1",
@@ -13,7 +13,7 @@ const sampleTree: DecisionTree = {
     { id: "n3", type: "leaf", outcome: "PASS" },
     { id: "n4", type: "leaf", outcome: "FAIL" },
   ],
-};
+});
 
 beforeEach(() => {
   useTreeStore.getState().reset();

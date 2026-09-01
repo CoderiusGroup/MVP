@@ -1,16 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import type { Asset } from "../entities/Asset";
-import type { Device } from "../entities/Device";
-import type { Session } from "../entities/Session";
+import { Asset } from "../entities/Asset";
+import { Device } from "../entities/Device";
+import { Session } from "../entities/Session";
 import {
   getAssetStatus,
   getDeviceStatus,
   getEvaluationProgress,
   getEvaluationStatus,
-  matchesPlan,
-  reopenEvaluation,
-  selectEvaluation,
   transitiveDependents,
   type DependencyMap,
 } from "./sessionRules";
@@ -24,7 +21,7 @@ const dependencies: DependencyMap = {
 };
 
 function completedSession(): Session {
-  return {
+  return Session.parse({
     id: "SES-1",
     savedAt: "2026-08-19T10:00:00Z",
     status: "completed",
@@ -34,18 +31,37 @@ function completedSession(): Session {
       operatingSystem: "OS",
       description: "desc",
       assets: [
-        { id: "AS-1", name: "A1", type: "network", description: "d", sensitive: false, requirements: ["ACM-1", "ACM-2", "AUM-1-1"] },
-        { id: "AS-2", name: "A2", type: "security", description: "d", sensitive: true, requirements: ["ACM-2"] },
+        {
+          id: "AS-1",
+          name: "A1",
+          type: "network",
+          description: "d",
+          sensitive: false,
+          requirements: ["ACM-1", "ACM-2", "AUM-1-1"],
+        },
+        {
+          id: "AS-2",
+          name: "A2",
+          type: "security",
+          description: "d",
+          sensitive: true,
+          requirements: ["ACM-2"],
+        },
       ],
     },
     evaluations: [
-      { assetId: "AS-1", requirementId: "ACM-1", status: "completed", outcome: "PASS", path: [{ nodeId: "n1", answer: "yes" }] },
+      {
+        assetId: "AS-1",
+        requirementId: "ACM-1",
+        status: "completed",
+        outcome: "PASS",
+        path: [{ nodeId: "n1", answer: "yes" }],
+      },
       { assetId: "AS-1", requirementId: "ACM-2", status: "completed", outcome: "FAIL", path: [] },
       { assetId: "AS-1", requirementId: "AUM-1-1", status: "completed", outcome: "PASS", path: [] },
       { assetId: "AS-2", requirementId: "ACM-2", status: "completed", outcome: "PASS", path: [] },
     ],
-    current: undefined,
-  };
+  });
 }
 
 describe("sessionRules — dipendenze e riapertura", () => {
@@ -60,8 +76,8 @@ describe("sessionRules — dipendenze e riapertura", () => {
     expect(transitiveDependents("AUM-2", dependencies)).toEqual([]);
   });
 
-  it("reopenEvaluation azzera il requisito e i suoi dipendenti sullo stesso asset", () => {
-    const result = reopenEvaluation(completedSession(), "AS-1", "ACM-1", ["ACM-2", "AUM-1-1"]);
+  it("Session.reopenEvaluation azzera il requisito e i suoi dipendenti sullo stesso asset", () => {
+    const result = completedSession().reopenEvaluation("AS-1", "ACM-1", ["ACM-2", "AUM-1-1"]);
 
     const as1 = (req: string) =>
       result.evaluations.find((e) => e.assetId === "AS-1" && e.requirementId === req);
@@ -75,15 +91,15 @@ describe("sessionRules — dipendenze e riapertura", () => {
     expect(result.current).toEqual({ assetId: "AS-1", requirementId: "ACM-1", nodeId: "" });
   });
 
-  it("reopenEvaluation non tocca lo stesso requisito su un altro asset", () => {
-    const result = reopenEvaluation(completedSession(), "AS-1", "ACM-1", ["ACM-2"]);
+  it("Session.reopenEvaluation non tocca lo stesso requisito su un altro asset", () => {
+    const result = completedSession().reopenEvaluation("AS-1", "ACM-1", ["ACM-2"]);
     const as2 = result.evaluations.find((e) => e.assetId === "AS-2" && e.requirementId === "ACM-2");
     expect(as2).toMatchObject({ status: "completed", outcome: "PASS" });
   });
 
-  it("selectEvaluation sposta current senza alterare le valutazioni", () => {
+  it("Session.selectEvaluation sposta current senza alterare le valutazioni", () => {
     const session = completedSession();
-    const result = selectEvaluation(session, "AS-1", "AUM-1-1");
+    const result = session.selectEvaluation("AS-1", "AUM-1-1");
 
     expect(result.current).toEqual({ assetId: "AS-1", requirementId: "AUM-1-1", nodeId: "" });
     expect(result.status).toBe("in_progress");
@@ -92,14 +108,14 @@ describe("sessionRules — dipendenze e riapertura", () => {
 });
 
 describe("sessionRules — stato di valutazione", () => {
-  const requirementFreeAsset: Asset = {
+  const requirementFreeAsset = Asset.create({
     id: "AS-3",
     name: "A3",
     type: "financial",
     description: "d",
     sensitive: false,
     requirements: [],
-  };
+  });
 
   it("getEvaluationStatus ritorna 'not_evaluated' senza sessione", () => {
     expect(getEvaluationStatus(null, "AS-1", "ACM-1")).toBe("not_evaluated");
@@ -120,70 +136,64 @@ describe("sessionRules — stato di valutazione", () => {
   });
 
   it("getAssetStatus da priorità a FAIL su un asset con esiti misti", () => {
-    const asset: Asset = {
+    const asset = Asset.create({
       id: "AS-1",
       name: "A1",
       type: "network",
       description: "d",
       sensitive: false,
       requirements: ["ACM-1", "ACM-2", "AUM-1-1"],
-    };
+    });
 
     expect(getAssetStatus(completedSession(), asset)).toBe("FAIL");
   });
 
   it("getAssetStatus ritorna PASS quando tutti i requisiti valutati sono PASS", () => {
-    const asset: Asset = {
+    const asset = Asset.create({
       id: "AS-2",
       name: "A2",
       type: "security",
       description: "d",
       sensitive: true,
       requirements: ["ACM-2"],
-    };
+    });
 
     expect(getAssetStatus(completedSession(), asset)).toBe("PASS");
   });
 
   it("getAssetStatus ritorna 'not_evaluated' se un requisito non ha ancora una valutazione", () => {
-    const asset: Asset = {
+    const asset = Asset.create({
       id: "AS-2",
       name: "A2",
       type: "security",
       description: "d",
       sensitive: true,
       requirements: ["ACM-2", "AUM-1-2"],
-    };
+    });
 
     expect(getAssetStatus(completedSession(), asset)).toBe("not_evaluated");
   });
 
   it("getEvaluationStatus ritorna 'in_progress' per una valutazione avviata ma non completata", () => {
-    const session: Session = {
-      ...completedSession(),
-      evaluations: [
-        { assetId: "AS-1", requirementId: "ACM-1", status: "in_progress", path: [] },
-      ],
-    };
+    const session = completedSession().withEvaluations([
+      { assetId: "AS-1", requirementId: "ACM-1", status: "in_progress", path: [] },
+    ]);
 
     expect(getEvaluationStatus(session, "AS-1", "ACM-1")).toBe("in_progress");
   });
 
   it("getAssetStatus ritorna NOT_APPLICABLE solo se tutti i requisiti completati sono N/A", () => {
-    const session: Session = {
-      ...completedSession(),
-      evaluations: [
-        { assetId: "AS-1", requirementId: "ACM-1", status: "completed", outcome: "NOT_APPLICABLE" },
-      ],
-    };
-    const asset: Asset = {
+    const session = completedSession().withEvaluations([
+      { assetId: "AS-1", requirementId: "ACM-1", status: "completed", outcome: "NOT_APPLICABLE" },
+    ]);
+    const asset = Asset.create({
       id: "AS-1",
       name: "A1",
       type: "network",
       description: "d",
       sensitive: false,
       requirements: ["ACM-1"],
-    };
+    });
 
     expect(getAssetStatus(session, asset)).toBe("NOT_APPLICABLE");
   });
@@ -193,11 +203,8 @@ describe("sessionRules — stato di valutazione", () => {
   });
 
   it("getDeviceStatus ritorna 'no_requirements' per un device senza asset", () => {
-    const emptyDeviceSession: Session = {
-      ...completedSession(),
-      device: { ...completedSession().device, assets: [] },
-      evaluations: [],
-    };
+    const base = completedSession();
+    const emptyDeviceSession = base.withDevice(base.device.withAssets([])).withEvaluations([]);
 
     expect(getDeviceStatus(emptyDeviceSession, emptyDeviceSession.device)).toBe(
       "no_requirements",
@@ -217,30 +224,28 @@ describe("sessionRules — getEvaluationProgress", () => {
 
   it("considera completato un asset senza requisiti", () => {
     const base = completedSession();
-    const session: Session = {
-      ...base,
-      device: {
-        ...base.device,
-        assets: [
-          ...base.device.assets,
-          { id: "AS-3", name: "A3", type: "financial", description: "d", sensitive: false, requirements: [] },
-        ],
-      },
-    };
+    const extraAsset = Asset.create({
+      id: "AS-3",
+      name: "A3",
+      type: "financial",
+      description: "d",
+      sensitive: false,
+      requirements: [],
+    });
+    const session = base.withDevice(base.device.withAssetAdded(extraAsset));
 
     expect(getEvaluationProgress(session)).toMatchObject({ assetsDone: 3, assetsTotal: 3 });
   });
 
   it("non conta un asset con requisiti ancora aperti", () => {
     const base = completedSession();
-    const session: Session = {
-      ...base,
-      evaluations: base.evaluations.map((evaluation) =>
+    const session = base.withEvaluations(
+      base.evaluations.map((evaluation) =>
         evaluation.assetId === "AS-1" && evaluation.requirementId === "ACM-2"
           ? { assetId: evaluation.assetId, requirementId: evaluation.requirementId, status: "not_evaluated" }
           : evaluation,
       ),
-    };
+    );
 
     expect(getEvaluationProgress(session, "AS-1")).toMatchObject({
       assetsDone: 1,
@@ -251,38 +256,49 @@ describe("sessionRules — getEvaluationProgress", () => {
 });
 
 describe("sessionRules — matchesPlan", () => {
-  const deviceWith = (requirements: string[]): Device => ({
-    id: "DEV-1",
-    name: "Device",
-    operatingSystem: "OS",
-    description: "d",
-    assets: [
-      { id: "AS-1", name: "A1", type: "network", description: "d", sensitive: false, requirements },
-    ],
-  });
+  const deviceWith = (requirements: string[]): Device =>
+    Device.create({
+      id: "DEV-1",
+      name: "Device",
+      operatingSystem: "OS",
+      description: "d",
+      assets: [
+        { id: "AS-1", name: "A1", type: "network", description: "d", sensitive: false, requirements },
+      ],
+    });
 
-  const sessionWith = (requirements: string[]): Session => ({
-    id: "SES-1",
-    savedAt: "2026-08-19T10:00:00Z",
-    status: "in_progress",
-    device: deviceWith(requirements),
-    evaluations: requirements.map((requirementId) => ({
-      assetId: "AS-1",
-      requirementId,
-      status: "not_evaluated" as const,
-    })),
-    current: undefined,
-  });
+  const sessionWith = (requirements: string[]): Session =>
+    Session.parse({
+      id: "SES-1",
+      savedAt: "2026-08-19T10:00:00Z",
+      status: "in_progress",
+      device: {
+        id: "DEV-1",
+        name: "Device",
+        operatingSystem: "OS",
+        description: "d",
+        assets: [
+          { id: "AS-1", name: "A1", type: "network", description: "d", sensitive: false, requirements },
+        ],
+      },
+      evaluations: requirements.map((requirementId) => ({
+        assetId: "AS-1",
+        requirementId,
+        status: "not_evaluated" as const,
+      })),
+    });
 
   it("vero quando le coppie coincidono con il piano del device", () => {
-    expect(matchesPlan(sessionWith(["ACM-1", "ACM-2"]), deviceWith(["ACM-1", "ACM-2"]))).toBe(true);
+    expect(sessionWith(["ACM-1", "ACM-2"]).matchesPlan(deviceWith(["ACM-1", "ACM-2"]))).toBe(true);
   });
 
   it("falso quando un requisito è cambiato", () => {
-    expect(matchesPlan(sessionWith(["ACM-1", "ACM-2"]), deviceWith(["ACM-1", "AUM-1-1"]))).toBe(false);
+    expect(sessionWith(["ACM-1", "ACM-2"]).matchesPlan(deviceWith(["ACM-1", "AUM-1-1"]))).toBe(
+      false,
+    );
   });
 
   it("falso quando il numero di coppie differisce", () => {
-    expect(matchesPlan(sessionWith(["ACM-1", "ACM-2"]), deviceWith(["ACM-1"]))).toBe(false);
+    expect(sessionWith(["ACM-1", "ACM-2"]).matchesPlan(deviceWith(["ACM-1"]))).toBe(false);
   });
 });

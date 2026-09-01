@@ -3,27 +3,31 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Asset } from "../domain/entities/Asset";
-import type { Device } from "../domain/entities/Device";
+import { Asset } from "../domain/entities/Asset";
+import { Device } from "../domain/entities/Device";
 import { useDeviceStore } from "../store/DeviceStore";
 import AssetFormPage from "./AssetFormPage";
 
-const sampleAsset: Asset = {
+const sampleAsset = Asset.create({
   id: "AS-1",
   name: "Credenziali utente",
   type: "security",
   description: "Codici PIN memorizzati sul dispositivo.",
   sensitive: true,
   requirements: ["ACM-1"],
-};
+});
 
-const sampleDevice: Device = {
+const sampleDevice = Device.create({
   id: "DEV-1",
   name: "Router1",
   operatingSystem: "Linux",
   description: "Router per la casa",
   assets: [],
-};
+});
+
+function assetsToJSON(assets: Asset[] | undefined) {
+  return (assets ?? []).map((asset) => asset.toJSON());
+}
 
 function renderPage(initialEntry = "/device/assets/new") {
   return render(
@@ -73,7 +77,7 @@ describe("AssetFormPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Invia" }));
 
     await waitFor(() => {
-      expect(useDeviceStore.getState().device?.assets).toEqual([mockAsset]);
+      expect(assetsToJSON(useDeviceStore.getState().device?.assets)).toEqual([mockAsset]);
     });
     expect(await screen.findByText("Pagina gestione asset")).toBeInTheDocument();
   });
@@ -146,7 +150,11 @@ describe("AssetFormPage", () => {
   });
 
   it("re-derives requirements via POST /assets when type changes", async () => {
-    const updatedAsset = { ...sampleAsset, type: "network", requirements: ["ACM-1", "ACM-2"] };
+    const updatedAsset = {
+      ...sampleAsset.toJSON(),
+      type: "network",
+      requirements: ["ACM-1", "ACM-2"],
+    };
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(new Response(JSON.stringify(updatedAsset), { status: 201 })),
@@ -161,7 +169,7 @@ describe("AssetFormPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Invia" }));
 
     await waitFor(() => {
-      expect(useDeviceStore.getState().device?.assets).toEqual([updatedAsset]);
+      expect(assetsToJSON(useDeviceStore.getState().device?.assets)).toEqual([updatedAsset]);
     });
     expect(fetch).toHaveBeenCalledWith(
       "/assets",
@@ -180,6 +188,8 @@ describe("AssetFormPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Torna indietro" }));
 
     expect(await screen.findByText("Pagina gestione asset")).toBeInTheDocument();
-    expect(useDeviceStore.getState().device?.assets).toEqual([sampleAsset]);
+    expect(assetsToJSON(useDeviceStore.getState().device?.assets)).toEqual([
+      sampleAsset.toJSON(),
+    ]);
   });
 });

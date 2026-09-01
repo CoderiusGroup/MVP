@@ -1,10 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import type { DecisionTree } from "../domain/entities/DecisionTree";
+import { DecisionTree } from "../domain/entities/DecisionTree";
 import { GrafoDecisionTree } from "./GrafoDecisionTree";
 
-const tree: DecisionTree = {
+const tree = DecisionTree.create({
   requirementId: "ACM-1",
   requirementName: "Sample",
   rootNode: "n1",
@@ -13,7 +13,7 @@ const tree: DecisionTree = {
     { id: "n2", type: "leaf", outcome: "PASS" },
     { id: "n3", type: "leaf", outcome: "FAIL" },
   ],
-};
+});
 
 describe("GrafoDecisionTree", () => {
   it("disegna un nodo per ogni elemento dell'albero", () => {

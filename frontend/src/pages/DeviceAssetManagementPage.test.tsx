@@ -3,29 +3,33 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Asset } from "../domain/entities/Asset";
-import type { Device } from "../domain/entities/Device";
-import type { Session } from "../domain/entities/Session";
+import { Asset } from "../domain/entities/Asset";
+import { Device } from "../domain/entities/Device";
+import { Session } from "../domain/entities/Session";
 import { useDeviceStore } from "../store/DeviceStore";
 import { useSessionStore } from "../store/SessionStore";
 import DeviceAssetManagementPage from "./DeviceAssetManagementPage";
 
-const sampleDevice: Device = {
+const sampleDevice = Device.create({
   id: "DEV-1",
   name: "Router1",
   operatingSystem: "Linux",
   description: "Router per la casa",
   assets: [],
-};
+});
 
-const sampleAsset: Asset = {
+const sampleAsset = Asset.create({
   id: "AS-1",
   name: "Credenziali utente",
   type: "security",
   description: "Codici PIN memorizzati sul dispositivo.",
   sensitive: true,
   requirements: ["ACM-1"],
-};
+});
+
+function assetsToJSON(assets: Asset[] | undefined) {
+  return (assets ?? []).map((asset) => asset.toJSON());
+}
 
 function renderPage() {
   return render(
@@ -104,15 +108,15 @@ describe("DeviceAssetManagementPage", () => {
   it("shows the asset status derived from the session (RF-Ob35)", () => {
     useDeviceStore.getState().setDevice(sampleDevice, {});
     useDeviceStore.getState().addAsset(sampleAsset);
-    const session: Session = {
+    const session = Session.parse({
       id: "SES-1",
       savedAt: "2026-08-21T10:00:00Z",
       status: "in_progress",
-      device: { ...sampleDevice, assets: [sampleAsset] },
+      device: { ...sampleDevice.toJSON(), assets: [sampleAsset.toJSON()] },
       evaluations: [
         { assetId: sampleAsset.id, requirementId: "ACM-1", status: "completed", outcome: "FAIL" },
       ],
-    };
+    });
     useSessionStore.getState().resume(session);
 
     renderPage();
@@ -157,15 +161,15 @@ describe("DeviceAssetManagementPage", () => {
   it("shows the status of each requirement in the detail view (RF-Ob43)", async () => {
     useDeviceStore.getState().setDevice(sampleDevice, {});
     useDeviceStore.getState().addAsset(sampleAsset);
-    const session: Session = {
+    const session = Session.parse({
       id: "SES-1",
       savedAt: "2026-08-21T10:00:00Z",
       status: "in_progress",
-      device: { ...sampleDevice, assets: [sampleAsset] },
+      device: { ...sampleDevice.toJSON(), assets: [sampleAsset.toJSON()] },
       evaluations: [
         { assetId: sampleAsset.id, requirementId: "ACM-1", status: "completed", outcome: "PASS" },
       ],
-    };
+    });
     useSessionStore.getState().resume(session);
 
     renderPage();
@@ -189,7 +193,7 @@ describe("DeviceAssetManagementPage", () => {
 
   it("shows 'Nessuno' when the asset has no derived requirements", async () => {
     useDeviceStore.getState().setDevice(sampleDevice, {});
-    useDeviceStore.getState().addAsset({ ...sampleAsset, requirements: [] });
+    useDeviceStore.getState().addAsset(Asset.create({ ...sampleAsset.toJSON(), requirements: [] }));
 
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: /Credenziali utente/ }));
@@ -226,6 +230,6 @@ describe("DeviceAssetManagementPage", () => {
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: "Rimuovi" }));
 
-    expect(useDeviceStore.getState().device?.assets).toEqual([sampleAsset]);
+    expect(assetsToJSON(useDeviceStore.getState().device?.assets)).toEqual([sampleAsset.toJSON()]);
   });
 });

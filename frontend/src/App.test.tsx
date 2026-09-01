@@ -43,8 +43,8 @@ describe("App", () => {
     await userEvent.upload(input, file);
 
     await waitFor(() => {
-      expect(useSessionStore.getState().session).toEqual(session);
+      expect(useSessionStore.getState().session?.toJSON()).toEqual(session);
     });
-    expect(useDeviceStore.getState().device).toEqual(session.device);
+    expect(useDeviceStore.getState().device?.toJSON()).toEqual(session.device);
   });
 });

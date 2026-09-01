@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import type { DecisionTree } from "../entities/DecisionTree";
+import { DecisionTree } from "../entities/DecisionTree";
 import { currentOutcome, describePath, isRequirementComplete, resolveNodeId } from "./treeRules";
 
-const tree: DecisionTree = {
+const tree = DecisionTree.create({
   requirementId: "ACM-1",
   requirementName: "Sample",
   rootNode: "n1",
@@ -13,7 +13,7 @@ const tree: DecisionTree = {
     { id: "n3", type: "leaf", outcome: "PASS" },
     { id: "n4", type: "leaf", outcome: "FAIL" },
   ],
-};
+});
 
 describe("treeRules", () => {
   it("resolves the root node for an empty path", () => {

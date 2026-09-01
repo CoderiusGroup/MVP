@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { Device } from "../domain/entities/Device";
+import { Asset } from "../domain/entities/Asset";
+import { Device } from "../domain/entities/Device";
 import { useSessionStore } from "./SessionStore";
 
-const device: Device = {
+const device = Device.create({
   id: "DEV-1",
   name: "Device",
   operatingSystem: "OS",
@@ -26,7 +27,7 @@ const device: Device = {
       requirements: ["AUM-1-1"],
     },
   ],
-};
+});
 
 beforeEach(() => {
   useSessionStore.getState().reset();
@@ -79,7 +80,7 @@ describe("SessionStore", () => {
   });
 
   it("starts already completed when the device has no assets to evaluate", () => {
-    useSessionStore.getState().start({ ...device, assets: [] });
+    useSessionStore.getState().start(device.withAssets([]));
     const session = useSessionStore.getState().session!;
 
     expect(session.status).toBe("completed");
@@ -148,12 +149,13 @@ describe("SessionStore", () => {
     useSessionStore.getState().start(device);
     useSessionStore.getState().completeCurrent("PASS", []);
 
-    const changed = {
-      ...device,
-      assets: device.assets.map((asset) =>
-        asset.id === "AS-1" ? { ...asset, requirements: ["ACM-1"] } : asset,
+    const changed = device.withAssets(
+      device.assets.map((asset) =>
+        asset.id === "AS-1"
+          ? Asset.create({ ...asset.toJSON(), requirements: ["ACM-1"] })
+          : asset,
       ),
-    };
+    );
     useSessionStore.getState().ensureSession(changed);
 
     const session = useSessionStore.getState().session!;
@@ -165,7 +167,7 @@ describe("SessionStore", () => {
     useSessionStore.getState().start(device);
     useSessionStore.getState().completeCurrent("PASS", []);
 
-    useSessionStore.getState().ensureSession({ ...device, id: "DEV-2" });
+    useSessionStore.getState().ensureSession(Device.create({ ...device.toJSON(), id: "DEV-2" }));
 
     const session = useSessionStore.getState().session!;
     expect(session.device.id).toBe("DEV-2");
