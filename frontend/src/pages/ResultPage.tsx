@@ -1,14 +1,20 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Esito } from "../components/Esito";
 import { getAssetStatus, getEvaluationStatus, STATUS_LABELS } from "../domain/rules/sessionRules";
 import { useResult } from "../hooks/useResult";
+import { NotificationManager } from "../infrastructure/NotificationManager";
+import { exportReportPdf } from "../services/ReportService";
 import { downloadSession } from "../services/SessionService";
 import { useSessionStore } from "../store/SessionStore";
+
+const notification = new NotificationManager();
 
 export function ResultPage() {
   const navigate = useNavigate();
   const session = useSessionStore((state) => state.session);
+  const [exportingReport, setExportingReport] = useState(false);
   const {
     selectedAssetId,
     selectedRequirementId,
@@ -29,6 +35,17 @@ export function ResultPage() {
       </div>
     );
   }
+
+  const handleExportReport = async () => {
+    setExportingReport(true);
+    try {
+      await exportReportPdf(session);
+    } catch {
+      notification.error("Esportazione del report non riuscita");
+    } finally {
+      setExportingReport(false);
+    }
+  };
 
   const selectedAsset = session.device.assets.find((a) => a.id === selectedAssetId) ?? null;
   const selectedEvaluation =
@@ -108,6 +125,9 @@ export function ResultPage() {
       <div style={{ marginTop: "1rem" }}>
         <button type="button" onClick={() => downloadSession(session)}>
           Salva sessione
+        </button>
+        <button type="button" onClick={handleExportReport} disabled={exportingReport}>
+          {exportingReport ? "Esportazione in corso..." : "Esporta report PDF"}
         </button>
         <button type="button" onClick={() => navigate("/session/modify")}>
           Modifica sessione

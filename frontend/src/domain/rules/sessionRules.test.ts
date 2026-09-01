@@ -8,6 +8,7 @@ import {
   getDeviceStatus,
   getEvaluationProgress,
   getEvaluationStatus,
+  getRequirementStatus,
   transitiveDependents,
   type DependencyMap,
 } from "./sessionRules";
@@ -200,6 +201,27 @@ describe("sessionRules — stato di valutazione", () => {
 
   it("getDeviceStatus riduce gli stati di tutti gli asset del device", () => {
     expect(getDeviceStatus(completedSession(), completedSession().device)).toBe("FAIL");
+  });
+
+  it("getRequirementStatus ritorna 'not_evaluated' senza sessione", () => {
+    expect(getRequirementStatus(null, "ACM-1")).toBe("not_evaluated");
+  });
+
+  it("getRequirementStatus ritorna 'no_requirements' se nessun asset ha il requisito", () => {
+    expect(getRequirementStatus(completedSession(), "AUM-2")).toBe("no_requirements");
+  });
+
+  it("getRequirementStatus aggrega l'esito del requisito su tutti gli asset che lo condividono", () => {
+    expect(getRequirementStatus(completedSession(), "ACM-2")).toBe("FAIL");
+    expect(getRequirementStatus(completedSession(), "ACM-1")).toBe("PASS");
+    expect(getRequirementStatus(completedSession(), "AUM-1-1")).toBe("PASS");
+  });
+
+  it("getRequirementStatus ritorna 'not_evaluated' se una delle coppie non è ancora valutata", () => {
+    const session = completedSession().withEvaluations([
+      { assetId: "AS-1", requirementId: "ACM-2", status: "completed", outcome: "PASS", path: [] },
+    ]);
+    expect(getRequirementStatus(session, "ACM-2")).toBe("not_evaluated");
   });
 
   it("getDeviceStatus ritorna 'no_requirements' per un device senza asset", () => {

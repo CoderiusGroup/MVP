@@ -67,7 +67,7 @@ describe("DeviceAssetManagementPage", () => {
     useDeviceStore.getState().setDevice(sampleDevice, {});
     renderPage();
 
-    const summaryButton = screen.getByRole("button", { name: /Vai al Riepilogo Finale/i });
+    const summaryButton = screen.getByRole("button", { name: /Visualizza dettaglio dispositivo/i });
     expect(summaryButton).toBeDisabled();
 
     await userEvent.click(screen.getByRole("button", { name: /Annulla e vai alla Home/i }));
@@ -79,7 +79,7 @@ describe("DeviceAssetManagementPage", () => {
     useDeviceStore.getState().addAsset(sampleAsset);
     renderPage();
 
-    const summaryButton = screen.getByRole("button", { name: /Vai al Riepilogo Finale/i });
+    const summaryButton = screen.getByRole("button", { name: /Visualizza dettaglio dispositivo/i });
     expect(summaryButton).not.toBeDisabled();
 
     await userEvent.click(summaryButton);

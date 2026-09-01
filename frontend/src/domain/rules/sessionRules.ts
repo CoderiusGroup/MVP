@@ -149,3 +149,21 @@ export function getAssetStatus(session: Session | null, asset: Asset): DisplaySt
 export function getDeviceStatus(session: Session | null, device: Device): DisplayStatus {
   return reduceStatuses(device.assets.map((asset) => getAssetStatus(session, asset)));
 }
+
+export function getRequirementStatus(
+  session: Session | null,
+  requirementId: string,
+): DisplayStatus {
+  if (!session) {
+    return "not_evaluated";
+  }
+  const assetIds = session.device.assets
+    .filter((asset) => (asset.requirements ?? []).includes(requirementId))
+    .map((asset) => asset.id);
+  if (assetIds.length === 0) {
+    return "no_requirements";
+  }
+  return reduceStatuses(
+    assetIds.map((assetId) => getEvaluationStatus(session, assetId, requirementId)),
+  );
+}

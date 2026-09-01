@@ -7,6 +7,7 @@ import {
 } from "../domain/entities/Device";
 import { Asset, AssetCreateSchema, type AssetCreate } from "../domain/entities/Asset";
 import { formatForFile, type DeviceFileFormat } from "./deviceFileFormats";
+import { downloadBlob } from "./downloadFile";
 
 const apiClient = new FetchApiClient();
 
@@ -52,12 +53,7 @@ export async function importDeviceFromFile(file: File): Promise<DeviceSaveResult
 export function exportDevice(device: Device, format: DeviceFileFormat): void {
   const content = format.serialize(device);
   const blob = new Blob([content], { type: format.mimeType });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `${device.id}${format.extension}`;
-  anchor.click();
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, `${device.id}${format.extension}`);
 }
 
 export async function createDeviceManually(payload: DeviceCreate): Promise<DeviceSaveResult> {
