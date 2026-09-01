@@ -24,8 +24,96 @@ export const AssetImportSchema = AssetCreateSchema.extend({
   id: identifier.optional(),
 });
 
-export type Asset = z.infer<typeof AssetSchema>;
-
+export type AssetType = z.infer<typeof AssetSchema>["type"];
 export type AssetCreate = z.infer<typeof AssetCreateSchema>;
-
 export type AssetImport = z.infer<typeof AssetImportSchema>;
+
+export interface AssetDetailsPatch {
+  name: string;
+  type: AssetType;
+  description: string;
+  sensitive: boolean;
+}
+
+export class Asset {
+  readonly #id: string;
+  readonly #name: string;
+  readonly #type: AssetType;
+  readonly #description: string;
+  readonly #sensitive: boolean;
+  readonly #requirements: string[] | undefined;
+
+  constructor(
+    id: string,
+    name: string,
+    type: AssetType,
+    description: string,
+    sensitive: boolean,
+    requirements?: string[],
+  ) {
+    this.#id = id;
+    this.#name = name;
+    this.#type = type;
+    this.#description = description;
+    this.#sensitive = sensitive;
+    this.#requirements = requirements;
+  }
+
+  get id(): string {
+    return this.#id;
+  }
+
+  get name(): string {
+    return this.#name;
+  }
+
+  get type(): AssetType {
+    return this.#type;
+  }
+
+  get description(): string {
+    return this.#description;
+  }
+
+  get sensitive(): boolean {
+    return this.#sensitive;
+  }
+
+  get requirements(): string[] | undefined {
+    return this.#requirements;
+  }
+
+  withDetails(patch: AssetDetailsPatch): Asset {
+    return new Asset(
+      this.#id,
+      patch.name,
+      patch.type,
+      patch.description,
+      patch.sensitive,
+      this.#requirements,
+    );
+  }
+
+  toJSON() {
+    return {
+      id: this.id,
+      name: this.name,
+      type: this.type,
+      description: this.description,
+      sensitive: this.sensitive,
+      requirements: this.requirements,
+    };
+  }
+
+  static create(raw: unknown): Asset {
+    const parsed = AssetSchema.parse(raw);
+    return new Asset(
+      parsed.id,
+      parsed.name,
+      parsed.type,
+      parsed.description,
+      parsed.sensitive,
+      parsed.requirements,
+    );
+  }
+}

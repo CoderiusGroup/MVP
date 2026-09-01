@@ -1,17 +1,11 @@
 import { FetchApiClient } from "../infrastructure/FetchApiClient";
 import {
-  DeviceSchema,
+  Device,
   DeviceCreateSchema,
-  type Device,
   type DeviceCreate,
   type DeviceImport,
 } from "../domain/entities/Device";
-import {
-  AssetSchema,
-  AssetCreateSchema,
-  type Asset,
-  type AssetCreate,
-} from "../domain/entities/Asset";
+import { Asset, AssetCreateSchema, type AssetCreate } from "../domain/entities/Asset";
 import { formatForFile, type DeviceFileFormat } from "./deviceFileFormats";
 
 const apiClient = new FetchApiClient();
@@ -36,7 +30,7 @@ export async function importDeviceFromFile(file: File): Promise<DeviceSaveResult
     operatingSystem: parsed.operatingSystem,
     description: parsed.description,
   });
-  const deviceShell = DeviceSchema.parse(deviceRaw);
+  const deviceShell = Device.create(deviceRaw);
 
   const assets = await Promise.all(
     parsed.assets.map(async (asset) => {
@@ -48,11 +42,11 @@ export async function importDeviceFromFile(file: File): Promise<DeviceSaveResult
         sensitive: asset.sensitive,
         requirements: asset.requirements,
       });
-      return AssetSchema.parse(assetRaw);
+      return Asset.create(assetRaw);
     }),
   );
 
-  return { device: { ...deviceShell, assets }, payload: parsed };
+  return { device: deviceShell.withAssets(assets), payload: parsed };
 }
 
 export function exportDevice(device: Device, format: DeviceFileFormat): void {
@@ -82,7 +76,7 @@ export async function createAsset(payload: AssetCreate): Promise<Asset> {
   }
 
   const raw = await apiClient.post<unknown>("/assets", result.data);
-  return AssetSchema.parse(raw);
+  return Asset.create(raw);
 }
 
 export async function updateAsset(existingAsset: Asset, payload: AssetCreate): Promise<Asset> {
@@ -92,7 +86,7 @@ export async function updateAsset(existingAsset: Asset, payload: AssetCreate): P
   }
 
   if (result.data.type === existingAsset.type) {
-    return { ...existingAsset, ...result.data };
+    return existingAsset.withDetails(result.data);
   }
   const raw = await apiClient.post<unknown>("/assets", {
     id: existingAsset.id,
@@ -101,12 +95,12 @@ export async function updateAsset(existingAsset: Asset, payload: AssetCreate): P
     description: result.data.description,
     sensitive: result.data.sensitive,
   });
-  return AssetSchema.parse(raw);
+  return Asset.create(raw);
 }
 
 async function saveDevice(payload: DeviceCreate): Promise<DeviceSaveResult> {
   const raw = await apiClient.post<unknown>("/devices", payload);
-  const device = DeviceSchema.parse(raw);
+  const device = Device.create(raw);
   return { device, payload };
 }
 

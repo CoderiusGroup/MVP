@@ -2,13 +2,7 @@ import { create } from "zustand";
 
 import type { Device } from "../domain/entities/Device";
 import type { Outcome } from "../domain/rules/treeRules";
-import type { PathStep, Session } from "../domain/entities/Session";
-import {
-  createInitialSession,
-  matchesPlan,
-  reopenEvaluation,
-  selectEvaluation,
-} from "../domain/rules/sessionRules";
+import { Session, type PathStep } from "../domain/entities/Session";
 
 function newSessionId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -32,7 +26,7 @@ export const useSessionStore = create<SessionState>((set) => ({
   session: null,
 
   start: (device) => {
-    set({ session: createInitialSession(device, newSessionId(), new Date().toISOString()) });
+    set({ session: Session.start(device, newSessionId(), new Date().toISOString()) });
   },
 
   ensureSession: (device) => {
@@ -40,12 +34,10 @@ export const useSessionStore = create<SessionState>((set) => ({
       const { session } = state;
       // Riprende la sessione solo se è dello stesso device e il piano non è cambiato;
       // altrimenti ne avvia una nuova. Aggiorna comunque lo snapshot del device.
-      if (!session || session.device.id !== device.id || !matchesPlan(session, device)) {
-        return {
-          session: createInitialSession(device, newSessionId(), new Date().toISOString()),
-        };
+      if (!session || session.device.id !== device.id || !session.matchesPlan(device)) {
+        return { session: Session.start(device, newSessionId(), new Date().toISOString()) };
       }
-      return { session: { ...session, device } };
+      return { session: session.withDevice(device) };
     });
   },
 
@@ -54,63 +46,25 @@ export const useSessionStore = create<SessionState>((set) => ({
   },
 
   syncProgress: (nodeId, path) => {
-    set((state) => {
-      const { session } = state;
-      if (!session || !session.current) {
-        return state;
-      }
-      const { assetId, requirementId } = session.current;
-      return {
-        session: {
-          ...session,
-          current: { ...session.current, nodeId },
-          evaluations: session.evaluations.map((evaluation) =>
-            evaluation.assetId === assetId &&
-            evaluation.requirementId === requirementId &&
-            evaluation.status !== "completed"
-              ? { ...evaluation, status: "in_progress", path }
-              : evaluation,
-          ),
-        },
-      };
-    });
+    set((state) => (state.session ? { session: state.session.syncProgress(nodeId, path) } : state));
   },
 
   completeCurrent: (outcome, path) => {
-    set((state) => {
-      const { session } = state;
-      if (!session || !session.current) {
-        return state;
-      }
-      const { assetId, requirementId } = session.current;
-      const evaluations = session.evaluations.map((evaluation) =>
-        evaluation.assetId === assetId && evaluation.requirementId === requirementId
-          ? { ...evaluation, status: "completed" as const, outcome, path }
-          : evaluation,
-      );
-      const allCompleted = evaluations.every((evaluation) => evaluation.status === "completed");
-      return {
-        session: {
-          ...session,
-          evaluations,
-          status: allCompleted ? "completed" : session.status,
-        },
-      };
-    });
+    set((state) =>
+      state.session ? { session: state.session.completeCurrent(outcome, path) } : state,
+    );
   },
 
   select: (assetId, requirementId) => {
     set((state) =>
-      state.session
-        ? { session: selectEvaluation(state.session, assetId, requirementId) }
-        : state,
+      state.session ? { session: state.session.selectEvaluation(assetId, requirementId) } : state,
     );
   },
 
   reopen: (assetId, requirementId, dependents) => {
     set((state) =>
       state.session
-        ? { session: reopenEvaluation(state.session, assetId, requirementId, dependents) }
+        ? { session: state.session.reopenEvaluation(assetId, requirementId, dependents) }
         : state,
     );
   },

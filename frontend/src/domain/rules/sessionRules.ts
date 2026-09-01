@@ -9,14 +9,10 @@ export interface EvaluationPair {
 
 export type DependencyMap = Record<string, string[]>;
 
+// Delega a Device.buildPlan(): mantenuta come funzione libera perché
+// SessionService.ts la ri-esporta ancora con questo nome per i chiamanti esistenti.
 export function buildPlan(device: Device): EvaluationPair[] {
-  const pairs: EvaluationPair[] = [];
-  for (const asset of device.assets) {
-    for (const requirementId of asset.requirements ?? []) {
-      pairs.push({ assetId: asset.id, requirementId });
-    }
-  }
-  return pairs;
+  return device.buildPlan();
 }
 
 export function isPairCompleted(evaluation: Evaluation): boolean {
@@ -44,81 +40,6 @@ export function transitiveDependents(
   return [...dependents];
 }
 
-export function selectEvaluation(
-  session: Session,
-  assetId: string,
-  requirementId: string,
-): Session {
-  return {
-    ...session,
-    status: "in_progress",
-    current: { assetId, requirementId, nodeId: "" },
-  };
-}
-
-export function reopenEvaluation(
-  session: Session,
-  assetId: string,
-  requirementId: string,
-  dependentRequirementIds: string[],
-): Session {
-  const toReset = new Set([requirementId, ...dependentRequirementIds]);
-  return {
-    ...session,
-    status: "in_progress",
-    current: { assetId, requirementId, nodeId: "" },
-    evaluations: session.evaluations.map((evaluation): Evaluation =>
-      evaluation.assetId === assetId && toReset.has(evaluation.requirementId)
-        ? {
-            assetId: evaluation.assetId,
-            requirementId: evaluation.requirementId,
-            status: "not_evaluated",
-          }
-        : evaluation,
-    ),
-  };
-}
-
-export function createInitialSession(
-  device: Device,
-  id: string,
-  savedAt: string,
-): Session {
-  const plan = buildPlan(device);
-  const evaluations: Evaluation[] = plan.map((pair) => ({
-    assetId: pair.assetId,
-    requirementId: pair.requirementId,
-    status: "not_evaluated",
-  }));
-
-  const first = plan[0];
-  return {
-    id,
-    savedAt,
-    status: first ? "in_progress" : "completed",
-    device,
-    evaluations,
-    current: first
-      ? { assetId: first.assetId, requirementId: first.requirementId, nodeId: "" }
-      : undefined,
-  };
-}
-
-// Vera se le valutazioni della sessione coprono esattamente il piano del device
-// (stesse coppie asset-requisito): in tal caso la sessione è riprendibile così com'è.
-export function matchesPlan(session: Session, device: Device): boolean {
-  const plan = buildPlan(device);
-  if (plan.length !== session.evaluations.length) {
-    return false;
-  }
-  return plan.every((pair) =>
-    session.evaluations.some(
-      (evaluation) =>
-        evaluation.assetId === pair.assetId && evaluation.requirementId === pair.requirementId,
-    ),
-  );
-}
-
 export interface EvaluationProgress {
   assetsDone: number;
   assetsTotal: number;
@@ -139,6 +60,9 @@ function assetRequirementsDone(session: Session, asset: Asset): number {
 
 // UC-19.1: progresso della sessione — asset completati sul totale e, per l'asset
 // corrente, requisiti completati sul totale.
+//
+// Resta una funzione libera (non un metodo di Session) perché tollera `session`
+// nullo — molte pagine la chiamano prima che una sessione esista.
 export function getEvaluationProgress(session: Session, assetId?: string): EvaluationProgress {
   const assets = session.device.assets;
   const assetsDone = assets.filter((asset) => {
@@ -195,6 +119,9 @@ function reduceStatuses(statuses: DisplayStatus[]): DisplayStatus {
   return STATUS_PRIORITY.find((candidate) => statuses.includes(candidate)) ?? "no_requirements";
 }
 
+// Le tre funzioni seguenti restano libere, non metodi di Session, per lo
+// stesso motivo di getEvaluationProgress: tollerano `session` nullo, come
+// usato da ogni pagina che mostra lo stato prima che una sessione esista.
 export function getEvaluationStatus(
   session: Session | null,
   assetId: string,

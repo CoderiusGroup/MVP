@@ -2,8 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
-import type { Device } from "../domain/entities/Device";
-import type { Session } from "../domain/entities/Session";
+import { Session } from "../domain/entities/Session";
 import { queryClient } from "../infrastructure/queryClient";
 import { useSessionStore } from "../store/SessionStore";
 import { useTreeStore } from "../store/TreeStore";
@@ -32,21 +31,21 @@ const dependentTree = {
   ],
 };
 
-function device(assets: Device["assets"]): Device {
+function device(assets: ReturnType<typeof asset>[]) {
   return { id: "DEV-1", name: "Device", operatingSystem: "OS", description: "desc", assets };
 }
 
-const asset = (id: string, requirements: string[]): Device["assets"][number] => ({
+const asset = (id: string, requirements: string[]) => ({
   id,
   name: `Asset ${id}`,
-  type: "network",
+  type: "network" as const,
   description: "d",
   sensitive: false,
   requirements,
 });
 
-function baseSession(overrides: Partial<Session> = {}): Session {
-  return {
+function baseSession(overrides: Record<string, unknown> = {}): Session {
+  return Session.parse({
     id: "SES-1",
     savedAt: "2026-08-19T10:00:00Z",
     status: "in_progress",
@@ -54,7 +53,7 @@ function baseSession(overrides: Partial<Session> = {}): Session {
     evaluations: [{ assetId: "AS-1", requirementId: "ACM-1", status: "not_evaluated" }],
     current: { assetId: "AS-1", requirementId: "ACM-1", nodeId: "n1" },
     ...overrides,
-  };
+  });
 }
 
 function renderPage() {

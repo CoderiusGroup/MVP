@@ -3,29 +3,29 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Asset } from "../domain/entities/Asset";
-import type { Device } from "../domain/entities/Device";
-import type { Session } from "../domain/entities/Session";
+import { Asset } from "../domain/entities/Asset";
+import { Device } from "../domain/entities/Device";
+import { Session } from "../domain/entities/Session";
 import { useDeviceStore } from "../store/DeviceStore";
 import { useSessionStore } from "../store/SessionStore";
 import DeviceSummaryPage from "./DeviceSummaryPage";
 
-const sampleAsset: Asset = {
+const sampleAsset = Asset.create({
   id: "AS-1",
   name: "Credenziali utente",
   type: "security",
   description: "Codici PIN memorizzati sul dispositivo.",
   sensitive: true,
   requirements: ["ACM-1"],
-};
+});
 
-const sampleDevice: Device = {
+const sampleDevice = Device.create({
   id: "DEV-1",
   name: "Router1",
   operatingSystem: "Linux",
   description: "Router per la casa",
-  assets: [sampleAsset],
-};
+  assets: [sampleAsset.toJSON()],
+});
 
 function renderPage() {
   return render(
@@ -66,15 +66,15 @@ describe("DeviceSummaryPage", () => {
 
   it("shows the aggregated status derived from the session (RF-Ob18)", () => {
     useDeviceStore.getState().setDevice(sampleDevice, {});
-    const session: Session = {
+    const session = Session.parse({
       id: "SES-1",
       savedAt: "2026-08-21T10:00:00Z",
       status: "in_progress",
-      device: sampleDevice,
+      device: sampleDevice.toJSON(),
       evaluations: [
         { assetId: sampleAsset.id, requirementId: "ACM-1", status: "completed", outcome: "FAIL" },
       ],
-    };
+    });
     useSessionStore.getState().resume(session);
 
     renderPage();
@@ -139,7 +139,7 @@ describe("DeviceSummaryPage", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Elimina dispositivo" }));
 
-    expect(useDeviceStore.getState().device).toEqual(sampleDevice);
+    expect(useDeviceStore.getState().device?.toJSON()).toEqual(sampleDevice.toJSON());
     expect(screen.getByText("Router1", { exact: false })).toBeInTheDocument();
   });
 
@@ -172,6 +172,6 @@ describe("DeviceSummaryPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Elimina con backup" }));
 
     expect(createObjectURL).not.toHaveBeenCalled();
-    expect(useDeviceStore.getState().device).toEqual(sampleDevice);
+    expect(useDeviceStore.getState().device?.toJSON()).toEqual(sampleDevice.toJSON());
   });
 });

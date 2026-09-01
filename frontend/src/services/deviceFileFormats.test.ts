@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type { Device } from "../domain/entities/Device";
+import { Asset } from "../domain/entities/Asset";
+import { Device } from "../domain/entities/Device";
 import { csvDeviceFormat, formatForFile, jsonDeviceFormat } from "./deviceFileFormats";
 
-const deviceWithAssets: Device = {
+const deviceWithAssets = Device.create({
   id: "DEV-1",
   name: "Coffee Machine",
   operatingSystem: "Linux",
@@ -26,22 +27,22 @@ const deviceWithAssets: Device = {
       requirements: ["ACM-1"],
     },
   ],
-};
+});
 
-const deviceWithoutAssets: Device = {
+const deviceWithoutAssets = Device.create({
   id: "DEV-2",
   name: "Router",
   operatingSystem: "OpenWRT",
   description: "Router domestico",
   assets: [],
-};
+});
 
 describe("jsonDeviceFormat", () => {
   it("fa un round-trip serialize/parse preservando device e asset", () => {
     const text = jsonDeviceFormat.serialize(deviceWithAssets);
     const parsed = jsonDeviceFormat.parse(text);
 
-    expect(parsed).toEqual(deviceWithAssets);
+    expect(parsed).toEqual(deviceWithAssets.toJSON());
   });
 
   it("rifiuta un testo non JSON", () => {
@@ -55,7 +56,7 @@ describe("jsonDeviceFormat", () => {
   });
 
   it("accetta un device senza id (generato poi dal backend)", () => {
-    const withoutId = { ...deviceWithoutAssets, id: undefined };
+    const withoutId = { ...deviceWithoutAssets.toJSON(), id: undefined };
     const text = JSON.stringify(withoutId);
 
     const parsed = jsonDeviceFormat.parse(text);
@@ -70,7 +71,7 @@ describe("csvDeviceFormat", () => {
     const text = csvDeviceFormat.serialize(deviceWithAssets);
     const parsed = csvDeviceFormat.parse(text);
 
-    expect(parsed).toEqual(deviceWithAssets);
+    expect(parsed).toEqual(deviceWithAssets.toJSON());
   });
 
   it("gestisce correttamente un device senza asset con una sola riga", () => {
@@ -97,10 +98,9 @@ describe("csvDeviceFormat", () => {
   });
 
   it("un asset con requirements esplicitamente vuoto torna 'undefined' al parse (limite noto: il CSV non distingue '[]' da 'assente')", () => {
-    const deviceWithEmptyRequirements: Device = {
-      ...deviceWithoutAssets,
-      assets: [{ ...deviceWithAssets.assets[0], requirements: [] }],
-    };
+    const deviceWithEmptyRequirements = deviceWithoutAssets.withAssets([
+      Asset.create({ ...deviceWithAssets.assets[0].toJSON(), requirements: [] }),
+    ]);
 
     const parsed = csvDeviceFormat.parse(csvDeviceFormat.serialize(deviceWithEmptyRequirements));
 

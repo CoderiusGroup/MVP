@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import DeviceFormPage from "./DeviceFormPage";
 import { FetchApiClient } from "../infrastructure/FetchApiClient";
 import { BrowserRouter } from "react-router-dom";
-import type { Device } from "../domain/entities/Device";
+import { Device } from "../domain/entities/Device";
 
 vi.mock("../infrastructure/FetchApiClient");
 
@@ -56,9 +56,12 @@ describe("DeviceFormPage", () => {
         await userEvent.click(screen.getByRole("button", {name: /Salva e procedi/i}));
 
         await waitFor(() => {
-            expect(mockSetDevice).toHaveBeenCalledWith(mockCreatedDevice, expect.objectContaining({ name: "Router1" }));
+            expect(mockSetDevice).toHaveBeenCalled();
             expect(mockedNavigate).toHaveBeenCalledWith("/device/assets");
         });
+        const [calledDevice, calledPayload] = mockSetDevice.mock.calls[0];
+        expect(calledDevice.toJSON()).toEqual(mockCreatedDevice);
+        expect(calledPayload).toEqual(expect.objectContaining({ name: "Router1" }));
     });
 
     it("mostra un errore HTML nativo (required) se il nome o SO sono mancanti", async () => {
@@ -72,7 +75,7 @@ describe("DeviceFormPage", () => {
 
     it("precompila il form con i dati esistenti in modalità modifica (RF-D11-14)", () => {
         mockPathname = "/device/edit";
-        mockDevice = { id: "1", name: "Router1", operatingSystem: "Linux", description: "Router per la casa", assets: [] };
+        mockDevice = Device.create({ id: "1", name: "Router1", operatingSystem: "Linux", description: "Router per la casa", assets: [] });
 
         render(<BrowserRouter><DeviceFormPage /></BrowserRouter>);
 
@@ -84,7 +87,7 @@ describe("DeviceFormPage", () => {
 
     it("in modalità modifica salva localmente senza chiamare il backend e torna al riepilogo", async () => {
         mockPathname = "/device/edit";
-        mockDevice = { id: "1", name: "Router1", operatingSystem: "Linux", description: "Router per la casa", assets: [] };
+        mockDevice = Device.create({ id: "1", name: "Router1", operatingSystem: "Linux", description: "Router per la casa", assets: [] });
 
         render(<BrowserRouter><DeviceFormPage /></BrowserRouter>);
 
@@ -104,7 +107,7 @@ describe("DeviceFormPage", () => {
 
     it("in modalità modifica 'Torna indietro' non salva nulla (RF-D02)", async () => {
         mockPathname = "/device/edit";
-        mockDevice = { id: "1", name: "Router1", operatingSystem: "Linux", description: "Router per la casa", assets: [] };
+        mockDevice = Device.create({ id: "1", name: "Router1", operatingSystem: "Linux", description: "Router per la casa", assets: [] });
 
         render(<BrowserRouter><DeviceFormPage /></BrowserRouter>);
 

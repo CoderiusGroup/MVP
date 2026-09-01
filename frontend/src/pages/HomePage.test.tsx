@@ -77,7 +77,9 @@ describe("HomePage", () =>{
             expect(onDeviceSaved).toHaveBeenCalled();
         });
         const [savedDevice] = onDeviceSaved.mock.calls[0];
-        expect(savedDevice.assets).toEqual([mockAsset]);
+        expect(savedDevice.assets.map((asset: { toJSON(): unknown }) => asset.toJSON())).toEqual([
+            mockAsset,
+        ]);
         expect(FetchApiClient.prototype.post).toHaveBeenCalledWith(
             "/assets",
             expect.objectContaining({ id: "AS-1" }),
