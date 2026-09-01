@@ -44,7 +44,7 @@ export default function DeviceAssetManagementPage() {
           disabled={assets.length === 0}
           style={{ fontWeight: "bold", backgroundColor: assets.length > 0 ? "green" : "grey", color: "white" }}
         >
-          Vai al Riepilogo Finale
+          Visualizza dettaglio dispositivo
         </button>
       </div>
 

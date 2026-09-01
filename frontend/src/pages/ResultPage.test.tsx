@@ -4,8 +4,21 @@ import { MemoryRouter } from "react-router-dom";
 
 import { Session } from "../domain/entities/Session";
 import { queryClient } from "../infrastructure/queryClient";
+import { exportReportPdf } from "../services/ReportService";
 import { useSessionStore } from "../store/SessionStore";
 import { ResultPage } from "./ResultPage";
+
+const { errorToastMock } = vi.hoisted(() => ({ errorToastMock: vi.fn() }));
+
+vi.mock("../infrastructure/NotificationManager", () => ({
+  NotificationManager: class {
+    success = vi.fn();
+    error = errorToastMock;
+    errorJsonLoading = vi.fn();
+  },
+}));
+
+vi.mock("../services/ReportService", () => ({ exportReportPdf: vi.fn() }));
 
 const tree = {
   requirementId: "ACM-1",
@@ -63,6 +76,8 @@ function renderPage() {
 beforeEach(() => {
   queryClient.clear();
   useSessionStore.getState().reset();
+  errorToastMock.mockClear();
+  vi.mocked(exportReportPdf).mockReset();
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve(JSON.stringify(tree)) }),
@@ -98,5 +113,26 @@ describe("ResultPage", () => {
     // UC-27.1.1: percorso logico del requisito.
     const detail = await screen.findByLabelText("Dettaglio requisito con esito");
     await waitFor(() => expect(detail).toHaveTextContent("Domanda 1? → Sì"));
+  });
+
+  it("esporta il report PDF al click del bottone", async () => {
+    vi.mocked(exportReportPdf).mockResolvedValue();
+    useSessionStore.getState().resume(completedSession());
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Esporta report PDF" }));
+
+    await waitFor(() => expect(exportReportPdf).toHaveBeenCalledTimes(1));
+    expect(errorToastMock).not.toHaveBeenCalled();
+  });
+
+  it("mostra un errore se l'esportazione del report fallisce", async () => {
+    vi.mocked(exportReportPdf).mockRejectedValue(new Error("boom"));
+    useSessionStore.getState().resume(completedSession());
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Esporta report PDF" }));
+
+    await waitFor(() => expect(errorToastMock).toHaveBeenCalledTimes(1));
   });
 });

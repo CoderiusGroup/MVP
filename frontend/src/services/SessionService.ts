@@ -1,4 +1,5 @@
 import { Session } from "../domain/entities/Session";
+import { downloadBlob } from "./downloadFile";
 
 export { buildPlan } from "../domain/rules/sessionRules";
 export type { EvaluationPair } from "../domain/rules/sessionRules";
@@ -25,12 +26,7 @@ export function parseSessionFile(text: string): Session {
 export function downloadSession(session: Session): void {
   const file = toSessionFile(session);
   const blob = new Blob([JSON.stringify(file, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `${file.id}.json`;
-  anchor.click();
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, `${file.id}.json`);
 }
 
 export async function loadSessionFromJson(file: File): Promise<Session> {
