@@ -101,7 +101,7 @@ describe("DecisionTreeCatalogPage", () => {
 
     const graph = screen.getByLabelText("Grafo decision tree");
     expect(graph.querySelectorAll('[data-current="true"]').length).toBe(0);
-    expect(graph.querySelectorAll('[opacity="0.5"]').length).toBe(0);
+    expect(graph.querySelectorAll('[data-dimmed="true"]').length).toBe(0);
   });
 
   it("esporta il tree JSON quando clicco il bottone appropriato", async () => {
