@@ -14,9 +14,10 @@ export function DecisionTreeCatalogPage() {
   const [selectedRequirementId, setSelectedRequirementId] = useState<string | null>(null);
   const [tree, setTree] = useState<DecisionTree | null>(null);
   const [loading, setLoading] = useState(true);
-  const [importing, setImporting] = useState(false);
+  const [importing, setImporting] = useState<"json" | "csv" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const jsonInputRef = useRef<HTMLInputElement>(null);
+  const csvInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -77,9 +78,15 @@ export function DecisionTreeCatalogPage() {
     }
   };
 
-  const handleImport = async (file?: File) => {
+  const handleImport = async (file: File | undefined, format: "json" | "csv") => {
+    const input = format === "json" ? jsonInputRef.current : csvInputRef.current;
     if (!file) return;
-    setImporting(true);
+    if (!file.name.toLowerCase().endsWith(`.${format}`)) {
+      notification.error(`Il file selezionato non è un ${format.toUpperCase()}.`);
+      if (input) input.value = "";
+      return;
+    }
+    setImporting(format);
     setError(null);
     try {
       const importedTree = await decisionTreeService.importTree(file);
@@ -92,8 +99,8 @@ export function DecisionTreeCatalogPage() {
     } catch {
       setError("Impossibile importare il decision tree. Verificare il formato e la struttura del file.");
     } finally {
-      setImporting(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      setImporting(null);
+      if (input) input.value = "";
     }
   };
 
@@ -112,16 +119,37 @@ export function DecisionTreeCatalogPage() {
         <>
           <p>Seleziona un requisito per visualizzare la struttura completa del DT.</p>
           <input
-            ref={fileInputRef}
+            ref={jsonInputRef}
             type="file"
-            accept=".json,.csv,application/json,text/csv"
-            aria-label="Seleziona decision tree da importare"
-            onChange={(event) => handleImport(event.target.files?.[0])}
+            accept=".json,application/json"
+            aria-label="Seleziona file JSON del decision tree"
+            onChange={(event) => handleImport(event.target.files?.[0], "json")}
             style={{ display: "none" }}
           />
-          <button type="button" onClick={() => fileInputRef.current?.click()} disabled={importing}>
-            {importing ? "Importazione..." : "Importa decision tree"}
-          </button>
+          <input
+            ref={csvInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            aria-label="Seleziona file CSV del decision tree"
+            onChange={(event) => handleImport(event.target.files?.[0], "csv")}
+            style={{ display: "none" }}
+          />
+          <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+            <button
+              type="button"
+              onClick={() => jsonInputRef.current?.click()}
+              disabled={importing !== null}
+            >
+              {importing === "json" ? "Importazione JSON..." : "Importa JSON"}
+            </button>
+            <button
+              type="button"
+              onClick={() => csvInputRef.current?.click()}
+              disabled={importing !== null}
+            >
+              {importing === "csv" ? "Importazione CSV..." : "Importa CSV"}
+            </button>
+          </div>
           <ul className="decision-tree-list">
             {trees.map((treeSummary) => (
               <li key={treeSummary.requirementId}>
@@ -174,8 +202,8 @@ export function DecisionTreeCatalogPage() {
               <GrafoDecisionTree tree={tree} currentNodeId={tree.rootNode} path={[]} readOnly />
               
               <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
-                <button type="button" onClick={() => handleExport("json")}>Export JSON</button>
-                <button type="button" onClick={() => handleExport("csv")}>Export CSV</button>
+                <button type="button" onClick={() => handleExport("json")}>Esporta JSON</button>
+                <button type="button" onClick={() => handleExport("csv")}>Esporta CSV</button>
               </div>
             </section>
           ) : null}
