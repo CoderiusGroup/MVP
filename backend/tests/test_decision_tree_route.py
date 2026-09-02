@@ -23,7 +23,7 @@ class FakeDecisionTreeRepository(IDecisionTreeRepository):
         self._trees[requirement_id] = decision_tree
 
     def delete(self, id):
-        raise NotImplementedError
+        self._trees.pop(id, None)
 
     def list(self):
         return list(self._trees)
@@ -59,6 +59,28 @@ def test_get_decision_tree_returns_404_when_missing():
     client = app.test_client()
 
     response = client.get("/decision-trees/does-not-exist")
+
+    assert response.status_code == 404
+    assert "error" in response.get_json()
+
+
+def test_delete_decision_tree_removes_it_and_returns_204():
+    app, decision_tree = _build_app()
+    client = app.test_client()
+    requirement_id = decision_tree["requirementId"]
+
+    response = client.delete(f"/decision-trees/{requirement_id}")
+
+    assert response.status_code == 204
+    assert response.data == b""
+    assert client.get(f"/decision-trees/{requirement_id}").status_code == 404
+
+
+def test_delete_decision_tree_returns_404_when_missing():
+    app, _ = _build_app()
+    client = app.test_client()
+
+    response = client.delete("/decision-trees/does-not-exist")
 
     assert response.status_code == 404
     assert "error" in response.get_json()

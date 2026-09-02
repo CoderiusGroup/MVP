@@ -20,7 +20,7 @@ class FakeDecisionTreeRepository(IDecisionTreeRepository):
         raise NotImplementedError
 
     def delete(self, id):
-        raise NotImplementedError
+        self._trees.pop(id, None)
 
     def list(self):
         return list(self._trees)
@@ -43,3 +43,21 @@ def test_get_tree_raises_when_missing():
 
     with pytest.raises(DecisionTreeNotFoundError):
         service.get_tree("missing")
+
+
+def test_delete_tree_removes_it_from_the_repository():
+    raw = json.loads(FIXTURE_PATH.read_text())
+    requirement_id = raw["decisionTree"]["requirementId"]
+    repository = FakeDecisionTreeRepository({requirement_id: raw})
+    service = DecisionTreeService(repository)
+
+    service.delete_tree(requirement_id)
+
+    assert repository.get(requirement_id) is None
+
+
+def test_delete_tree_raises_when_missing():
+    service = DecisionTreeService(FakeDecisionTreeRepository({}))
+
+    with pytest.raises(DecisionTreeNotFoundError):
+        service.delete_tree("missing")

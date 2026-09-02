@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ApiClientService } from "../infrastructure/ApiClientService";
 import { queryClient } from "../infrastructure/queryClient";
@@ -46,5 +46,14 @@ describe("DecisionTreeService", () => {
     const file = new File([JSON.stringify(rawTree)], "tree.json", { type: "application/json" });
 
     await expect(service.importTree(file)).resolves.toMatchObject({ requirementId: "ACM-1" });
+  });
+
+  it("elimina un decision tree chiamando DELETE sull'endpoint", async () => {
+    const del = vi.fn().mockResolvedValue(undefined);
+    const service = new DecisionTreeService({ ...fakeApi(undefined), delete: del } as ApiClientService);
+
+    await service.deleteTree("ACM-1");
+
+    expect(del).toHaveBeenCalledWith("/decision-trees/ACM-1");
   });
 });

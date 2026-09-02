@@ -15,6 +15,7 @@ export function DecisionTreeCatalogPage() {
   const [tree, setTree] = useState<DecisionTree | null>(null);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState<"json" | "csv" | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
@@ -75,6 +76,30 @@ export function DecisionTreeCatalogPage() {
       await decisionTreeService.exportTree(selectedRequirementId, format);
     } catch {
       setError(`Esportazione ${format.toUpperCase()} non disponibile.`);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedRequirementId || !tree) return;
+    if (
+      !window.confirm(
+        `Confermi l'eliminazione definitiva del decision tree ${tree.requirementId}? L'operazione non è reversibile.`,
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    setError(null);
+    try {
+      await decisionTreeService.deleteTree(selectedRequirementId);
+      const updatedTrees = await decisionTreeService.listTrees();
+      setTrees(updatedTrees);
+      setSelectedRequirementId(updatedTrees[0]?.requirementId ?? null);
+      notification.success("Decision tree eliminato");
+    } catch {
+      setError("Impossibile eliminare il decision tree.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -205,6 +230,10 @@ export function DecisionTreeCatalogPage() {
                 <button type="button" onClick={() => handleExport("json")}>Esporta JSON</button>
                 <button type="button" onClick={() => handleExport("csv")}>Esporta CSV</button>
               </div>
+
+              <button type="button" onClick={handleDelete} disabled={deleting}>
+                {deleting ? "Eliminazione..." : "Elimina decision tree"}
+              </button>
             </section>
           ) : null}
         </>

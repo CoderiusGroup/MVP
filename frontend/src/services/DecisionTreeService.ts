@@ -39,6 +39,12 @@ export class DecisionTreeService {
     });
   }
 
+  async deleteTree(requirementId: string): Promise<void> {
+    await this.api.delete<void>(`/decision-trees/${requirementId}`);
+    await queryClient.invalidateQueries({ queryKey: ["decision-trees"] });
+    queryClient.removeQueries({ queryKey: ["decision-tree", requirementId] });
+  }
+
   async importTree(file: File): Promise<DecisionTree> {
     const formData = new FormData();
     formData.append("file", file);

@@ -60,6 +60,11 @@ class DecisionTreeService:
             raise DecisionTreeNotFoundError(requirement_id)
         return normalize_tree(raw)
 
+    def delete_tree(self, requirement_id: str) -> None:
+        if self._repository.get(requirement_id) is None:
+            raise DecisionTreeNotFoundError(requirement_id)
+        self._repository.delete(requirement_id)
+
     def list_trees(self) -> list[dict[str, str]]:
         trees = []
         for tree_id in sorted(self._repository.list()):

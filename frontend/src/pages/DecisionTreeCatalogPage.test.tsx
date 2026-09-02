@@ -26,6 +26,7 @@ vi.mock("../services/DecisionTreeService", () => ({
     getTree: vi.fn(),
     importTree: vi.fn(),
     exportTree: vi.fn(),
+    deleteTree: vi.fn(),
   },
 }));
 
@@ -262,5 +263,81 @@ describe("DecisionTreeCatalogPage", () => {
       expect(errorToastMock).toHaveBeenCalledWith(expect.stringMatching(/non è un JSON/i));
     });
     expect(decisionTreeService.importTree).not.toHaveBeenCalledWith(file);
+  });
+
+  it("elimina il decision tree selezionato dopo conferma e aggiorna la lista", async () => {
+    vi.mocked(decisionTreeService.listTrees)
+      .mockResolvedValueOnce([
+        { requirementId: "ACM-1", requirementName: "Access control" },
+        { requirementId: "AUM-2", requirementName: "Authentication" },
+      ])
+      .mockResolvedValueOnce([{ requirementId: "AUM-2", requirementName: "Authentication" }]);
+    vi.mocked(decisionTreeService.getTree).mockResolvedValue(
+      DecisionTree.create({
+        requirementId: "ACM-1",
+        requirementName: "Access control",
+        rootNode: "N1",
+        nodes: [
+          { id: "N1", type: "question", text: "Q?", branches: { yes: "L1", no: "L2" } },
+          { id: "L1", type: "leaf", outcome: "PASS" },
+          { id: "L2", type: "leaf", outcome: "FAIL" },
+        ],
+      }),
+    );
+    vi.mocked(decisionTreeService.deleteTree).mockResolvedValue();
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    render(
+      <BrowserRouter>
+        <DecisionTreeCatalogPage />
+      </BrowserRouter>,
+    );
+
+    const deleteButton = await screen.findByRole("button", { name: /Elimina decision tree/i });
+    await userEvent.click(deleteButton);
+
+    await waitFor(() => {
+      expect(decisionTreeService.deleteTree).toHaveBeenCalledWith("ACM-1");
+    });
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(successToastMock).toHaveBeenCalledWith("Decision tree eliminato");
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: /ACM-1 — Access control/i })).not.toBeInTheDocument();
+    });
+
+    confirmSpy.mockRestore();
+  });
+
+  it("non elimina se l'utente annulla la conferma", async () => {
+    vi.mocked(decisionTreeService.listTrees).mockResolvedValue([
+      { requirementId: "ACM-1", requirementName: "Access control" },
+    ]);
+    vi.mocked(decisionTreeService.getTree).mockResolvedValue(
+      DecisionTree.create({
+        requirementId: "ACM-1",
+        requirementName: "Access control",
+        rootNode: "N1",
+        nodes: [
+          { id: "N1", type: "question", text: "Q?", branches: { yes: "L1", no: "L2" } },
+          { id: "L1", type: "leaf", outcome: "PASS" },
+          { id: "L2", type: "leaf", outcome: "FAIL" },
+        ],
+      }),
+    );
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    render(
+      <BrowserRouter>
+        <DecisionTreeCatalogPage />
+      </BrowserRouter>,
+    );
+
+    const deleteButton = await screen.findByRole("button", { name: /Elimina decision tree/i });
+    await userEvent.click(deleteButton);
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(decisionTreeService.deleteTree).not.toHaveBeenCalled();
+
+    confirmSpy.mockRestore();
   });
 });

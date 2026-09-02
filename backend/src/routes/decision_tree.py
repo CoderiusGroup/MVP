@@ -110,6 +110,14 @@ def create_decision_tree_blueprint(service: DecisionTreeService) -> Blueprint:
             return jsonify({"error": f"decision tree '{requirement_id}' not found"}), 404
         return jsonify(_serialize_tree(tree))
 
+    @blueprint.delete("/decision-trees/<requirement_id>")
+    def delete_decision_tree(requirement_id: str):
+        try:
+            service.delete_tree(requirement_id)
+        except DecisionTreeNotFoundError:
+            return jsonify({"error": f"decision tree '{requirement_id}' not found"}), 404
+        return "", 204
+
     @blueprint.get("/decision-trees/<requirement_id>/export")
     def export_decision_tree(requirement_id: str):
         try:
