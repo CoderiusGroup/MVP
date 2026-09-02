@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import json
-
 from src.domain.decision_tree import DecisionTree
 from src.domain.decision_tree_validation import InvalidDecisionTreeError, validate_raw_tree
 from src.domain.node import Branches, LeafNode, Node, QuestionNode
 from src.repositories.decision_tree_repository import IDecisionTreeRepository
-from src.services.decision_tree_csv import tree_from_csv
+from src.services.decision_tree_format import format_for_filename
 
 __all__ = [
     "DecisionTreeNotFoundError",
@@ -91,18 +89,10 @@ class DecisionTreeService:
         except UnicodeDecodeError as error:
             raise InvalidDecisionTreeError("Il file non contiene dati validi") from error
 
-        lowered = filename.lower()
-        if lowered.endswith(".json"):
-            try:
-                raw = json.loads(text)
-            except json.JSONDecodeError as error:
-                raise InvalidDecisionTreeError("Il file non contiene dati validi") from error
-            if isinstance(raw, dict) and "decisionTree" not in raw:
-                raw = {"schemaVersion": "1.0", "kind": "decisionTree", "decisionTree": raw}
-        elif lowered.endswith(".csv"):
-            raw = tree_from_csv(text)
-        else:
+        fmt = format_for_filename(filename)
+        if fmt is None:
             raise InvalidDecisionTreeError("Formato non supportato: usare JSON o CSV")
+        raw = fmt.parse(text)
 
         validate_raw_tree(raw)
         requirement_id = raw["decisionTree"]["requirementId"]
