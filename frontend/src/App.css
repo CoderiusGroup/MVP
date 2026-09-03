@@ -37,12 +37,12 @@
   grid-template-columns: 180px 1fr;
   gap: 16px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--border);
 }
 
 .decision-tree-info dt {
   font-weight: 700;
-  color: var(--text-h);
+  color: var(--color-text);
 }
 
 .decision-tree-info dd {
