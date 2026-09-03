@@ -1,10 +1,5 @@
 import type { Outcome } from "../domain/rules/treeRules";
-
-const COLORS: Record<Outcome, string> = {
-  PASS: "#1a7f37",
-  FAIL: "#cf222e",
-  NOT_APPLICABLE: "#57606a",
-};
+import { STATUS_COLORS } from "../theme/statusColors";
 
 const LABELS: Record<Outcome, string> = {
   PASS: "PASS",
@@ -22,10 +17,11 @@ export function Esito({ outcome }: Props) {
       style={{
         display: "inline-block",
         padding: "2px 8px",
-        borderRadius: "4px",
+        borderRadius: "999px",
         color: "#fff",
         fontWeight: 600,
-        backgroundColor: COLORS[outcome],
+        fontSize: "0.875rem",
+        backgroundColor: STATUS_COLORS[outcome],
       }}
     >
       {LABELS[outcome]}

@@ -14,6 +14,7 @@ import type { DecisionTree } from "../domain/entities/DecisionTree";
 import type { PathStep } from "../domain/entities/Session";
 import { layoutTree, type TreeLayout } from "../domain/rules/treeLayout";
 import type { Outcome } from "../domain/rules/treeRules";
+import { STATUS_COLORS } from "../theme/statusColors";
 
 type Props = {
   tree: DecisionTree;
@@ -27,19 +28,15 @@ const ROW_H = 126;
 const NODE_W = 220;
 const PAD = 18;
 
-// Tinta delle foglie per esito.
+// Tinta chiara di riempimento delle foglie per esito; il bordo usa STATUS_COLORS.
 const LEAF_FILL: Record<string, string> = {
   PASS: "#e4f1ea",
   FAIL: "#f6e3e7",
   NOT_APPLICABLE: "#eef1f5",
 };
-const LEAF_STROKE: Record<string, string> = {
-  PASS: "#227a52",
-  FAIL: "#b23a52",
-  NOT_APPLICABLE: "#8b95a4",
-};
+const LEAF_STROKE: Record<string, string> = STATUS_COLORS;
 
-const EDGE_ON = "#4a90d9";
+const EDGE_ON = "#00129a";
 const EDGE_OFF = "#aeb6c2";
 
 interface TreeNodeData extends Record<string, unknown> {
