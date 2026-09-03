@@ -17,7 +17,7 @@ export default function HomePage({onDeviceSaved, onSessionResumed}: Props){
 
     const resumeSessionOnUpload = async (uploadedFile?: File) => {
         if(!uploadedFile){
-            notification.errorJsonLoading("Nessun file selezionato");
+            notification.errorWithFallback("Nessun file selezionato");
             return;
         }
 
@@ -27,13 +27,13 @@ export default function HomePage({onDeviceSaved, onSessionResumed}: Props){
             notification.success("Sessione ripresa correttamente");
         }catch(e){
             console.error("Resume error", e);
-            notification.errorJsonLoading(e instanceof Error ? e.message : "Errore durante il caricamento della sessione");
+            notification.errorWithFallback(e instanceof Error ? e.message : "Errore durante il caricamento della sessione");
         }
     }
 
     const readFileOnUpload = async (uploadedFile?: File) => {
         if(!uploadedFile){
-            notification.errorJsonLoading("Nessun file selezionato");
+            notification.errorWithFallback("Nessun file selezionato");
             return;
         }
 
@@ -43,7 +43,7 @@ export default function HomePage({onDeviceSaved, onSessionResumed}: Props){
             notification.success("Dispositivo caricato correttamente");
         }catch(e){
             console.error("Upload error", e)
-            notification.errorJsonLoading(e instanceof Error ? e.message : "Errore durante il caricamento del file");
+            notification.errorWithFallback(e instanceof Error ? e.message : "Errore durante il caricamento del file");
         }
     }
 

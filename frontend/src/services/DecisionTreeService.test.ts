@@ -17,7 +17,6 @@ function fakeApi(data: unknown): ApiClientService {
     get: async () => data,
     post: async () => data,
     postFormData: async () => data,
-    put: async () => data,
     delete: async () => data,
   } as ApiClientService;
 }

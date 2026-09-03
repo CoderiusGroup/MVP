@@ -10,8 +10,8 @@ export class NotificationManager implements NotificationService {
   error(message: string): void {
     toast.error(message);
   }
-  
-  errorJsonLoading(message: string): void {
-      this.error(message || "Errore nel caricamento del file JSON");
+
+  errorWithFallback(message: string): void {
+    this.error(message || "Si è verificato un errore");
   }
 }

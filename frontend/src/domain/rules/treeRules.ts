@@ -25,10 +25,6 @@ export function currentOutcome(tree: DecisionTree, steps: PathStep[]): Outcome |
   return node ? node.verdict() : null;
 }
 
-export function isRequirementComplete(tree: DecisionTree, steps: PathStep[]): boolean {
-  return currentOutcome(tree, steps) !== null;
-}
-
 export interface PathQuestion {
   nodeId: string;
   text: string;

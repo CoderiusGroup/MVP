@@ -2,22 +2,7 @@ import type { Asset } from "../entities/Asset";
 import type { Device } from "../entities/Device";
 import type { Evaluation, Session } from "../entities/Session";
 
-export interface EvaluationPair {
-  assetId: string;
-  requirementId: string;
-}
-
 export type DependencyMap = Record<string, string[]>;
-
-// Delega a Device.buildPlan(): mantenuta come funzione libera perché
-// SessionService.ts la ri-esporta ancora con questo nome per i chiamanti esistenti.
-export function buildPlan(device: Device): EvaluationPair[] {
-  return device.buildPlan();
-}
-
-export function isPairCompleted(evaluation: Evaluation): boolean {
-  return evaluation.status === "completed";
-}
 
 export function transitiveDependents(
   requirementId: string,
