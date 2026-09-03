@@ -70,7 +70,7 @@ describe("DeviceAssetManagementPage", () => {
     const summaryButton = screen.getByRole("button", { name: /Visualizza dettaglio dispositivo/i });
     expect(summaryButton).toBeDisabled();
 
-    await userEvent.click(screen.getByRole("button", { name: /Annulla e vai alla Home/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Torna alla Home/i }));
     expect(await screen.findByText("Pagina Home")).toBeInTheDocument();
   });
 

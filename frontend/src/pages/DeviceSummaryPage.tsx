@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { getDeviceStatus, STATUS_LABELS } from "../domain/rules/sessionRules";
+import { Page } from "../components/Page";
+import { StatusBadge } from "../components/StatusBadge";
+import { getDeviceStatus } from "../domain/rules/sessionRules";
 import { exportDevice } from "../services/DeviceService";
 import { csvDeviceFormat, jsonDeviceFormat } from "../services/deviceFileFormats";
 import { useDeviceStore } from "../store/DeviceStore";
@@ -49,58 +51,84 @@ export default function DeviceSummaryPage() {
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <button onClick={() => navigate("/device/assets")}>Torna alla Gestione Asset</button>
-
-      <h1>Dettaglio Dispositivo (Riepilogo)</h1>
-
+    <Page
+      title="Riepilogo dispositivo"
+      onBack={() => navigate("/device/assets")}
+      backLabel="Torna alla gestione asset"
+    >
       {device ? (
         <>
-          <p>
-            <strong>ID:</strong> {device.id}
-          </p>
-          <p>
-            <strong>Nome:</strong> {device.name}
-          </p>
-          <p>
-            <strong>Sistema operativo:</strong> {device.operatingSystem}
-          </p>
-          <p>
-            <strong>Descrizione:</strong> {device.description}
-          </p>
-          <p>
-            <strong>Stato:</strong> {STATUS_LABELS[getDeviceStatus(session, device)]}
-          </p>
+          <dl className="data-list">
+            <div className="data-list__row">
+              <dt>ID</dt>
+              <dd>{device.id}</dd>
+            </div>
+            <div className="data-list__row">
+              <dt>Nome</dt>
+              <dd>{device.name}</dd>
+            </div>
+            <div className="data-list__row">
+              <dt>Sistema operativo</dt>
+              <dd>{device.operatingSystem}</dd>
+            </div>
+            <div className="data-list__row">
+              <dt>Descrizione</dt>
+              <dd>{device.description}</dd>
+            </div>
+            <div className="data-list__row">
+              <dt>Stato</dt>
+              <dd>
+                <StatusBadge status={getDeviceStatus(session, device)} />
+              </dd>
+            </div>
+          </dl>
 
-          <button type="button" onClick={() => navigate("/device/edit")}>
-            Modifica dispositivo
-          </button>
-
-          <button type="button" onClick={() => exportDevice(device, jsonDeviceFormat)}>
-            Esporta in JSON
-          </button>
-          <button type="button" onClick={() => exportDevice(device, csvDeviceFormat)}>
-            Esporta in CSV
-          </button>
-
-          <button type="button" onClick={handleStart} disabled={!hasAssets}>
-            Avvia valutazione
-          </button>
           {!hasAssets ? (
-            <p>Nessun asset da valutare: aggiungi almeno un asset prima di avviare.</p>
+            <p className="empty-state" role="alert">
+              Nessun asset da valutare: aggiungi almeno un asset prima di avviare.
+            </p>
           ) : null}
-          <button onClick={() => navigate("/device/assets")}>Gestisci asset</button>
 
-          <button type="button" onClick={handleDelete}>
-            Elimina dispositivo
-          </button>
-          <button type="button" onClick={handleDeleteWithBackup}>
-            Elimina con backup
-          </button>
+          <div className="action-bar">
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={handleStart}
+              disabled={!hasAssets}
+            >
+              Avvia valutazione
+            </button>
+            <button type="button" className="btn" onClick={() => navigate("/device/assets")}>
+              Gestisci asset
+            </button>
+            <button type="button" className="btn" onClick={() => navigate("/device/edit")}>
+              Modifica dispositivo
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => exportDevice(device, jsonDeviceFormat)}
+            >
+              Esporta in JSON
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => exportDevice(device, csvDeviceFormat)}
+            >
+              Esporta in CSV
+            </button>
+            <button type="button" className="btn btn--danger" onClick={handleDelete}>
+              Elimina dispositivo
+            </button>
+            <button type="button" className="btn btn--danger" onClick={handleDeleteWithBackup}>
+              Elimina con backup
+            </button>
+          </div>
         </>
       ) : (
-        <p>Nessun dispositivo disponibile.</p>
+        <p className="empty-state">Nessun dispositivo disponibile.</p>
       )}
-    </div>
+    </Page>
   );
 }

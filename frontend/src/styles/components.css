@@ -30,6 +30,40 @@
   gap: var(--space-4);
 }
 
+/* Griglia generica di card */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Elemento di lista: nome + badge/azioni sulla stessa riga */
+.list-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.list-row__actions {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.data-list--nested {
+  margin-top: var(--space-3);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 /* Bottoni */
 .btn {
   display: inline-flex;

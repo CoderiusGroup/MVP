@@ -1,4 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { Field } from "../components/Field";
+import { Page } from "../components/Page";
 import { NotificationManager } from "../infrastructure/NotificationManager";
 import { createDeviceManually } from "../services/DeviceService";
 import { useDeviceStore } from "../store/DeviceStore";
@@ -46,27 +48,38 @@ export default function DeviceFormPage() {
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <button onClick={() => navigate(isEditMode ? "/device" : "/")}>Torna indietro</button>
-      <h2>{isEditMode ? "Modifica dispositivo" : "Crea un nuovo dispositivo"}</h2>
+    <Page
+      title={isEditMode ? "Modifica dispositivo" : "Crea un nuovo dispositivo"}
+      onBack={() => navigate(isEditMode ? "/device" : "/")}
+    >
       <form onSubmit={handleFormSubmit}>
-        <p>Nome:</p>
-        <input name="name" placeholder="Nome" defaultValue={device?.name} required />
-        <p>Sistema Operativo:</p>
-        <input
+        <Field
+          label="Nome"
+          id="device-name"
+          name="name"
+          placeholder="Nome"
+          defaultValue={device?.name}
+          required
+        />
+        <Field
+          label="Sistema operativo"
+          id="device-os"
           name="operatingSystem"
           placeholder="Sistema Operativo"
           defaultValue={device?.operatingSystem}
           required
         />
-        <p>Descrizione:</p>
-        <input name="description" placeholder="Descrizione" defaultValue={device?.description} />
-        <br />
-        <br />
-        <button type="submit">
+        <Field
+          label="Descrizione"
+          id="device-description"
+          name="description"
+          placeholder="Descrizione"
+          defaultValue={device?.description}
+        />
+        <button type="submit" className="btn btn--primary">
           {isEditMode ? "Salva modifiche" : "Salva e procedi agli asset"}
         </button>
       </form>
-    </div>
+    </Page>
   );
 }

@@ -52,32 +52,54 @@ export default function HomePage({ onDeviceSaved, onSessionResumed }: Props) {
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <h1>Gestione Valutazione Dispositivi</h1>
+    <div className="page">
+      <header className="page__header">
+        <h1 className="page__title">Gestione Valutazione Dispositivi</h1>
+      </header>
 
-      <h2>1. Nuovo Dispositivo</h2>
-      <button onClick={() => navigate("/device/new")}>Crea nuovo dispositivo</button>
+      <div className="card-grid">
+        <section className="card">
+          <h2 className="card__title">Nuovo dispositivo</h2>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={() => navigate("/device/new")}
+          >
+            Crea nuovo dispositivo
+          </button>
+        </section>
 
-      <h2>2. Importa Dispositivo da JSON o CSV</h2>
-      <input
-        type="file"
-        aria-label="Carica file JSON o CSV dispositivo"
-        accept=".json,application/json,.csv,text/csv"
-        onChange={(e) => readFileOnUpload(e.target.files?.[0])}
-      />
+        <section className="card">
+          <h2 className="card__title">Importa dispositivo da JSON o CSV</h2>
+          <input
+            type="file"
+            aria-label="Carica file JSON o CSV dispositivo"
+            accept=".json,application/json,.csv,text/csv"
+            onChange={(e) => readFileOnUpload(e.target.files?.[0])}
+          />
+        </section>
 
-      <h2>3. Riprendi una Sessione Salvata</h2>
-      <input
-        type="file"
-        aria-label="Riprendi sessione da file"
-        accept=".json,application/json"
-        onChange={(e) => resumeSessionOnUpload(e.target.files?.[0])}
-      />
+        <section className="card">
+          <h2 className="card__title">Riprendi una sessione salvata</h2>
+          <input
+            type="file"
+            aria-label="Riprendi sessione da file"
+            accept=".json,application/json"
+            onChange={(e) => resumeSessionOnUpload(e.target.files?.[0])}
+          />
+        </section>
 
-      <h2>4. Catalogo Decision Tree</h2>
-      <button type="button" onClick={() => navigate("/decision-tree-catalog")}>
-        Apri catalogo decision tree
-      </button>
+        <section className="card">
+          <h2 className="card__title">Catalogo decision tree</h2>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => navigate("/decision-tree-catalog")}
+          >
+            Apri catalogo decision tree
+          </button>
+        </section>
+      </div>
     </div>
   );
 }
