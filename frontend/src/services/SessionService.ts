@@ -1,8 +1,6 @@
 import { Session } from "../domain/entities/Session";
 import { downloadBlob } from "./downloadFile";
-
-export { buildPlan } from "../domain/rules/sessionRules";
-export type { EvaluationPair } from "../domain/rules/sessionRules";
+import { readFileAsText } from "./readFile";
 
 export function toSessionFile(session: Session): Session {
   return session.withSavedAt(new Date().toISOString());
@@ -36,19 +34,4 @@ export async function loadSessionFromJson(file: File): Promise<Session> {
     throw new Error("Il file caricato non è un JSON valido");
   }
   return parseSessionFile(await readFileAsText(file));
-}
-
-function readFileAsText(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-      } else {
-        reject(new Error("Errore durante la lettura del file"));
-      }
-    };
-    reader.onerror = () => reject(new Error("Errore durante il caricamento del file"));
-    reader.readAsText(file);
-  });
 }

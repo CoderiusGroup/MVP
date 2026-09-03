@@ -79,6 +79,16 @@ Risposta `201`: decision tree importato.
 Errori:
 - `400` — file mancante, formato non supportato o struttura del decision tree non valida
 
+### `DELETE /decision-trees/{requirementId}` — eliminazione decision tree
+
+Rimuove definitivamente il decision tree. Nessun vincolo referenziale: l'eliminazione è
+sempre permessa (il backend è stateless per device e sessioni).
+
+Risposta `204`: nessun contenuto.
+
+Errori:
+- `404` — nessun decision tree con quel `requirementId`
+
 ## Device
 
 ### `POST /devices` — creazione device (stateless)

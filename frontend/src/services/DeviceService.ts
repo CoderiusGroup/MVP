@@ -8,6 +8,7 @@ import {
 import { Asset, AssetCreateSchema, type AssetCreate } from "../domain/entities/Asset";
 import { formatForFile, type DeviceFileFormat } from "./deviceFileFormats";
 import { downloadBlob } from "./downloadFile";
+import { readFileAsText } from "./readFile";
 
 const apiClient = new FetchApiClient();
 
@@ -98,19 +99,4 @@ async function saveDevice(payload: DeviceCreate): Promise<DeviceSaveResult> {
   const raw = await apiClient.post<unknown>("/devices", payload);
   const device = Device.create(raw);
   return { device, payload };
-}
-
-function readFileAsText(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-      } else {
-        reject(new Error("Errore durante la lettura del file"));
-      }
-    };
-    reader.onerror = () => reject(new Error("Errore durante il caricamento del file"));
-    reader.readAsText(file);
-  });
 }

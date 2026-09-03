@@ -14,7 +14,7 @@ vi.mock("../infrastructure/NotificationManager", () => ({
   NotificationManager: class {
     success = vi.fn();
     error = errorToastMock;
-    errorJsonLoading = vi.fn();
+    errorWithFallback = vi.fn();
   },
 }));
 

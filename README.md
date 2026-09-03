@@ -24,7 +24,7 @@ l'[Analisi dei Requisiti][ar], la [Specifica Tecnica][st] e le [Norme di Progett
 ```
 MVP/
 ├── backend/             API REST in Flask (Python 3.12): logica di valutazione, validazione
-│                        dei file JSON, persistenza su filesystem, generazione dei report
+│                        dei file JSON e accesso al catalogo dei decision tree su filesystem
 ├── frontend/            Single Page Application React (Vite): interfaccia utente
 ├── docs/                contratto API e altra documentazione interna alla repository
 ├── .github/             workflow di integrazione continua e template delle pull request

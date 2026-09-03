@@ -39,7 +39,7 @@ export default function DeviceFormPage() {
             navigate("/device/assets");
         } catch (e) {
             console.error("Errore creazione dispositivo", e);
-            notification.errorJsonLoading(e instanceof Error ? e.message : "Errore durante la creazione del dispositivo");
+            notification.errorWithFallback(e instanceof Error ? e.message : "Errore durante la creazione del dispositivo");
         }
     };
 

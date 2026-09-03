@@ -1,6 +1,41 @@
 import { describe, expect, it } from "vitest";
 
-import { DeviceSchema } from "./Device";
+import { Device, DeviceSchema } from "./Device";
+
+describe("Device.buildPlan", () => {
+  it("enumerates assets then their requirements in order", () => {
+    const device = Device.create({
+      id: "DEV-1",
+      name: "Device",
+      operatingSystem: "OS",
+      description: "desc",
+      assets: [
+        {
+          id: "AS-1",
+          name: "Asset 1",
+          type: "network",
+          description: "d",
+          sensitive: false,
+          requirements: ["ACM-1", "ACM-2"],
+        },
+        {
+          id: "AS-2",
+          name: "Asset 2",
+          type: "security",
+          description: "d",
+          sensitive: true,
+          requirements: ["AUM-1-1"],
+        },
+      ],
+    });
+
+    expect(device.buildPlan()).toEqual([
+      { assetId: "AS-1", requirementId: "ACM-1" },
+      { assetId: "AS-1", requirementId: "ACM-2" },
+      { assetId: "AS-2", requirementId: "AUM-1-1" },
+    ]);
+  });
+});
 
 describe("DeviceSchema", () => {
   it("accepts a valid device", () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { DecisionTree } from "../entities/DecisionTree";
-import { currentOutcome, describePath, isRequirementComplete, resolveNodeId } from "./treeRules";
+import { currentOutcome, describePath, resolveNodeId } from "./treeRules";
 
 const tree = DecisionTree.create({
   requirementId: "ACM-1",
@@ -33,11 +33,6 @@ describe("treeRules", () => {
   it("returns the outcome only when a leaf is reached", () => {
     expect(currentOutcome(tree, [])).toBeNull();
     expect(currentOutcome(tree, [{ nodeId: "n1", answer: "no" }])).toBe("FAIL");
-  });
-
-  it("marks a requirement complete once a leaf is reached", () => {
-    expect(isRequirementComplete(tree, [])).toBe(false);
-    expect(isRequirementComplete(tree, [{ nodeId: "n1", answer: "no" }])).toBe(true);
   });
 
   it("describePath ricostruisce la sequenza domande→risposte", () => {

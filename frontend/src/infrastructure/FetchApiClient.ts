@@ -43,14 +43,6 @@ export class FetchApiClient implements ApiClientService {
     return this.request<T>(path, { method: "POST", body });
   }
 
-  put<T>(path: string, body: unknown): Promise<T> {
-    return this.request<T>(path, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-  }
-
   delete<T>(path: string): Promise<T> {
     return this.request<T>(path, { method: "DELETE" });
   }
