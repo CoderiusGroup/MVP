@@ -23,8 +23,8 @@ type Props = {
   readOnly?: boolean;
 };
 
-const COL_W = 260;
-const ROW_H = 126;
+const COL_W = 300;
+const ROW_H = 200;
 const NODE_W = 220;
 const PAD = 18;
 
@@ -89,9 +89,9 @@ export function toFlow(
       source: edge.from,
       target: edge.to,
       label: edge.answer === "yes" ? "Sì" : "No",
-      type: "smoothstep",
+      type: "default",
       style: { stroke: on ? EDGE_ON : EDGE_OFF, strokeWidth: on ? 2.4 : 1.2 },
-      labelStyle: { fill: on ? EDGE_ON : "#97a1b0", fontWeight: on ? 700 : 500 },
+      labelStyle: { fill: on ? EDGE_ON : "#57606a", fontWeight: on ? 700 : 500 },
     };
   });
 
@@ -100,8 +100,12 @@ export function toFlow(
 
 const TreeNode = memo(function TreeNode({ data }: NodeProps<TreeFlowNode>) {
   const highlighted = data.isCurrent || (data.readOnly && !data.isLeaf);
-  const leafBorder = data.isLeaf ? (LEAF_STROKE[data.outcome ?? ""] ?? "#8b95a4") : "#cbd3dd";
-  const leafFill = data.isLeaf ? (LEAF_FILL[data.outcome ?? ""] ?? "#eef1f5") : "#ffffff";
+  const leafBorder = data.isLeaf
+    ? (LEAF_STROKE[data.outcome ?? ""] ?? "#57606a")
+    : "var(--color-border)";
+  const leafFill = data.isLeaf
+    ? (LEAF_FILL[data.outcome ?? ""] ?? "#eef1f5")
+    : "var(--color-surface)";
 
   return (
     <div
@@ -113,13 +117,13 @@ const TreeNode = memo(function TreeNode({ data }: NodeProps<TreeFlowNode>) {
         width: NODE_W,
         boxSizing: "border-box",
         padding: "8px 10px",
-        borderRadius: 8,
-        border: `${highlighted ? 2.4 : 1.2}px solid ${highlighted ? "#2f6db5" : leafBorder}`,
-        background: highlighted ? "#eaf1fa" : leafFill,
+        borderRadius: "var(--radius)",
+        border: `${highlighted ? 2 : 1}px solid ${highlighted ? "var(--color-accent)" : leafBorder}`,
+        background: highlighted ? "var(--color-accent-soft)" : leafFill,
         opacity: data.isDimmed ? 0.5 : 1,
-        fontSize: 10,
+        fontSize: 12,
         lineHeight: 1.3,
-        color: "#1a2230",
+        color: "var(--color-text)",
         textAlign: "center",
       }}
     >
@@ -145,10 +149,15 @@ export function GrafoDecisionTree({ tree, currentNodeId, path = [], readOnly = f
   return (
     <section aria-label="Grafo decision tree">
       <div
-        style={{ width: "100%", height: 460, border: "1px solid #e1e5ea", borderRadius: 8 }}
-        aria-label={`Grafo del decision tree ${tree.requirementId}`}
+        style={{
+          width: "100%",
+          height: 460,
+          border: "1px solid var(--color-border)",
+          borderRadius: "var(--radius-lg)",
+        }}
       >
         <ReactFlow
+          key={tree.requirementId}
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}

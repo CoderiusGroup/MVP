@@ -6,6 +6,23 @@
   text-align: left;
 }
 
+.page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.page__back:hover {
+  text-decoration: underline;
+}
+
 .page__header {
   display: flex;
   align-items: center;

@@ -11,12 +11,12 @@ type Props = {
 export function Page({ title, onBack, backLabel = "Torna indietro", actions, children }: Props) {
   return (
     <div className="page">
+      {onBack ? (
+        <button type="button" className="page__back" onClick={onBack}>
+          <span aria-hidden="true">←</span> {backLabel}
+        </button>
+      ) : null}
       <header className="page__header">
-        {onBack ? (
-          <button type="button" className="btn btn--ghost" onClick={onBack}>
-            {backLabel}
-          </button>
-        ) : null}
         <h1 className="page__title">{title}</h1>
         {actions ? <div className="page__actions">{actions}</div> : null}
       </header>

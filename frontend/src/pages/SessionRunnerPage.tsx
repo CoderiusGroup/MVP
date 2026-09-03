@@ -100,10 +100,10 @@ export function SessionRunnerPage() {
         </section>
       ) : phase === "asset" && selectedAsset ? (
         <section aria-label="Asset in valutazione">
+          <button type="button" className="page__back" onClick={backToDashboard}>
+            <span aria-hidden="true">←</span> Torna alla dashboard
+          </button>
           <header className="page__header">
-            <button type="button" className="btn btn--ghost" onClick={backToDashboard}>
-              Torna alla dashboard
-            </button>
             <h1 className="page__title">{selectedAsset.name}</h1>
           </header>
           <dl className="data-list">
@@ -146,10 +146,10 @@ export function SessionRunnerPage() {
         </section>
       ) : phase === "requirement" && selectedAsset && selectedRequirementId ? (
         <section aria-label="Dettaglio requisito">
+          <button type="button" className="page__back" onClick={backToAsset}>
+            <span aria-hidden="true">←</span> Indietro
+          </button>
           <header className="page__header">
-            <button type="button" className="btn btn--ghost" onClick={backToAsset}>
-              Indietro
-            </button>
             <h1 className="page__title">
               {selectedRequirementId}
               {requirementDetail ? ` — ${requirementDetail.name}` : ""}
