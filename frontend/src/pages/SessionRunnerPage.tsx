@@ -66,12 +66,10 @@ export function SessionRunnerPage() {
     : undefined;
 
   return (
-    <div className="page">
+    <div className="page stack">
       {phase === "dashboard" ? (
-        <section aria-label="Dashboard di valutazione">
-          <header className="page__header">
-            <h1 className="page__title">Valutazione dispositivo</h1>
-          </header>
+        <section aria-label="Dashboard di valutazione" className="stack">
+          <h1>Valutazione dispositivo</h1>
           <p className="card__meta">
             Asset completati: {progress.assetsDone} / {progress.assetsTotal}
           </p>
@@ -99,13 +97,13 @@ export function SessionRunnerPage() {
           </ul>
         </section>
       ) : phase === "asset" && selectedAsset ? (
-        <section aria-label="Asset in valutazione">
-          <button type="button" className="page__back" onClick={backToDashboard}>
-            <span aria-hidden="true">←</span> Torna alla dashboard
-          </button>
-          <header className="page__header">
-            <h1 className="page__title">{selectedAsset.name}</h1>
-          </header>
+        <section aria-label="Asset in valutazione" className="stack">
+          <div>
+            <button type="button" className="page__back" onClick={backToDashboard}>
+              <span aria-hidden="true">←</span> Torna alla dashboard
+            </button>
+            <h1>{selectedAsset.name}</h1>
+          </div>
           <dl className="data-list">
             <div className="data-list__row">
               <dt>Tipo</dt>
@@ -145,16 +143,16 @@ export function SessionRunnerPage() {
           </ul>
         </section>
       ) : phase === "requirement" && selectedAsset && selectedRequirementId ? (
-        <section aria-label="Dettaglio requisito">
-          <button type="button" className="page__back" onClick={backToAsset}>
-            <span aria-hidden="true">←</span> Indietro
-          </button>
-          <header className="page__header">
-            <h1 className="page__title">
+        <section aria-label="Dettaglio requisito" className="stack">
+          <div>
+            <button type="button" className="page__back" onClick={backToAsset}>
+              <span aria-hidden="true">←</span> Indietro
+            </button>
+            <h1>
               {selectedRequirementId}
               {requirementDetail ? ` — ${requirementDetail.name}` : ""}
             </h1>
-          </header>
+          </div>
           <h2>Dipendenze</h2>
           {requirementDetail ? (
             requirementDetail.dependencies.length === 0 ? (
@@ -177,7 +175,7 @@ export function SessionRunnerPage() {
           </button>
         </section>
       ) : (
-        <section aria-label="Esecuzione decision tree">
+        <section aria-label="Esecuzione decision tree" className="stack">
           <p className="card__meta">
             <strong>Asset:</strong> {asset ? asset.name : "—"} &nbsp;
             <strong>Requisito:</strong> {requirementId}

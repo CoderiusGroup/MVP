@@ -104,6 +104,9 @@ export default function DeviceSummaryPage() {
             <button type="button" className="btn" onClick={() => navigate("/device/edit")}>
               Modifica dispositivo
             </button>
+          </div>
+
+          <div className="toolbar">
             <button
               type="button"
               className="btn"
@@ -118,6 +121,9 @@ export default function DeviceSummaryPage() {
             >
               Esporta in CSV
             </button>
+          </div>
+
+          <div className="toolbar">
             <button type="button" className="btn btn--danger" onClick={handleDelete}>
               Elimina dispositivo
             </button>
