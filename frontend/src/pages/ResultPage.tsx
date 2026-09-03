@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Esito } from "../components/Esito";
-import { getAssetStatus, getEvaluationStatus, STATUS_LABELS } from "../domain/rules/sessionRules";
+import { NoActiveSession } from "../components/NoActiveSession";
+import { Page } from "../components/Page";
+import { StatusBadge } from "../components/StatusBadge";
+import { getAssetStatus, getEvaluationStatus } from "../domain/rules/sessionRules";
 import { useResult } from "../hooks/useResult";
 import { NotificationManager } from "../infrastructure/NotificationManager";
 import { exportReportPdf } from "../services/ReportService";
@@ -26,14 +29,7 @@ export function ResultPage() {
   } = useResult();
 
   if (!session) {
-    return (
-      <div style={{ padding: "1rem" }}>
-        <p role="alert">Nessuna sessione attiva.</p>
-        <button type="button" onClick={() => navigate("/")}>
-          Torna alla Home
-        </button>
-      </div>
-    );
+    return <NoActiveSession />;
   }
 
   const handleExportReport = async () => {
@@ -47,6 +43,16 @@ export function ResultPage() {
     }
   };
 
+  const handleBack = () => {
+    if (selectedRequirementId) {
+      clearRequirement();
+    } else if (selectedAssetId) {
+      clearAsset();
+    } else {
+      navigate("/");
+    }
+  };
+
   const selectedAsset = session.device.assets.find((a) => a.id === selectedAssetId) ?? null;
   const selectedEvaluation =
     selectedAsset && selectedRequirementId
@@ -56,26 +62,26 @@ export function ResultPage() {
       : undefined;
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <h1>Valutazione completata</h1>
-
-      {/* UC-27.1.1: dettaglio requisito con percorso logico */}
+    <Page
+      title="Valutazione completata"
+      onBack={handleBack}
+      backLabel={selectedAssetId ? "Indietro" : "Torna alla Home"}
+    >
       {selectedAsset && selectedRequirementId ? (
-        <section aria-label="Dettaglio requisito con esito">
-          <button type="button" onClick={clearRequirement}>
-            Torna all'asset
-          </button>
-          <h2>
+        <section aria-label="Dettaglio requisito con esito" className="card">
+          <h2 className="card__title">
             {selectedRequirementId}{" "}
             {selectedEvaluation?.outcome ? <Esito outcome={selectedEvaluation.outcome} /> : "—"}
           </h2>
           <h3>Percorso logico</h3>
           {pathQuestions === null ? (
-            <p>Caricamento percorso...</p>
+            <p className="loading" role="status">
+              Caricamento…
+            </p>
           ) : pathQuestions.length === 0 ? (
-            <p>Nessuna domanda registrata.</p>
+            <p className="empty-state">Nessuna domanda registrata.</p>
           ) : (
-            <ol>
+            <ol className="list">
               {pathQuestions.map((question, index) => (
                 <li key={`${question.nodeId}-${index}`}>
                   <strong>{question.nodeId}</strong> — {question.text} →{" "}
@@ -86,20 +92,24 @@ export function ResultPage() {
           )}
         </section>
       ) : selectedAsset ? (
-        /* UC-27.1: riepilogo per asset */
-        <section aria-label="Riepilogo asset">
-          <button type="button" onClick={clearAsset}>
-            Torna ai risultati
-          </button>
-          <h2>{selectedAsset.name}</h2>
-          <p>Tipo: {selectedAsset.type}</p>
-          <p>Esito: {STATUS_LABELS[getAssetStatus(session, selectedAsset)]}</p>
+        <section aria-label="Riepilogo asset" className="card">
+          <h2 className="card__title">{selectedAsset.name}</h2>
+          <p className="card__meta">Tipo: {selectedAsset.type}</p>
+          <p className="card__meta">
+            Esito: <StatusBadge status={getAssetStatus(session, selectedAsset)} />
+          </p>
           <h3>Requisiti</h3>
-          <ul>
+          <ul className="list">
             {(selectedAsset.requirements ?? []).map((r) => (
-              <li key={r}>
-                {r} — {STATUS_LABELS[getEvaluationStatus(session, selectedAsset.id, r)]}{" "}
-                <button type="button" onClick={() => selectRequirement(r)}>
+              <li key={r} className="list-row">
+                <span>
+                  {r} — <StatusBadge status={getEvaluationStatus(session, selectedAsset.id, r)} />
+                </span>
+                <button
+                  type="button"
+                  className="btn btn--ghost list-row__actions"
+                  onClick={() => selectRequirement(r)}
+                >
                   Dettaglio
                 </button>
               </li>
@@ -107,13 +117,18 @@ export function ResultPage() {
           </ul>
         </section>
       ) : (
-        /* UC-27: lista asset con esito aggregato */
         <section aria-label="Risultati per asset">
-          <ul>
+          <ul className="list">
             {session.device.assets.map((asset) => (
-              <li key={asset.id}>
-                {asset.name} — {STATUS_LABELS[getAssetStatus(session, asset)]}{" "}
-                <button type="button" onClick={() => selectAsset(asset.id)}>
+              <li key={asset.id} className="card list-row">
+                <span>
+                  {asset.name} — <StatusBadge status={getAssetStatus(session, asset)} />
+                </span>
+                <button
+                  type="button"
+                  className="btn btn--ghost list-row__actions"
+                  onClick={() => selectAsset(asset.id)}
+                >
                   Dettaglio
                 </button>
               </li>
@@ -122,20 +137,25 @@ export function ResultPage() {
         </section>
       )}
 
-      <div style={{ marginTop: "1rem" }}>
-        <button type="button" onClick={() => downloadSession(session)}>
+      <div className="action-bar">
+        <button type="button" className="btn" onClick={() => downloadSession(session)}>
           Salva sessione
         </button>
-        <button type="button" onClick={handleExportReport} disabled={exportingReport}>
+        <button
+          type="button"
+          className="btn btn--primary"
+          onClick={handleExportReport}
+          disabled={exportingReport}
+        >
           {exportingReport ? "Esportazione in corso..." : "Esporta report PDF"}
         </button>
-        <button type="button" onClick={() => navigate("/session/modify")}>
+        <button type="button" className="btn" onClick={() => navigate("/session/modify")}>
           Modifica sessione
         </button>
-        <button type="button" onClick={() => navigate("/")}>
+        <button type="button" className="btn" onClick={() => navigate("/")}>
           Torna alla Home
         </button>
       </div>
-    </div>
+    </Page>
   );
 }

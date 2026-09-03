@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 
 import { Esito } from "../components/Esito";
 import { GrafoDecisionTree } from "../components/GrafoDecisionTree";
-import { getAssetStatus, getEvaluationStatus, STATUS_LABELS } from "../domain/rules/sessionRules";
+import { Loading } from "../components/Loading";
+import { NoActiveSession } from "../components/NoActiveSession";
+import { StatusBadge } from "../components/StatusBadge";
+import { getAssetStatus, getEvaluationStatus } from "../domain/rules/sessionRules";
 import { useSessionRunner } from "../hooks/useSessionRunner";
 import { ResultPage } from "./ResultPage";
 
@@ -40,14 +43,7 @@ export function SessionRunnerPage() {
   } = useSessionRunner();
 
   if (!session) {
-    return (
-      <div style={{ padding: "1rem" }}>
-        <p role="alert">Nessuna sessione attiva.</p>
-        <button type="button" onClick={() => navigate("/")}>
-          Torna alla Home
-        </button>
-      </div>
-    );
+    return <NoActiveSession />;
   }
 
   if (isCompleted) {
@@ -70,24 +66,32 @@ export function SessionRunnerPage() {
     : undefined;
 
   return (
-    <div style={{ padding: "1rem" }}>
+    <div className="page">
       {phase === "dashboard" ? (
         <section aria-label="Dashboard di valutazione">
-          <h1>Valutazione dispositivo</h1>
-          <p>
+          <header className="page__header">
+            <h1 className="page__title">Valutazione dispositivo</h1>
+          </header>
+          <p className="card__meta">
             Asset completati: {progress.assetsDone} / {progress.assetsTotal}
           </p>
           {session.current && currentAsset ? (
-            <p>
+            <p className="card__meta">
               In esame: {currentAsset.name} — {session.current.requirementId} (requisiti:{" "}
               {progress.reqDone} / {progress.reqTotal})
             </p>
           ) : null}
-          <ul>
+          <ul className="list">
             {session.device.assets.map((a) => (
-              <li key={a.id}>
-                {a.name} — {a.type} — {STATUS_LABELS[getAssetStatus(session, a)]}{" "}
-                <button type="button" onClick={() => openAsset(a.id)}>
+              <li key={a.id} className="card list-row">
+                <span>
+                  {a.name} — {a.type} — <StatusBadge status={getAssetStatus(session, a)} />
+                </span>
+                <button
+                  type="button"
+                  className="btn btn--primary list-row__actions"
+                  onClick={() => openAsset(a.id)}
+                >
                   Valuta
                 </button>
               </li>
@@ -96,20 +100,44 @@ export function SessionRunnerPage() {
         </section>
       ) : phase === "asset" && selectedAsset ? (
         <section aria-label="Asset in valutazione">
-          <button type="button" onClick={backToDashboard}>
-            Torna alla dashboard
-          </button>
-          <h1>{selectedAsset.name}</h1>
-          <p>Tipo: {selectedAsset.type}</p>
-          <p>Descrizione: {selectedAsset.description}</p>
-          <p>Sensibilità: {selectedAsset.sensitive ? "Sensibile" : "Non sensibile"}</p>
-          <p>Stato: {STATUS_LABELS[getAssetStatus(session, selectedAsset)]}</p>
+          <header className="page__header">
+            <button type="button" className="btn btn--ghost" onClick={backToDashboard}>
+              Torna alla dashboard
+            </button>
+            <h1 className="page__title">{selectedAsset.name}</h1>
+          </header>
+          <dl className="data-list">
+            <div className="data-list__row">
+              <dt>Tipo</dt>
+              <dd>{selectedAsset.type}</dd>
+            </div>
+            <div className="data-list__row">
+              <dt>Descrizione</dt>
+              <dd>{selectedAsset.description}</dd>
+            </div>
+            <div className="data-list__row">
+              <dt>Sensibilità</dt>
+              <dd>{selectedAsset.sensitive ? "Sensibile" : "Non sensibile"}</dd>
+            </div>
+            <div className="data-list__row">
+              <dt>Stato</dt>
+              <dd>
+                <StatusBadge status={getAssetStatus(session, selectedAsset)} />
+              </dd>
+            </div>
+          </dl>
           <h2>Requisiti</h2>
-          <ul>
+          <ul className="list">
             {(selectedAsset.requirements ?? []).map((r) => (
-              <li key={r}>
-                {r} — {STATUS_LABELS[getEvaluationStatus(session, selectedAsset.id, r)]}{" "}
-                <button type="button" onClick={() => openRequirement(selectedAsset.id, r)}>
+              <li key={r} className="list-row">
+                <span>
+                  {r} — <StatusBadge status={getEvaluationStatus(session, selectedAsset.id, r)} />
+                </span>
+                <button
+                  type="button"
+                  className="btn btn--ghost list-row__actions"
+                  onClick={() => openRequirement(selectedAsset.id, r)}
+                >
                   Apri
                 </button>
               </li>
@@ -118,62 +146,69 @@ export function SessionRunnerPage() {
         </section>
       ) : phase === "requirement" && selectedAsset && selectedRequirementId ? (
         <section aria-label="Dettaglio requisito">
-          <button type="button" onClick={backToAsset}>
-            Indietro
-          </button>
-          <h1>
-            {selectedRequirementId}
-            {requirementDetail ? ` — ${requirementDetail.name}` : ""}
-          </h1>
+          <header className="page__header">
+            <button type="button" className="btn btn--ghost" onClick={backToAsset}>
+              Indietro
+            </button>
+            <h1 className="page__title">
+              {selectedRequirementId}
+              {requirementDetail ? ` — ${requirementDetail.name}` : ""}
+            </h1>
+          </header>
           <h2>Dipendenze</h2>
           {requirementDetail ? (
             requirementDetail.dependencies.length === 0 ? (
-              <p>Nessuna dipendenza.</p>
+              <p className="empty-state">Nessuna dipendenza.</p>
             ) : (
-              <ul>
+              <ul className="list">
                 {requirementDetail.dependencies.map((dep) => (
-                  <li key={dep}>
-                    {dep} — {STATUS_LABELS[getEvaluationStatus(session, selectedAsset.id, dep)]}
+                  <li key={dep} className="list-row">
+                    {dep} —{" "}
+                    <StatusBadge status={getEvaluationStatus(session, selectedAsset.id, dep)} />
                   </li>
                 ))}
               </ul>
             )
           ) : (
-            <p>Caricamento dettagli requisito...</p>
+            <Loading label="Caricamento dettagli requisito…" />
           )}
-          <button type="button" onClick={startRequirement}>
+          <button type="button" className="btn btn--primary" onClick={startRequirement}>
             Avvia decision tree
           </button>
         </section>
       ) : (
         <section aria-label="Esecuzione decision tree">
-          <p>
+          <p className="card__meta">
             <strong>Asset:</strong> {asset ? asset.name : "—"} &nbsp;
             <strong>Requisito:</strong> {requirementId}
           </p>
 
           {status === "error" ? (
-            <p role="alert">Impossibile caricare l'albero decisionale.</p>
+            <p role="alert" className="empty-state">
+              Impossibile caricare l'albero decisionale.
+            </p>
           ) : status === "loading" || !currentNode ? (
-            <p>Caricamento albero decisionale...</p>
+            <Loading label="Caricamento albero decisionale…" />
           ) : currentNode.type === "question" ? (
-            <section aria-label="Domanda corrente">
-              <p>
+            <section aria-label="Domanda corrente" className="card">
+              <p className="card__meta">
                 <strong>Nodo:</strong> {currentNode.id}
               </p>
               <p>{currentNode.text}</p>
-              <button type="button" onClick={() => answer(true)}>
-                Sì
-              </button>
-              <button type="button" onClick={() => answer(false)}>
-                No
-              </button>
+              <div className="toolbar">
+                <button type="button" className="btn btn--primary" onClick={() => answer(true)}>
+                  Sì
+                </button>
+                <button type="button" className="btn" onClick={() => answer(false)}>
+                  No
+                </button>
+              </div>
             </section>
           ) : (
-            <section aria-label="Esito requisito">
-              <p>Esito: {outcome ? <Esito outcome={outcome} /> : null}</p>
+            <section aria-label="Esito requisito" className="card">
+              <p className="card__meta">Esito: {outcome ? <Esito outcome={outcome} /> : null}</p>
               {currentNode.text ? <p>{currentNode.text}</p> : null}
-              <button type="button" onClick={confirmOutcome}>
+              <button type="button" className="btn btn--primary" onClick={confirmOutcome}>
                 Conferma esito
               </button>
             </section>
@@ -183,38 +218,40 @@ export function SessionRunnerPage() {
             <GrafoDecisionTree tree={tree} currentNodeId={currentNodeId} path={path} />
           ) : null}
 
-          <div style={{ marginTop: "1rem" }}>
-            <button type="button" onClick={goBack} disabled={!canGoBack}>
+          <div className="toolbar">
+            <button type="button" className="btn" onClick={goBack} disabled={!canGoBack}>
               Indietro
             </button>
           </div>
         </section>
       )}
 
-      <div style={{ marginTop: "1rem" }}>
-        <button type="button" onClick={saveSession}>
+      <div className="action-bar">
+        <button type="button" className="btn" onClick={saveSession}>
           Salva sessione
         </button>
-        <button type="button" onClick={() => navigate("/session/modify")}>
+        <button type="button" className="btn" onClick={() => navigate("/session/modify")}>
           Modifica sessione
         </button>
-        <button type="button" onClick={() => setConfirmingExit(true)}>
+        <button type="button" className="btn btn--danger" onClick={() => setConfirmingExit(true)}>
           Esci dal test
         </button>
       </div>
 
       {confirmingExit ? (
-        <section aria-label="Conferma uscita dal test" style={{ marginTop: "1rem" }}>
+        <section aria-label="Conferma uscita dal test" className="card">
           <p>Vuoi salvare la sessione prima di uscire?</p>
-          <button type="button" onClick={exitSaving}>
-            Salva ed esci
-          </button>
-          <button type="button" onClick={exitDiscarding}>
-            Esci senza salvare
-          </button>
-          <button type="button" onClick={() => setConfirmingExit(false)}>
-            Annulla
-          </button>
+          <div className="toolbar">
+            <button type="button" className="btn btn--primary" onClick={exitSaving}>
+              Salva ed esci
+            </button>
+            <button type="button" className="btn btn--danger" onClick={exitDiscarding}>
+              Esci senza salvare
+            </button>
+            <button type="button" className="btn" onClick={() => setConfirmingExit(false)}>
+              Annulla
+            </button>
+          </div>
         </section>
       ) : null}
     </div>
