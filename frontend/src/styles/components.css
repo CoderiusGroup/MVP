@@ -1,4 +1,3 @@
-/* Contenitore di pagina */
 .page {
   max-width: 960px;
   margin-inline: auto;
@@ -53,14 +52,12 @@
   margin-block: 0;
 }
 
-/* Griglia generica di card */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-4);
 }
 
-/* Azioni della home: una card per riga, centrata */
 .home-actions {
   display: flex;
   flex-direction: column;
@@ -82,7 +79,6 @@
   font-size: var(--text-xl);
 }
 
-/* Elemento di lista: nome + badge/azioni sulla stessa riga */
 .list-row {
   display: flex;
   align-items: center;
@@ -105,7 +101,6 @@
   gap: var(--space-2);
 }
 
-/* Bottoni */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -168,7 +163,6 @@
   width: 100%;
 }
 
-/* Card */
 .card {
   background: var(--color-surface);
   border: var(--border);
@@ -199,7 +193,6 @@
   font-size: var(--text-sm);
 }
 
-/* Barre di azioni */
 .toolbar {
   display: flex;
   gap: var(--space-2);
@@ -214,7 +207,6 @@
   border-top: var(--border);
 }
 
-/* Liste chiave/valore */
 .data-list {
   margin: 0;
   border: var(--border);
@@ -248,7 +240,6 @@
   margin: 0;
 }
 
-/* Campi di form */
 .field {
   display: flex;
   flex-direction: column;
@@ -274,7 +265,6 @@
   gap: var(--space-2);
 }
 
-/* Stati */
 .empty-state {
   padding: var(--space-6);
   text-align: center;
@@ -288,7 +278,6 @@
   color: var(--color-text-muted);
 }
 
-/* Badge di esito */
 .status-badge {
   display: inline-block;
   padding: 2px var(--space-2);
@@ -321,7 +310,6 @@
   color: var(--color-text-muted);
 }
 
-/* Griglia del catalogo decision tree */
 .catalog-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

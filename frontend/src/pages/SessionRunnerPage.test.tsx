@@ -167,7 +167,8 @@ describe("SessionRunnerPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Valuta" }));
     const assetView = screen.getByLabelText("Asset in valutazione");
-    fireEvent.click(within(assetView).getAllByRole("button", { name: "Apri" })[1]);
+    expect(within(assetView).getByRole("button", { name: "Completato" })).toBeDisabled();
+    fireEvent.click(within(assetView).getByRole("button", { name: "Apri" }));
 
     const detail = await screen.findByLabelText("Dettaglio requisito");
     expect(within(detail).getByRole("heading", { name: "ACM-2 — Dependent" })).toBeInTheDocument();

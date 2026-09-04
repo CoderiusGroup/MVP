@@ -23,9 +23,9 @@ const EvaluationSchema = z.object({
 const CurrentSchema = z.object({
   assetId: identifier,
   requirementId: requirementCode,
-  // Niente min(1) come nodeCode: Session.selectEvaluation()/reopenEvaluation()
-  // costruiscono legittimamente un nodeId vuoto ("non ancora risolto", lo
-  // risolve il TreeStore all'idratazione dell'albero).
+  // Niente min(1) come nodeCode: Session.selectEvaluation() costruisce
+  // legittimamente un nodeId vuoto ("non ancora risolto", lo risolve il
+  // TreeStore all'idratazione dell'albero).
   nodeId: z.string().max(32),
 });
 
@@ -118,25 +118,6 @@ export class Session {
   // vuoto: lo risolve il TreeStore all'idratazione).
   selectEvaluation(assetId: string, requirementId: string): Session {
     return new Session(this.#id, this.#savedAt, "in_progress", this.#device, this.#evaluations, {
-      decisionTreeVersions: this.#decisionTreeVersions,
-      current: { assetId, requirementId, nodeId: "" },
-    });
-  }
-
-  // UC-27.2: riapre una coppia già valutata e tutte quelle che ne dipendono
-  // transitivamente, riportandole a "non_valutato".
-  reopenEvaluation(
-    assetId: string,
-    requirementId: string,
-    dependentRequirementIds: string[],
-  ): Session {
-    const toReset = new Set([requirementId, ...dependentRequirementIds]);
-    const evaluations = this.#evaluations.map((evaluation): Evaluation =>
-      evaluation.assetId === assetId && toReset.has(evaluation.requirementId)
-        ? { assetId: evaluation.assetId, requirementId: evaluation.requirementId, status: "not_evaluated" }
-        : evaluation,
-    );
-    return new Session(this.#id, this.#savedAt, "in_progress", this.#device, evaluations, {
       decisionTreeVersions: this.#decisionTreeVersions,
       current: { assetId, requirementId, nodeId: "" },
     });
