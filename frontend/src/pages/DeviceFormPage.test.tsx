@@ -50,9 +50,9 @@ describe("DeviceFormPage", () => {
 
         render(<BrowserRouter><DeviceFormPage /></BrowserRouter>);
 
-        await userEvent.type(screen.getByPlaceholderText("Nome"), "Router1");
-        await userEvent.type(screen.getByPlaceholderText("Sistema Operativo"), "Linux");
-        await userEvent.type(screen.getByPlaceholderText("Descrizione"), "Router per la casa");
+        await userEvent.type(screen.getByLabelText("Nome"), "Router1");
+        await userEvent.type(screen.getByLabelText("Sistema operativo"), "Linux");
+        await userEvent.type(screen.getByLabelText("Descrizione"), "Router per la casa");
         await userEvent.click(screen.getByRole("button", {name: /Salva e procedi/i}));
 
         await waitFor(() => {
@@ -80,9 +80,9 @@ describe("DeviceFormPage", () => {
         render(<BrowserRouter><DeviceFormPage /></BrowserRouter>);
 
         expect(screen.getByText("Modifica dispositivo")).toBeInTheDocument();
-        expect(screen.getByPlaceholderText("Nome")).toHaveValue("Router1");
-        expect(screen.getByPlaceholderText("Sistema Operativo")).toHaveValue("Linux");
-        expect(screen.getByPlaceholderText("Descrizione")).toHaveValue("Router per la casa");
+        expect(screen.getByLabelText("Nome")).toHaveValue("Router1");
+        expect(screen.getByLabelText("Sistema operativo")).toHaveValue("Linux");
+        expect(screen.getByLabelText("Descrizione")).toHaveValue("Router per la casa");
     });
 
     it("in modalità modifica salva localmente senza chiamare il backend e torna al riepilogo", async () => {
@@ -91,8 +91,8 @@ describe("DeviceFormPage", () => {
 
         render(<BrowserRouter><DeviceFormPage /></BrowserRouter>);
 
-        await userEvent.clear(screen.getByPlaceholderText("Nome"));
-        await userEvent.type(screen.getByPlaceholderText("Nome"), "Router aggiornato");
+        await userEvent.clear(screen.getByLabelText("Nome"));
+        await userEvent.type(screen.getByLabelText("Nome"), "Router aggiornato");
         await userEvent.click(screen.getByRole("button", { name: "Salva modifiche" }));
 
         await waitFor(() => {
@@ -111,8 +111,8 @@ describe("DeviceFormPage", () => {
 
         render(<BrowserRouter><DeviceFormPage /></BrowserRouter>);
 
-        await userEvent.clear(screen.getByPlaceholderText("Nome"));
-        await userEvent.type(screen.getByPlaceholderText("Nome"), "Nome scartato");
+        await userEvent.clear(screen.getByLabelText("Nome"));
+        await userEvent.type(screen.getByLabelText("Nome"), "Nome scartato");
         await userEvent.click(screen.getByRole("button", { name: "Torna indietro" }));
 
         expect(mockUpdateDeviceDetails).not.toHaveBeenCalled();
