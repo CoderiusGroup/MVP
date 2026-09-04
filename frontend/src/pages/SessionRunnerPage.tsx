@@ -126,20 +126,27 @@ export function SessionRunnerPage() {
           </dl>
           <h2>Requisiti</h2>
           <ul className="list">
-            {(selectedAsset.requirements ?? []).map((r) => (
-              <li key={r} className="list-row">
-                <span>
-                  {r} — <StatusBadge status={getEvaluationStatus(session, selectedAsset.id, r)} />
-                </span>
-                <button
-                  type="button"
-                  className="btn btn--ghost list-row__actions"
-                  onClick={() => openRequirement(selectedAsset.id, r)}
-                >
-                  Apri
-                </button>
-              </li>
-            ))}
+            {(selectedAsset.requirements ?? []).map((r) => {
+              const evaluated =
+                session.evaluations.find(
+                  (e) => e.assetId === selectedAsset.id && e.requirementId === r,
+                )?.status === "completed";
+              return (
+                <li key={r} className="list-row">
+                  <span>
+                    {r} — <StatusBadge status={getEvaluationStatus(session, selectedAsset.id, r)} />
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn--ghost list-row__actions"
+                    onClick={() => openRequirement(selectedAsset.id, r)}
+                    disabled={evaluated}
+                  >
+                    {evaluated ? "Completato" : "Apri"}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : phase === "requirement" && selectedAsset && selectedRequirementId ? (
@@ -227,9 +234,6 @@ export function SessionRunnerPage() {
       <div className="action-bar">
         <button type="button" className="btn" onClick={saveSession}>
           Salva sessione
-        </button>
-        <button type="button" className="btn" onClick={() => navigate("/session/modify")}>
-          Modifica sessione
         </button>
         <button type="button" className="btn btn--danger" onClick={() => setConfirmingExit(true)}>
           Esci dal test

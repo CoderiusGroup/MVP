@@ -28,7 +28,6 @@ const ROW_H = 200;
 const NODE_W = 220;
 const PAD = 18;
 
-// Tinta chiara di riempimento delle foglie per esito; il bordo usa STATUS_COLORS.
 const LEAF_FILL: Record<string, string> = {
   PASS: "#e4f1ea",
   FAIL: "#f6e3e7",

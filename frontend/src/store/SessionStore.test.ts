@@ -101,28 +101,6 @@ describe("SessionStore", () => {
     expect(session.evaluations).toEqual(before);
   });
 
-  it("reopen resets the chosen requirement and the given dependents, per asset", () => {
-    useSessionStore.getState().start(device);
-    const pairs = useSessionStore
-      .getState()
-      .session!.evaluations.map((e) => ({ assetId: e.assetId, requirementId: e.requirementId }));
-    for (const pair of pairs) {
-      useSessionStore.getState().select(pair.assetId, pair.requirementId);
-      useSessionStore.getState().completeCurrent("PASS", []);
-    }
-
-    useSessionStore.getState().reopen("AS-1", "ACM-1", ["ACM-2"]);
-
-    const session = useSessionStore.getState().session!;
-    const find = (assetId: string, requirementId: string) =>
-      session.evaluations.find((e) => e.assetId === assetId && e.requirementId === requirementId);
-    expect(find("AS-1", "ACM-1")).toMatchObject({ status: "not_evaluated" });
-    expect(find("AS-1", "ACM-2")).toMatchObject({ status: "not_evaluated" });
-    expect(find("AS-2", "AUM-1-1")).toMatchObject({ status: "completed" });
-    expect(session.status).toBe("in_progress");
-    expect(session.current).toMatchObject({ assetId: "AS-1", requirementId: "ACM-1" });
-  });
-
   it("ensureSession crea una sessione quando non ce n'è una", () => {
     useSessionStore.getState().ensureSession(device);
 

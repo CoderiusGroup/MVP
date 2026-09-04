@@ -149,9 +149,6 @@ export function ResultPage() {
         >
           {exportingReport ? "Esportazione in corso..." : "Esporta report PDF"}
         </button>
-        <button type="button" className="btn" onClick={() => navigate("/session/modify")}>
-          Modifica sessione
-        </button>
         <button type="button" className="btn" onClick={() => navigate("/")}>
           Torna alla Home
         </button>

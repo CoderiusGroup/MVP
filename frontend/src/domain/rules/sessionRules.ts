@@ -2,29 +2,6 @@ import type { Asset } from "../entities/Asset";
 import type { Device } from "../entities/Device";
 import type { Evaluation, Session } from "../entities/Session";
 
-export type DependencyMap = Record<string, string[]>;
-
-export function transitiveDependents(
-  requirementId: string,
-  dependencies: DependencyMap,
-): string[] {
-  const dependents = new Set<string>();
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (const [requirement, deps] of Object.entries(dependencies)) {
-      if (dependents.has(requirement) || requirement === requirementId) {
-        continue;
-      }
-      if (deps.some((dep) => dep === requirementId || dependents.has(dep))) {
-        dependents.add(requirement);
-        changed = true;
-      }
-    }
-  }
-  return [...dependents];
-}
-
 export interface EvaluationProgress {
   assetsDone: number;
   assetsTotal: number;

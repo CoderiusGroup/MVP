@@ -9,17 +9,7 @@ import {
   getEvaluationProgress,
   getEvaluationStatus,
   getRequirementStatus,
-  transitiveDependents,
-  type DependencyMap,
 } from "./sessionRules";
-
-const dependencies: DependencyMap = {
-  "ACM-1": [],
-  "ACM-2": ["ACM-1"],
-  "AUM-1-1": ["ACM-1"],
-  "AUM-1-2": ["ACM-1"],
-  "AUM-2": ["AUM-1-1", "AUM-1-2"],
-};
 
 function completedSession(): Session {
   return Session.parse({
@@ -65,39 +55,7 @@ function completedSession(): Session {
   });
 }
 
-describe("sessionRules — dipendenze e riapertura", () => {
-  it("transitiveDependents raccoglie i dipendenti diretti e transitivi", () => {
-    expect(new Set(transitiveDependents("ACM-1", dependencies))).toEqual(
-      new Set(["ACM-2", "AUM-1-1", "AUM-1-2", "AUM-2"]),
-    );
-  });
-
-  it("transitiveDependents segue solo la catena a valle", () => {
-    expect(transitiveDependents("AUM-1-1", dependencies)).toEqual(["AUM-2"]);
-    expect(transitiveDependents("AUM-2", dependencies)).toEqual([]);
-  });
-
-  it("Session.reopenEvaluation azzera il requisito e i suoi dipendenti sullo stesso asset", () => {
-    const result = completedSession().reopenEvaluation("AS-1", "ACM-1", ["ACM-2", "AUM-1-1"]);
-
-    const as1 = (req: string) =>
-      result.evaluations.find((e) => e.assetId === "AS-1" && e.requirementId === req);
-    expect(as1("ACM-1")).toMatchObject({ status: "not_evaluated" });
-    expect(as1("ACM-1")?.outcome).toBeUndefined();
-    expect(as1("ACM-1")?.path).toBeUndefined();
-    expect(as1("ACM-2")).toMatchObject({ status: "not_evaluated" });
-    expect(as1("AUM-1-1")).toMatchObject({ status: "not_evaluated" });
-
-    expect(result.status).toBe("in_progress");
-    expect(result.current).toEqual({ assetId: "AS-1", requirementId: "ACM-1", nodeId: "" });
-  });
-
-  it("Session.reopenEvaluation non tocca lo stesso requisito su un altro asset", () => {
-    const result = completedSession().reopenEvaluation("AS-1", "ACM-1", ["ACM-2"]);
-    const as2 = result.evaluations.find((e) => e.assetId === "AS-2" && e.requirementId === "ACM-2");
-    expect(as2).toMatchObject({ status: "completed", outcome: "PASS" });
-  });
-
+describe("sessionRules — selezione valutazione", () => {
   it("Session.selectEvaluation sposta current senza alterare le valutazioni", () => {
     const session = completedSession();
     const result = session.selectEvaluation("AS-1", "AUM-1-1");

@@ -1,5 +1,4 @@
 :root {
-  /* superfici e testo — base bianca */
   --color-bg: #ffffff;
   --color-surface: #ffffff;
   --color-surface-alt: #f5f6fb;
@@ -7,7 +6,6 @@
   --color-text-muted: #57606a;
   --color-border: #d7dae4;
 
-  /* accento / azione */
   --color-accent: #00129a;
   --color-accent-hover: #000d73;
   --color-accent-soft: #e9eaf5;
@@ -15,13 +13,11 @@
   --color-danger: #cf222e;
   --color-danger-hover: #a40e26;
 
-  /* esito — tenere in sync con src/theme/statusColors.ts */
   --color-pass: #1a7f37;
   --color-fail: #cf222e;
   --color-na: #57606a;
   --color-progress: #9a6700;
 
-  /* spaziatura */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -29,7 +25,6 @@
   --space-6: 1.5rem;
   --space-8: 2rem;
 
-  /* tipografia */
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Consolas, monospace;
   --text-sm: 0.875rem;

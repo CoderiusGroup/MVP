@@ -18,7 +18,6 @@ interface SessionState {
   syncProgress: (nodeId: string, path: PathStep[]) => void;
   completeCurrent: (outcome: Outcome, path: PathStep[]) => void;
   select: (assetId: string, requirementId: string) => void;
-  reopen: (assetId: string, requirementId: string, dependents: string[]) => void;
   reset: () => void;
 }
 
@@ -58,14 +57,6 @@ export const useSessionStore = create<SessionState>((set) => ({
   select: (assetId, requirementId) => {
     set((state) =>
       state.session ? { session: state.session.selectEvaluation(assetId, requirementId) } : state,
-    );
-  },
-
-  reopen: (assetId, requirementId, dependents) => {
-    set((state) =>
-      state.session
-        ? { session: state.session.reopenEvaluation(assetId, requirementId, dependents) }
-        : state,
     );
   },
 

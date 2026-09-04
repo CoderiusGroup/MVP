@@ -6,7 +6,6 @@ import DeviceSummaryPage from "./pages/DeviceSummaryPage";
 import DeviceAssetManagementPage from "./pages/DeviceAssetManagementPage";
 import AssetFormPage from "./pages/AssetFormPage";
 import { SessionRunnerPage } from "./pages/SessionRunnerPage";
-import { ModifySessionPage } from "./pages/ModifySessionPage";
 import { DecisionTreeCatalogPage } from "./pages/DecisionTreeCatalogPage";
 import { RequireSession } from "./components/RequireSession";
 import type { Device } from "./domain/entities/Device";
@@ -47,14 +46,6 @@ function App() {
           element={
             <RequireSession>
               <SessionRunnerPage />
-            </RequireSession>
-          }
-        />
-        <Route
-          path="/session/modify"
-          element={
-            <RequireSession>
-              <ModifySessionPage />
             </RequireSession>
           }
         />
