@@ -58,6 +58,23 @@ export default function DeviceSummaryPage() {
     >
       {device ? (
         <>
+          <div className="toolbar">
+            <button
+              type="button"
+              className="btn"
+              onClick={() => exportDevice(device, jsonDeviceFormat)}
+            >
+              Esporta in JSON
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => exportDevice(device, csvDeviceFormat)}
+            >
+              Esporta in CSV
+            </button>
+          </div>
+
           <dl className="data-list">
             <div className="data-list__row">
               <dt>ID</dt>
@@ -103,23 +120,6 @@ export default function DeviceSummaryPage() {
             </button>
             <button type="button" className="btn" onClick={() => navigate("/device/edit")}>
               Modifica dispositivo
-            </button>
-          </div>
-
-          <div className="toolbar">
-            <button
-              type="button"
-              className="btn"
-              onClick={() => exportDevice(device, jsonDeviceFormat)}
-            >
-              Esporta in JSON
-            </button>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => exportDevice(device, csvDeviceFormat)}
-            >
-              Esporta in CSV
             </button>
           </div>
 

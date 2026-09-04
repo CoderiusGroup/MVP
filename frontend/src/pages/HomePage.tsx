@@ -53,11 +53,9 @@ export default function HomePage({ onDeviceSaved, onSessionResumed }: Props) {
 
   return (
     <div className="page">
-      <header className="page__header">
-        <h1 className="page__title">Gestione Valutazione Dispositivi</h1>
-      </header>
+      <div className="home-actions">
+        <h1>Gestione Valutazione Dispositivi</h1>
 
-      <div className="card-grid">
         <section className="card card--action">
           <h2 className="card__title">Nuovo dispositivo</h2>
           <button
@@ -71,7 +69,7 @@ export default function HomePage({ onDeviceSaved, onSessionResumed }: Props) {
 
         <section className="card card--action">
           <h2 className="card__title">Importa dispositivo da JSON o CSV</h2>
-          <label className="btn btn--block" htmlFor="home-import-device">
+          <label className="btn btn--primary btn--block" htmlFor="home-import-device">
             Scegli un file
           </label>
           <input
@@ -86,7 +84,7 @@ export default function HomePage({ onDeviceSaved, onSessionResumed }: Props) {
 
         <section className="card card--action">
           <h2 className="card__title">Riprendi una sessione salvata</h2>
-          <label className="btn btn--block" htmlFor="home-resume-session">
+          <label className="btn btn--primary btn--block" htmlFor="home-resume-session">
             Scegli un file
           </label>
           <input
@@ -103,7 +101,7 @@ export default function HomePage({ onDeviceSaved, onSessionResumed }: Props) {
           <h2 className="card__title">Catalogo decision tree</h2>
           <button
             type="button"
-            className="btn btn--block"
+            className="btn btn--primary btn--block"
             onClick={() => navigate("/decision-tree-catalog")}
           >
             Apri catalogo decision tree

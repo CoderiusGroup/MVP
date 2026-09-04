@@ -201,7 +201,7 @@ export function DecisionTreeCatalogPage() {
           </ul>
 
           {selectedRequirementId && tree ? (
-            <section aria-label="Dettaglio decision tree" className="card">
+            <section aria-label="Dettaglio decision tree" className="card stack">
               <h2 className="card__title">
                 {tree.requirementId} — {tree.requirementName}
               </h2>
