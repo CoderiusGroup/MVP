@@ -197,6 +197,41 @@ describe("SessionRunnerPage", () => {
     expect(within(screen.getByLabelText("Esito requisito")).getByText("PASS"),).toBeInTheDocument();
   });
 
+  it("torna avanti sul nodo già risposto dopo un Indietro (RF-D09)", async () => {
+    useSessionStore.getState().resume(
+      baseSession({
+        evaluations: [
+          {
+            assetId: "AS-1",
+            requirementId: "ACM-1",
+            status: "in_progress",
+            path: [{ nodeId: "n1", answer: "yes" }],
+          },
+        ],
+        current: { assetId: "AS-1", requirementId: "ACM-1", nodeId: "n2" },
+      }),
+    );
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Conferma esito" })).toBeInTheDocument(),
+    );
+    expect(screen.getByRole("button", { name: "Avanti" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Indietro" }));
+
+    expect(within(screen.getByLabelText("Domanda corrente")).getByText("Domanda 1?")).toBeInTheDocument();
+    const forward = screen.getByRole("button", { name: "Avanti" });
+    expect(forward).not.toBeDisabled();
+
+    fireEvent.click(forward);
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Conferma esito" })).toBeInTheDocument(),
+    );
+    expect(within(screen.getByLabelText("Esito requisito")).getByText("PASS")).toBeInTheDocument();
+  });
+
   it("permette l'uscita anticipata scartando la sessione (RF-Ob69)", () => {
     useSessionStore.getState().resume(baseSession());
     renderPage();

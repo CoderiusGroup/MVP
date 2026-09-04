@@ -45,6 +45,7 @@ export function useSessionRunner() {
   const cursor = useTreeStore((state) => state.cursor);
   const answer = useTreeStore((state) => state.answer);
   const goBack = useTreeStore((state) => state.goBack);
+  const goForward = useTreeStore((state) => state.goForward);
   const hydrate = useTreeStore((state) => state.hydrate);
   const resetTree = useTreeStore((state) => state.reset);
 
@@ -208,6 +209,10 @@ export function useSessionRunner() {
     answer,
     goBack,
     canGoBack: cursor > 0,
+    // (UC-22.5): si può tornare avanti solo sui nodi già risposti,
+    //cioè finché il cursore non ha raggiunto la fine del percorso registrato.
+    goForward,
+    canGoForward: cursor < history.length,
     openAsset,
     openRequirement,
     startRequirement,

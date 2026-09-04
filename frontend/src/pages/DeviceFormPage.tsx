@@ -53,19 +53,11 @@ export default function DeviceFormPage() {
       onBack={() => navigate(isEditMode ? "/device" : "/")}
     >
       <form onSubmit={handleFormSubmit}>
-        <Field
-          label="Nome"
-          id="device-name"
-          name="name"
-          placeholder="Nome"
-          defaultValue={device?.name}
-          required
-        />
+        <Field label="Nome" id="device-name" name="name" defaultValue={device?.name} required />
         <Field
           label="Sistema operativo"
           id="device-os"
           name="operatingSystem"
-          placeholder="Sistema Operativo"
           defaultValue={device?.operatingSystem}
           required
         />
@@ -73,7 +65,6 @@ export default function DeviceFormPage() {
           label="Descrizione"
           id="device-description"
           name="description"
-          placeholder="Descrizione"
           defaultValue={device?.description}
         />
         <button type="submit" className="btn btn--primary">

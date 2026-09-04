@@ -32,6 +32,8 @@ export function SessionRunnerPage() {
     answer,
     goBack,
     canGoBack,
+    goForward,
+    canGoForward,
     openAsset,
     openRequirement,
     startRequirement,
@@ -226,6 +228,9 @@ export function SessionRunnerPage() {
           <div className="toolbar">
             <button type="button" className="btn" onClick={goBack} disabled={!canGoBack}>
               Indietro
+            </button>
+            <button type="button" className="btn" onClick={goForward} disabled={!canGoForward}>
+              Avanti
             </button>
           </div>
         </section>
