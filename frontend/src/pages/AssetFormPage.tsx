@@ -1,4 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { Field, SelectField } from "../components/Field";
+import { Page } from "../components/Page";
 import { NotificationManager } from "../infrastructure/NotificationManager";
 import { createAsset, updateAsset } from "../services/DeviceService";
 import { useDeviceStore } from "../store/DeviceStore";
@@ -20,10 +22,9 @@ export default function AssetFormPage() {
 
   if (isEditMode && !existingAsset) {
     return (
-      <div style={{ padding: "1rem" }}>
-        <button onClick={goBack}>Torna indietro</button>
-        <p>Asset non trovato.</p>
-      </div>
+      <Page title="Asset" onBack={goBack}>
+        <p className="empty-state">Asset non trovato.</p>
+      </Page>
     );
   }
 
@@ -60,38 +61,41 @@ export default function AssetFormPage() {
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <button onClick={goBack}>Torna indietro</button>
-
-      <h1>{existingAsset ? "Modifica Asset" : "Nuovo Asset"}</h1>
+    <Page title={existingAsset ? "Modifica Asset" : "Nuovo Asset"} onBack={goBack}>
       <form onSubmit={handleFormSubmit}>
-        <p>Nome:</p>
-        <input name="name" placeholder="Nome" defaultValue={existingAsset?.name} />
-
-        <p>Tipo:</p>
-        <select name="type" defaultValue={existingAsset?.type ?? "network"}>
+        <Field
+          label="Nome"
+          id="asset-name"
+          name="name"
+          placeholder="Nome"
+          defaultValue={existingAsset?.name}
+        />
+        <SelectField
+          label="Tipo"
+          id="asset-type"
+          name="type"
+          defaultValue={existingAsset?.type ?? "network"}
+        >
           <option value="network">Network</option>
           <option value="security">Security</option>
           <option value="privacy">Privacy</option>
           <option value="financial">Financial</option>
-        </select>
-
-        <p>Descrizione:</p>
-        <input
+        </SelectField>
+        <Field
+          label="Descrizione"
+          id="asset-description"
           name="description"
           placeholder="Descrizione"
           defaultValue={existingAsset?.description}
         />
-
-        <p>
-          <label>
-            <input type="checkbox" name="sensitive" defaultChecked={existingAsset?.sensitive} />{" "}
-            Asset sensibile
-          </label>
-        </p>
-
-        <button type="submit">Invia</button>
+        <label className="field field--checkbox">
+          <input type="checkbox" name="sensitive" defaultChecked={existingAsset?.sensitive} />
+          Asset sensibile
+        </label>
+        <button type="submit" className="btn btn--primary">
+          Invia
+        </button>
       </form>
-    </div>
+    </Page>
   );
 }

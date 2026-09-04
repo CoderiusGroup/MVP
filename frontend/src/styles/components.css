@@ -1,0 +1,342 @@
+/* Contenitore di pagina */
+.page {
+  max-width: 960px;
+  margin-inline: auto;
+  padding: var(--space-6);
+  text-align: left;
+}
+
+.page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.page__back:hover {
+  text-decoration: underline;
+}
+
+.page__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.page__title {
+  margin: 0;
+  flex: 1;
+}
+
+.page__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.page__body,
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.page__body > *,
+.stack > * {
+  margin-block: 0;
+}
+
+/* Griglia generica di card */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Azioni della home: una card per riga, centrata */
+.home-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 560px;
+  margin-inline: auto;
+}
+
+.home-actions > h1 {
+  margin: 0 0 var(--space-2);
+}
+
+.home-actions .card {
+  padding: var(--space-6);
+  gap: var(--space-4);
+}
+
+.home-actions .card__title {
+  font-size: var(--text-xl);
+}
+
+/* Elemento di lista: nome + badge/azioni sulla stessa riga */
+.list-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.list-row__actions {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Bottoni */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.btn:hover {
+  background: var(--color-surface-alt);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.btn--danger {
+  background: var(--color-surface);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: var(--color-danger);
+  color: var(--color-on-accent);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-accent);
+}
+
+.btn--ghost:hover {
+  background: var(--color-accent-soft);
+}
+
+.btn--block {
+  width: 100%;
+}
+
+/* Card */
+.card {
+  background: var(--color-surface);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.card--action {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.card__title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-lg);
+}
+
+.card--action .card__title {
+  margin: 0;
+}
+
+.card__meta {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+/* Barre di azioni */
+.toolbar {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.action-bar {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-top: var(--space-4);
+  border-top: var(--border);
+}
+
+/* Liste chiave/valore */
+.data-list {
+  margin: 0;
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.data-list--nested {
+  margin-top: var(--space-6);
+}
+
+.data-list__row {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) 1fr;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border);
+}
+
+.data-list__row:last-child {
+  border-bottom: none;
+}
+
+.data-list dt {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.data-list dd {
+  margin: 0;
+}
+
+/* Campi di form */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.field__control {
+  padding: var(--space-2) var(--space-3);
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  width: 100%;
+}
+
+.field__control:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.field--checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Stati */
+.empty-state {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-text-muted);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.loading {
+  padding: var(--space-4) 0;
+  color: var(--color-text-muted);
+}
+
+/* Badge di esito */
+.status-badge {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-on-accent);
+  background: var(--color-na);
+  white-space: nowrap;
+}
+
+.status-badge--pass {
+  background: var(--color-pass);
+}
+
+.status-badge--fail {
+  background: var(--color-fail);
+}
+
+.status-badge--na {
+  background: var(--color-na);
+}
+
+.status-badge--progress {
+  background: var(--color-progress);
+}
+
+.status-badge--neutral {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
+
+/* Griglia del catalogo decision tree */
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.catalog-grid li {
+  display: flex;
+}
+
+.catalog-grid button {
+  width: 100%;
+  min-height: 64px;
+  text-align: left;
+}

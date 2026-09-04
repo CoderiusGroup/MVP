@@ -1,6 +1,5 @@
 import { Toaster } from "react-hot-toast";
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
-import "./App.css";
 import HomePage from "./pages/HomePage";
 import DeviceFormPage from "./pages/DeviceFormPage";
 import DeviceSummaryPage from "./pages/DeviceSummaryPage";
@@ -10,8 +9,8 @@ import { SessionRunnerPage } from "./pages/SessionRunnerPage";
 import { ModifySessionPage } from "./pages/ModifySessionPage";
 import { DecisionTreeCatalogPage } from "./pages/DecisionTreeCatalogPage";
 import { RequireSession } from "./components/RequireSession";
-import type { Device } from "./domain/entities/Device.ts";
-import type { Session } from "./domain/entities/Session.ts";
+import type { Device } from "./domain/entities/Device";
+import type { Session } from "./domain/entities/Session";
 import { useDeviceStore } from "./store/DeviceStore";
 import { useSessionStore } from "./store/SessionStore";
 
@@ -22,7 +21,7 @@ function HomeRoute() {
 
   const handleDeviceSaved = (device: Device, payload: unknown) => {
     setDevice(device, payload);
-    navigate("/device/assets"); 
+    navigate("/device/assets");
   };
 
   const handleSessionResumed = (session: Session) => {
@@ -39,7 +38,7 @@ function App() {
     <BrowserRouter>
       <Toaster />
       <Routes>
-        <Route path="/" element={<HomeRoute />} /> {}
+        <Route path="/" element={<HomeRoute />} />
         <Route path="/device/new" element={<DeviceFormPage />} />
         <Route path="/device/edit" element={<DeviceFormPage />} />
         <Route path="/device" element={<DeviceSummaryPage />} />

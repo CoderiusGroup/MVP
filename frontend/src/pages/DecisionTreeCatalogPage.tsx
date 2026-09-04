@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { GrafoDecisionTree } from "../components/GrafoDecisionTree";
+import { Loading } from "../components/Loading";
+import { Page } from "../components/Page";
 import { NotificationManager } from "../infrastructure/NotificationManager";
 import { decisionTreeService, type DecisionTreeSummary } from "../services/DecisionTreeService";
 import type { DecisionTree } from "../domain/entities/DecisionTree";
@@ -122,7 +124,9 @@ export function DecisionTreeCatalogPage() {
       setTree(importedTree);
       notification.success(message);
     } catch {
-      setError("Impossibile importare il decision tree. Verificare il formato e la struttura del file.");
+      setError(
+        "Impossibile importare il decision tree. Verificare il formato e la struttura del file.",
+      );
     } finally {
       setImporting(null);
       if (input) input.value = "";
@@ -130,19 +134,19 @@ export function DecisionTreeCatalogPage() {
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <button type="button" onClick={() => navigate("/")}>
-        Torna alla Home
-      </button>
-      <h1>Decision Tree disponibili</h1>
-
+    <Page title="Decision Tree disponibili" onBack={() => navigate("/")} backLabel="Torna alla Home">
       {loading ? (
-        <p>Caricamento...</p>
+        <Loading />
       ) : error ? (
-        <p role="alert">{error}</p>
+        <p role="alert" className="empty-state">
+          {error}
+        </p>
       ) : (
         <>
-          <p>Seleziona un requisito per visualizzare la struttura completa del DT.</p>
+          <p className="card__meta">
+            Seleziona un requisito per visualizzarne la struttura completa.
+          </p>
+
           <input
             ref={jsonInputRef}
             type="file"
@@ -159,9 +163,10 @@ export function DecisionTreeCatalogPage() {
             onChange={(event) => handleImport(event.target.files?.[0], "csv")}
             style={{ display: "none" }}
           />
-          <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+          <div className="toolbar">
             <button
               type="button"
+              className="btn"
               onClick={() => jsonInputRef.current?.click()}
               disabled={importing !== null}
             >
@@ -169,17 +174,24 @@ export function DecisionTreeCatalogPage() {
             </button>
             <button
               type="button"
+              className="btn"
               onClick={() => csvInputRef.current?.click()}
               disabled={importing !== null}
             >
               {importing === "csv" ? "Importazione CSV..." : "Importa CSV"}
             </button>
           </div>
-          <ul className="decision-tree-list">
+
+          <ul className="catalog-grid">
             {trees.map((treeSummary) => (
               <li key={treeSummary.requirementId}>
                 <button
                   type="button"
+                  className={
+                    treeSummary.requirementId === selectedRequirementId
+                      ? "btn btn--primary"
+                      : "btn"
+                  }
                   onClick={() => setSelectedRequirementId(treeSummary.requirementId)}
                 >
                   {treeSummary.requirementId} — {treeSummary.requirementName}
@@ -189,31 +201,29 @@ export function DecisionTreeCatalogPage() {
           </ul>
 
           {selectedRequirementId && tree ? (
-            <section aria-label="Dettaglio decision tree">
-              <h2>{tree.requirementId} — {tree.requirementName}</h2>
+            <section aria-label="Dettaglio decision tree" className="card stack">
+              <h2 className="card__title">
+                {tree.requirementId} — {tree.requirementName}
+              </h2>
 
-              <dl className="decision-tree-info">
-                <div>
+              <dl className="data-list">
+                <div className="data-list__row">
                   <dt>Versione:</dt>
                   <dd>{tree.version ?? "Non specificata"}</dd>
                 </div>
-
-                <div>
+                <div className="data-list__row">
                   <dt>Applicabile a:</dt>
                   <dd>{tree.appliesTo?.join(", ") ?? "Non specificato"}</dd>
                 </div>
-
-                <div>
+                <div className="data-list__row">
                   <dt>Nodo radice:</dt>
                   <dd>{tree.rootNode}</dd>
                 </div>
-
-                <div>
+                <div className="data-list__row">
                   <dt>Numero nodi:</dt>
                   <dd>{tree.nodes.length}</dd>
                 </div>
-
-                <div>
+                <div className="data-list__row">
                   <dt>Dipendenze:</dt>
                   <dd>
                     {tree.dependencies && tree.dependencies.length > 0
@@ -225,19 +235,27 @@ export function DecisionTreeCatalogPage() {
 
               <h3>Grafo decision tree</h3>
               <GrafoDecisionTree tree={tree} currentNodeId={tree.rootNode} path={[]} readOnly />
-              
-              <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
-                <button type="button" onClick={() => handleExport("json")}>Esporta JSON</button>
-                <button type="button" onClick={() => handleExport("csv")}>Esporta CSV</button>
-              </div>
 
-              <button type="button" onClick={handleDelete} disabled={deleting}>
-                {deleting ? "Eliminazione..." : "Elimina decision tree"}
-              </button>
+              <div className="action-bar">
+                <button type="button" className="btn" onClick={() => handleExport("json")}>
+                  Esporta JSON
+                </button>
+                <button type="button" className="btn" onClick={() => handleExport("csv")}>
+                  Esporta CSV
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--danger"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                >
+                  {deleting ? "Eliminazione..." : "Elimina decision tree"}
+                </button>
+              </div>
             </section>
           ) : null}
         </>
       )}
-    </div>
+    </Page>
   );
 }

@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Page } from "../components/Page";
+import { StatusBadge } from "../components/StatusBadge";
 import type { Asset } from "../domain/entities/Asset";
-import {
-  getAssetStatus,
-  getEvaluationStatus,
-  STATUS_LABELS,
-} from "../domain/rules/sessionRules";
+import { getAssetStatus, getEvaluationStatus, STATUS_LABELS } from "../domain/rules/sessionRules";
 import { useDeviceStore } from "../store/DeviceStore";
 import { useSessionStore } from "../store/SessionStore";
 
@@ -30,75 +28,113 @@ export default function DeviceAssetManagementPage() {
   };
 
   return (
-    <div style={{ padding: "1rem" }}> {}
-      <button onClick={() => navigate("/")}>Annulla e vai alla Home</button> 
-      
-      <h1>Gestione Asset</h1>
-      {device ? <p>Dispositivo: {device.name}</p> : <p>Nessun dispositivo disponibile.</p>}
+    <Page title="Gestione asset" onBack={() => navigate("/")} backLabel="Torna alla Home">
+      {device ? (
+        <p className="card__meta">Dispositivo: {device.name}</p>
+      ) : (
+        <p className="empty-state">Nessun dispositivo disponibile.</p>
+      )}
 
-      <button onClick={() => navigate("/device/assets/new")}>Aggiungi asset</button>
-
-      <div style={{ margin: "1rem 0" }}>
-        <button 
-          onClick={() => navigate("/device")} 
+      <div className="toolbar">
+        <button
+          type="button"
+          className="btn btn--primary"
+          onClick={() => navigate("/device/assets/new")}
+        >
+          Aggiungi asset
+        </button>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => navigate("/device")}
           disabled={assets.length === 0}
-          style={{ fontWeight: "bold", backgroundColor: assets.length > 0 ? "green" : "grey", color: "white" }}
         >
           Visualizza dettaglio dispositivo
         </button>
       </div>
 
       {assets.length === 0 ? (
-        <p>Nessun asset presente.</p>
+        <p className="empty-state">Nessun asset presente.</p>
       ) : (
-        <ul>
+        <ul className="list">
           {assets.map((asset) => {
             const isExpanded = asset.id === expandedAssetId;
             const assetStatus = getAssetStatus(session, asset);
 
             return (
-              <li key={asset.id}>
-                <button aria-expanded={isExpanded} onClick={() => toggleExpanded(asset.id)}>
-                  <strong>{asset.name}</strong> — {asset.type} — {STATUS_LABELS[assetStatus]}
-                </button>
-                <button onClick={() => navigate(`/device/assets/${asset.id}/edit`)}>
-                  Modifica
-                </button>
-                <button onClick={() => handleRemove(asset.id)}>Rimuovi</button>
+              <li key={asset.id} className="card">
+                <div className="list-row">
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    aria-expanded={isExpanded}
+                    onClick={() => toggleExpanded(asset.id)}
+                  >
+                    <strong>{asset.name}</strong> — {asset.type}
+                  </button>
+                  <StatusBadge status={assetStatus} />
+                  <span className="list-row__actions">
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => navigate(`/device/assets/${asset.id}/edit`)}
+                    >
+                      Modifica
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--danger"
+                      onClick={() => handleRemove(asset.id)}
+                    >
+                      Rimuovi
+                    </button>
+                  </span>
+                </div>
 
                 {isExpanded && (
-                  <div style={{ marginLeft: "1rem" }}>
-                    <p>
-                      <strong>Descrizione:</strong> {asset.description}
-                    </p>
-                    <p>
-                      <strong>Sensibile:</strong> {asset.sensitive ? "Sì" : "No"}
-                    </p>
-                    <p>
-                      <strong>Stato:</strong> {STATUS_LABELS[assetStatus]}
-                    </p>
-                    <p>
-                      <strong>Requisiti:</strong>
-                    </p>
-                    {asset.requirements && asset.requirements.length > 0 ? (
-                      <ul>
-                        {asset.requirements.map((requirementId) => (
-                          <li key={requirementId}>
-                            {requirementId} —{" "}
-                            {STATUS_LABELS[getEvaluationStatus(session, asset.id, requirementId)]}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p>Nessuno</p>
-                    )}
-                  </div>
+                  <dl className="data-list data-list--nested">
+                    <div className="data-list__row">
+                      <dt>Descrizione:</dt>
+                      <dd>{asset.description}</dd>
+                    </div>
+                    <div className="data-list__row">
+                      <dt>Sensibile:</dt>
+                      <dd>{asset.sensitive ? "Sì" : "No"}</dd>
+                    </div>
+                    <div className="data-list__row">
+                      <dt>Stato:</dt>
+                      <dd>
+                        <StatusBadge status={assetStatus} />
+                      </dd>
+                    </div>
+                    <div className="data-list__row">
+                      <dt>Requisiti:</dt>
+                      <dd>
+                        {asset.requirements && asset.requirements.length > 0 ? (
+                          <ul className="list">
+                            {asset.requirements.map((requirementId) => (
+                              <li key={requirementId}>
+                                {requirementId} —{" "}
+                                {
+                                  STATUS_LABELS[
+                                    getEvaluationStatus(session, asset.id, requirementId)
+                                  ]
+                                }
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          "Nessuno"
+                        )}
+                      </dd>
+                    </div>
+                  </dl>
                 )}
               </li>
             );
           })}
         </ul>
       )}
-    </div>
+    </Page>
   );
 }

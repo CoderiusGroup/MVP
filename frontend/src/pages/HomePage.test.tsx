@@ -26,9 +26,9 @@ describe("HomePage", () =>{
 
     it("naviga alla pagina di creazione dispositivo quando si clicca il bottone", async () => {
         render(<BrowserRouter><HomePage onDeviceSaved={onDeviceSaved} onSessionResumed={onSessionResumed}/></BrowserRouter>);
-        
+
         await userEvent.click(screen.getByRole("button", {name: "Crea nuovo dispositivo"}));
-        
+
         expect(mockedNavigate).toHaveBeenCalledWith("/device/new");
     });
 

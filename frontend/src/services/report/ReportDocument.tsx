@@ -1,16 +1,8 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import { STATUS_LABELS, type DisplayStatus } from "../../domain/rules/sessionRules";
+import { STATUS_COLORS } from "../../theme/statusColors";
 import type { ReportData } from "../reportData";
-
-const STATUS_COLORS: Record<DisplayStatus, string> = {
-  PASS: "#1a7f37",
-  FAIL: "#cf222e",
-  NOT_APPLICABLE: "#57606a",
-  in_progress: "#9a6700",
-  not_evaluated: "#57606a",
-  no_requirements: "#57606a",
-};
 
 const styles = StyleSheet.create({
   page: {
