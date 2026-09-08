@@ -1,6 +1,3 @@
-// Orchestra la sessione guidata: dashboard → asset → dettaglio requisito → esecuzione
-// dell'albero. La fase è stato di navigazione locale; l'albero viene caricato e idratato
-// solo durante la fase "tree".
 import { useEffect, useState } from "react";
 
 import { getEvaluationProgress } from "../domain/rules/sessionRules";
@@ -19,8 +16,6 @@ interface RequirementDetail {
   dependencies: string[];
 }
 
-// UC-26: riprendendo una sessione interrotta a metà di un albero si rientra nel tree;
-// altrimenti si parte dalla dashboard.
 function initialPhase(session: Session | null): Phase {
   const current = session?.current;
   if (!current) {
@@ -60,7 +55,6 @@ export function useSessionRunner() {
   );
   const [requirementDetail, setRequirementDetail] = useState<RequirementDetail | null>(null);
 
-  // Coppia in esecuzione: la coppia corrente della sessione, attivata da select().
   const treeAssetId = session?.current?.assetId ?? null;
   const treeRequirementId = session?.current?.requirementId ?? null;
 
@@ -107,8 +101,6 @@ export function useSessionRunner() {
     syncProgress(currentNodeId, history.slice(0, cursor));
   }, [phase, status, tree, currentNodeId, history, cursor, treeRequirementId, syncProgress]);
 
-  // UC-21/21.1: nel dettaglio requisito servono nome e dipendenze; li leggo dall'albero
-  // (fetch cached, riusato poi dalla fase tree) senza toccare il TreeStore.
   useEffect(() => {
     if (phase !== "requirement" || !selectedRequirementId) {
       return;
@@ -159,8 +151,6 @@ export function useSessionRunner() {
     if (!selectedAssetId || !selectedRequirementId) {
       return;
     }
-    // Azzera l'albero precedente: due coppie con lo stesso codice requisito
-    // condividono requirementId e l'albero stale contaminerebbe la nuova coppia.
     resetTree();
     select(selectedAssetId, selectedRequirementId);
     setPhase("tree");
@@ -169,7 +159,6 @@ export function useSessionRunner() {
   const backToDashboard = () => setPhase("dashboard");
   const backToAsset = () => setPhase("asset");
 
-  // UC-23: registrato l'esito della foglia si torna alla vista asset per il prossimo requisito.
   const confirmOutcome = () => {
     if (!tree || outcome === null) {
       return;
@@ -184,7 +173,6 @@ export function useSessionRunner() {
     }
   };
 
-  // UC-24: uscita anticipata — termina la sessione scartandone lo stato in memoria.
   const endSession = () => {
     resetTree();
     resetSession();
@@ -209,8 +197,6 @@ export function useSessionRunner() {
     answer,
     goBack,
     canGoBack: cursor > 0,
-    // (UC-22.5): si può tornare avanti solo sui nodi già risposti,
-    //cioè finché il cursore non ha raggiunto la fine del percorso registrato.
     goForward,
     canGoForward: cursor < history.length,
     openAsset,

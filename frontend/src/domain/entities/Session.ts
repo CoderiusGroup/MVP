@@ -23,9 +23,6 @@ const EvaluationSchema = z.object({
 const CurrentSchema = z.object({
   assetId: identifier,
   requirementId: requirementCode,
-  // Niente min(1) come nodeCode: Session.selectEvaluation() costruisce
-  // legittimamente un nodeId vuoto ("non ancora risolto", lo risolve il
-  // TreeStore all'idratazione dell'albero).
   nodeId: z.string().max(32),
 });
 
@@ -39,9 +36,6 @@ export const SessionSchema = z.object({
   evaluations: z.array(EvaluationSchema),
 });
 
-// Evaluation/Current/PathStep restano dati puri (nessun comportamento proprio,
-// nessun invariante da proteggere oltre alla forma) — non diventano classi:
-// solo Session ha comportamento reale da incapsulare.
 export type Evaluation = z.infer<typeof EvaluationSchema>;
 export type Current = z.infer<typeof CurrentSchema>;
 export type PathStep = z.infer<typeof PathStepSchema>;
@@ -114,8 +108,6 @@ export class Session {
     });
   }
 
-  // UC-19: attiva la coppia asset/requisito e apre l'albero da capo (nodeId
-  // vuoto: lo risolve il TreeStore all'idratazione).
   selectEvaluation(assetId: string, requirementId: string): Session {
     return new Session(this.#id, this.#savedAt, "in_progress", this.#device, this.#evaluations, {
       decisionTreeVersions: this.#decisionTreeVersions,
@@ -123,8 +115,6 @@ export class Session {
     });
   }
 
-  // Registra il nodo corrente e il percorso parziale mentre l'utente percorre
-  // l'albero, senza chiudere la valutazione (status resta "in_progress").
   syncProgress(nodeId: string, path: PathStep[]): Session {
     if (!this.#current) {
       return this;
@@ -147,8 +137,6 @@ export class Session {
     );
   }
 
-  // UC-23: registra l'esito raggiunto per la coppia corrente; la sessione
-  // passa a "completed" quando tutte le valutazioni lo sono.
   completeCurrent(outcome: Evaluation["outcome"], path: PathStep[]): Session {
     if (!this.#current) {
       return this;
@@ -170,9 +158,6 @@ export class Session {
     );
   }
 
-  // UC-26: vera se le valutazioni coprono esattamente il piano attuale del
-  // device (stesse coppie asset-requisito) — in tal caso la sessione resta
-  // riprendibile così com'è, invece di doverne avviare una nuova.
   matchesPlan(device: Device): boolean {
     const plan = device.buildPlan();
     if (plan.length !== this.#evaluations.length) {
@@ -212,8 +197,6 @@ export class Session {
     };
   }
 
-  // Avvia una sessione nuova per un device: una coppia asset/requisito per
-  // ogni requisito derivato di ogni asset, tutte "non_valutato".
   static start(device: Device, id: string, savedAt: string): Session {
     const plan = device.buildPlan();
     const evaluations: Evaluation[] = plan.map((pair) => ({
@@ -232,7 +215,6 @@ export class Session {
     );
   }
 
-  // Valida e ricostruisce una sessione da un file caricato dall'utente.
   static parse(raw: unknown): Session {
     const parsed = SessionSchema.parse(raw);
     return new Session(

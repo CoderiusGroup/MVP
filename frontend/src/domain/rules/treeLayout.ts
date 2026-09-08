@@ -1,6 +1,3 @@
-// Layout di un decision tree binario per il rendering a grafo: assegna a ogni nodo
-// una colonna (x) e una profondità (riga, y). Le foglie occupano colonne progressive,
-// i nodi interni si centrano sui figli. Regola pura, indipendente dai pixel.
 import type { DecisionTree } from "../entities/DecisionTree";
 import type { Node } from "../entities/Node";
 import { nodeById } from "./treeRules";

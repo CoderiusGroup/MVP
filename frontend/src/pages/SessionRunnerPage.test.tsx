@@ -99,23 +99,19 @@ describe("SessionRunnerPage", () => {
     );
     renderPage();
 
-    // Dashboard: progresso e lista asset.
     expect(screen.getByText("Asset completati: 0 / 2")).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: "Valuta" })[0]);
 
-    // Vista asset: info e requisiti con stato.
     const assetView = screen.getByLabelText("Asset in valutazione");
     expect(within(assetView).getByRole("heading", { name: "Asset AS-1" })).toBeInTheDocument();
     expect(assetView).toHaveTextContent("ACM-1 — Non valutato");
     fireEvent.click(within(assetView).getByRole("button", { name: "Apri" }));
 
-    // Dettaglio requisito: codice + nome.
     await waitFor(() =>
       expect(screen.getByRole("heading", { name: "ACM-1 — Sample" })).toBeInTheDocument(),
     );
     fireEvent.click(screen.getByRole("button", { name: "Avvia decision tree" }));
 
-    // Albero: codice nodo + domanda, poi foglia.
     await waitFor(() =>
       expect(
         within(screen.getByLabelText("Domanda corrente")).getByText("Domanda 1?"),
@@ -128,13 +124,11 @@ describe("SessionRunnerPage", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Conferma esito" }));
 
-    // Ritorno alla vista asset con l'esito registrato.
     const afterAsset = screen.getByLabelText("Asset in valutazione");
     expect(afterAsset).toHaveTextContent("ACM-1 — PASS");
     fireEvent.click(within(afterAsset).getByRole("button", { name: "Torna alla dashboard" }));
     expect(screen.getByText("Asset completati: 1 / 2")).toBeInTheDocument();
 
-    // Valuta il secondo asset fino al completamento della sessione.
     fireEvent.click(screen.getAllByRole("button", { name: "Valuta" })[1]);
     fireEvent.click(screen.getByRole("button", { name: "Apri" }));
     await waitFor(() =>
