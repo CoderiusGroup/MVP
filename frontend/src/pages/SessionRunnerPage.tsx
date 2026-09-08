@@ -52,7 +52,6 @@ export function SessionRunnerPage() {
     return <ResultPage />;
   }
 
-  // UC-24: uscita anticipata dal test.
   const exitDiscarding = () => {
     endSession();
     navigate("/");

@@ -20,11 +20,6 @@ function assetRequirementsDone(session: Session, asset: Asset): number {
   ).length;
 }
 
-// UC-19.1: progresso della sessione — asset completati sul totale e, per l'asset
-// corrente, requisiti completati sul totale.
-//
-// Resta una funzione libera (non un metodo di Session) perché tollera `session`
-// nullo — molte pagine la chiamano prima che una sessione esista.
 export function getEvaluationProgress(session: Session, assetId?: string): EvaluationProgress {
   const assets = session.device.assets;
   const assetsDone = assets.filter((asset) => {
@@ -81,9 +76,6 @@ function reduceStatuses(statuses: DisplayStatus[]): DisplayStatus {
   return STATUS_PRIORITY.find((candidate) => statuses.includes(candidate)) ?? "no_requirements";
 }
 
-// Le tre funzioni seguenti restano libere, non metodi di Session, per lo
-// stesso motivo di getEvaluationProgress: tollerano `session` nullo, come
-// usato da ogni pagina che mostra lo stato prima che una sessione esista.
 export function getEvaluationStatus(
   session: Session | null,
   assetId: string,

@@ -74,7 +74,7 @@ describe("AssetFormPage", () => {
       "Codici PIN memorizzati sul dispositivo.",
     );
     await userEvent.click(screen.getByLabelText("Asset sensibile"));
-    await userEvent.click(screen.getByRole("button", { name: "Invia" }));
+    await userEvent.click(screen.getByRole("button", { name: "Crea asset" }));
 
     await waitFor(() => {
       expect(assetsToJSON(useDeviceStore.getState().device?.assets)).toEqual([mockAsset]);
@@ -98,7 +98,7 @@ describe("AssetFormPage", () => {
       screen.getByPlaceholderText("Descrizione"),
       "Codici PIN memorizzati sul dispositivo.",
     );
-    await userEvent.click(screen.getByRole("button", { name: "Invia" }));
+    await userEvent.click(screen.getByRole("button", { name: "Crea asset" }));
 
     await waitFor(() => {
       expect(screen.queryByText("Pagina gestione asset")).not.toBeInTheDocument();
@@ -138,7 +138,7 @@ describe("AssetFormPage", () => {
 
     await userEvent.clear(screen.getByPlaceholderText("Nome"));
     await userEvent.type(screen.getByPlaceholderText("Nome"), "Nome aggiornato");
-    await userEvent.click(screen.getByRole("button", { name: "Invia" }));
+    await userEvent.click(screen.getByRole("button", { name: "Salva modifiche" }));
 
     await waitFor(() => {
       expect(useDeviceStore.getState().device?.assets[0]?.name).toBe("Nome aggiornato");
@@ -166,7 +166,7 @@ describe("AssetFormPage", () => {
     renderPage(`/device/assets/${sampleAsset.id}/edit`);
 
     await userEvent.selectOptions(screen.getByRole("combobox"), "network");
-    await userEvent.click(screen.getByRole("button", { name: "Invia" }));
+    await userEvent.click(screen.getByRole("button", { name: "Salva modifiche" }));
 
     await waitFor(() => {
       expect(assetsToJSON(useDeviceStore.getState().device?.assets)).toEqual([updatedAsset]);

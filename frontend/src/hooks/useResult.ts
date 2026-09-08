@@ -1,5 +1,3 @@
-// Consultazione dei risultati (UC-27): drill-down asset → requisito e ricostruzione
-// del percorso logico (domande→risposte) del requisito selezionato.
 import { useEffect, useState } from "react";
 
 import { describePath, type PathQuestion } from "../domain/rules/treeRules";

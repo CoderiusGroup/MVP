@@ -93,7 +93,7 @@ export default function AssetFormPage() {
           Asset sensibile
         </label>
         <button type="submit" className="btn btn--primary">
-          Invia
+          {existingAsset ? "Salva modifiche" : "Crea asset"}
         </button>
       </form>
     </Page>

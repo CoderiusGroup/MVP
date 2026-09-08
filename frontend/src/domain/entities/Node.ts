@@ -27,8 +27,6 @@ export type NodeRaw = z.infer<typeof NodeSchema>;
 export type Branches = z.infer<typeof BranchesSchema>;
 export type Outcome = "PASS" | "FAIL" | "NOT_APPLICABLE";
 
-// Contratto astratto comune: QuestionNode e LeafNode lo implementano ciascuna
-// in modo indipendente (nessuna gerarchia di classi, nessuno stato condiviso).
 export interface NodeContract {
   readonly id: string;
   readonly type: "question" | "leaf";
@@ -116,9 +114,6 @@ export class LeafNode implements NodeContract {
   }
 }
 
-// Unione usata da tutti i chiamanti: consente il narrowing su `.type`
-// (node.type === "leaf" => node ha .outcome), che una classe base astratta
-// con `extends` non permetterebbe.
 export type Node = QuestionNode | LeafNode;
 
 export function createNode(raw: NodeRaw): Node {

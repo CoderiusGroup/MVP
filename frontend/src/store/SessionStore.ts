@@ -31,8 +31,6 @@ export const useSessionStore = create<SessionState>((set) => ({
   ensureSession: (device) => {
     set((state) => {
       const { session } = state;
-      // Riprende la sessione solo se è dello stesso device e il piano non è cambiato;
-      // altrimenti ne avvia una nuova. Aggiorna comunque lo snapshot del device.
       if (!session || session.device.id !== device.id || !session.matchesPlan(device)) {
         return { session: Session.start(device, newSessionId(), new Date().toISOString()) };
       }

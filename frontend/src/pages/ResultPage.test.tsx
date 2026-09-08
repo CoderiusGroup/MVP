@@ -98,19 +98,16 @@ describe("ResultPage", () => {
     useSessionStore.getState().resume(completedSession());
     renderPage();
 
-    // UC-27: lista asset con esito aggregato (FAIL perché ACM-2 è FAIL).
     const list = screen.getByLabelText("Risultati per asset");
     expect(list).toHaveTextContent("Asset 1 — FAIL");
     fireEvent.click(within(list).getByRole("button", { name: "Dettaglio" }));
 
-    // UC-27.1: riepilogo per asset con requisiti ed esiti.
     const summary = screen.getByLabelText("Riepilogo asset");
     expect(summary).toHaveTextContent("Tipo: network");
     expect(summary).toHaveTextContent("ACM-1 — PASS");
     expect(summary).toHaveTextContent("ACM-2 — FAIL");
     fireEvent.click(within(summary).getAllByRole("button", { name: "Dettaglio" })[0]);
 
-    // UC-27.1.1: percorso logico del requisito.
     const detail = await screen.findByLabelText("Dettaglio requisito con esito");
     await waitFor(() => expect(detail).toHaveTextContent("Domanda 1? → Sì"));
   });

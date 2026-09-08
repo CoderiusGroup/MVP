@@ -31,7 +31,6 @@ export interface PathQuestion {
   answer: "yes" | "no";
 }
 
-// UC-27.1.1.1: sequenza ordinata domande→risposte di un requisito completato.
 export function describePath(tree: DecisionTree, steps: PathStep[]): PathQuestion[] {
   return steps.map((step) => {
     const node = nodeById(tree, step.nodeId);
