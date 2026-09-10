@@ -52,62 +52,82 @@ export default function HomePage({ onDeviceSaved, onSessionResumed }: Props) {
   };
 
   return (
-    <div className="page">
-      <div className="home-actions">
-        <h1>Gestione Valutazione Dispositivi</h1>
+    <div className="home-shell">
+      <aside className="home-sidebar">
+        <h1 className="home-sidebar__title">
+          EN 18031
+          <br />
+          Compliance Verification
+        </h1>
+        <span className="home-sidebar__divider" aria-hidden="true" />
+      </aside>
 
-        <section className="card card--action">
-          <h2 className="card__title">Nuovo dispositivo</h2>
-          <button
-            type="button"
-            className="btn btn--primary btn--block"
-            onClick={() => navigate("/device/new")}
-          >
-            Crea nuovo dispositivo
-          </button>
-        </section>
+      <main className="home-main">
+        <div>
+          <div className="home-intro">
+            <h2>Da dove vuoi partire?</h2>
+            <p>Scegli come iniziare la tua valutazione.</p>
+          </div>
 
-        <section className="card card--action">
-          <h2 className="card__title">Importa dispositivo da JSON o CSV</h2>
-          <label className="btn btn--primary btn--block" htmlFor="home-import-device">
-            Scegli un file
-          </label>
-          <input
-            id="home-import-device"
-            type="file"
-            aria-label="Carica file JSON o CSV dispositivo"
-            accept=".json,application/json,.csv,text/csv"
-            onChange={(e) => readFileOnUpload(e.target.files?.[0])}
-            style={{ display: "none" }}
-          />
-        </section>
+          <div className="home-grid">
+            <section className="card home-card">
+              <h3 className="home-card__title">Crea dispositivo</h3>
+              <p className="home-card__desc">Registra un nuovo dispositivo da zero.</p>
+              <button
+                type="button"
+                className="btn btn--primary btn--block"
+                onClick={() => navigate("/device/new")}
+              >
+                Crea nuovo dispositivo
+              </button>
+            </section>
 
-        <section className="card card--action">
-          <h2 className="card__title">Riprendi una sessione salvata</h2>
-          <label className="btn btn--primary btn--block" htmlFor="home-resume-session">
-            Scegli un file
-          </label>
-          <input
-            id="home-resume-session"
-            type="file"
-            aria-label="Riprendi sessione da file"
-            accept=".json,application/json"
-            onChange={(e) => resumeSessionOnUpload(e.target.files?.[0])}
-            style={{ display: "none" }}
-          />
-        </section>
+            <section className="card home-card">
+              <h3 className="home-card__title">Importa dispositivo</h3>
+              <p className="home-card__desc">Importa un dispositivo da file JSON o CSV.</p>
+              <label className="btn btn--primary btn--block" htmlFor="home-import-device">
+                Scegli file da importare
+              </label>
+              <input
+                id="home-import-device"
+                type="file"
+                aria-label="Carica file JSON o CSV dispositivo"
+                accept=".json,application/json,.csv,text/csv"
+                onChange={(e) => readFileOnUpload(e.target.files?.[0])}
+                style={{ display: "none" }}
+              />
+            </section>
 
-        <section className="card card--action">
-          <h2 className="card__title">Catalogo decision tree</h2>
-          <button
-            type="button"
-            className="btn btn--primary btn--block"
-            onClick={() => navigate("/decision-tree-catalog")}
-          >
-            Apri catalogo decision tree
-          </button>
-        </section>
-      </div>
+            <section className="card home-card">
+              <h3 className="home-card__title">Riprendi sessione</h3>
+              <p className="home-card__desc">Riprendi una valutazione salvata in precedenza.</p>
+              <label className="btn btn--primary btn--block" htmlFor="home-resume-session">
+                Carica sessione salvata
+              </label>
+              <input
+                id="home-resume-session"
+                type="file"
+                aria-label="Riprendi sessione da file"
+                accept=".json,application/json"
+                onChange={(e) => resumeSessionOnUpload(e.target.files?.[0])}
+                style={{ display: "none" }}
+              />
+            </section>
+
+            <section className="card home-card">
+              <h3 className="home-card__title">Catalogo decision tree</h3>
+              <p className="home-card__desc">Consulta i decision tree dei requisiti EN 18031.</p>
+              <button
+                type="button"
+                className="btn btn--primary btn--block"
+                onClick={() => navigate("/decision-tree-catalog")}
+              >
+                Esplora il catalogo
+              </button>
+            </section>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

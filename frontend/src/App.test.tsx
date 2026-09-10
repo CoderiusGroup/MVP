@@ -15,7 +15,7 @@ describe("App", () => {
   it("shows HomePage on the default route", () => {
     render(<App />);
 
-    expect(screen.getByText("Gestione Valutazione Dispositivi")).toBeInTheDocument();
+    expect(screen.getByText("Da dove vuoi partire?")).toBeInTheDocument();
   });
 
   it("populates DeviceStore when resuming a saved session", async () => {
