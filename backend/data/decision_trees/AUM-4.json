@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "decisionTree",
+  "decisionTree": {
+    "requirementId": "AUM-4",
+    "requirementName": "Changing authenticators",
+    "version": "1.0.0",
+    "appliesTo": ["network", "security"],
+    "dependencies": ["AUM-1-1", "AUM-1-2"],
+    "rootNode": "DT.AUM-4.DN-1",
+    "nodes": [
+      {
+        "id": "DT.AUM-4.DN-1",
+        "type": "question",
+        "text": "Does the change of the authenticator conflict security goals?",
+        "branches": { "yes": "L-NA-1", "no": "DT.AUM-4.DN-2" }
+      },
+      {
+        "id": "DT.AUM-4.DN-2",
+        "type": "question",
+        "text": "Does the authentication mechanism allow the change of the authenticator?",
+        "branches": { "yes": "L-PASS-1", "no": "L-FAIL-1" }
+      },
+      {
+        "id": "L-PASS-1",
+        "type": "leaf",
+        "outcome": "PASS",
+        "text": "The mechanism successfully allows changing the authenticator."
+      },
+      {
+        "id": "L-FAIL-1",
+        "type": "leaf",
+        "outcome": "FAIL",
+        "text": "The mechanism fails to allow the change of the authenticator."
+      },
+      {
+        "id": "L-NA-1",
+        "type": "leaf",
+        "outcome": "NOT_APPLICABLE",
+        "text": "The change of the authenticator conflicts with existing security goals."
+      }
+    ]
+  }
+}

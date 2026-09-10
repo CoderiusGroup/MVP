@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "decisionTree",
+  "decisionTree": {
+    "requirementId": "AUM-1-2",
+    "requirementName": "Applicability of authentication mechanisms (user interface)",
+    "version": "1.0.0",
+    "appliesTo": ["network", "security"],
+    "dependencies": ["ACM-1"],
+    "rootNode": "DT.AUM-1-2.DN-1",
+    "nodes": [
+      {
+        "id": "DT.AUM-1-2.DN-1",
+        "type": "question",
+        "text": "Is the managed access performed over a user interface where physical or logical measures in the targeted environment provide confidence in the correctness of an entity's claim?",
+        "branches": { "yes": "L-NA-1", "no": "DT.AUM-1-2.DN-2" }
+      },
+      {
+        "id": "DT.AUM-1-2.DN-2",
+        "type": "question",
+        "text": "Is the managed access only for reading of network functions or network functions configuration where access without authentication is needed to enable the intended equipment functionality?",
+        "branches": { "yes": "L-NA-2", "no": "DT.AUM-1-2.DN-3" }
+      },
+      {
+        "id": "DT.AUM-1-2.DN-3",
+        "type": "question",
+        "text": "Is the managed access only for reading of network functions or network functions configuration where access without authentication is needed because legal implications do not allow for authentication mechanisms?",
+        "branches": { "yes": "L-NA-3", "no": "DT.AUM-1-2.DN-4" }
+      },
+      {
+        "id": "DT.AUM-1-2.DN-4",
+        "type": "question",
+        "text": "Does the managed access use authentication mechanisms?",
+        "branches": { "yes": "L-PASS-1", "no": "L-FAIL-1" }
+      },
+      {
+        "id": "L-PASS-1",
+        "type": "leaf",
+        "outcome": "PASS",
+        "text": "The managed access uses authentication mechanisms."
+      },
+      {
+        "id": "L-FAIL-1",
+        "type": "leaf",
+        "outcome": "FAIL",
+        "text": "The managed access does not use authentication mechanisms."
+      },
+      {
+        "id": "L-NA-1",
+        "type": "leaf",
+        "outcome": "NOT_APPLICABLE",
+        "text": "Physical or logical measures in the targeted environment provide confidence."
+      },
+      {
+        "id": "L-NA-2",
+        "type": "leaf",
+        "outcome": "NOT_APPLICABLE",
+        "text": "Read-only access without authentication is needed to enable the intended equipment functionality."
+      },
+      {
+        "id": "L-NA-3",
+        "type": "leaf",
+        "outcome": "NOT_APPLICABLE",
+        "text": "Read-only access without authentication is needed due to legal implications."
+      }
+    ]
+  }
+}
