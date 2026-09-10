@@ -6,9 +6,9 @@
   --color-text-muted: #57606a;
   --color-border: #d7dae4;
 
-  --color-accent: #00129a;
-  --color-accent-hover: #000d73;
-  --color-accent-soft: #e9eaf5;
+  --color-accent: #001b98;
+  --color-accent-hover: #001470;
+  --color-accent-soft: #e8eaf6;
   --color-on-accent: #ffffff;
   --color-danger: #cf222e;
   --color-danger-hover: #a40e26;
@@ -35,6 +35,6 @@
 
   --radius: 6px;
   --radius-lg: 10px;
-  --shadow-sm: 0 1px 2px rgba(0, 18, 154, 0.05), 0 1px 3px rgba(0, 18, 154, 0.08);
+  --shadow-sm: 0 1px 2px rgba(0, 27, 152, 0.05), 0 1px 3px rgba(0, 27, 152, 0.08);
   --border: 1px solid var(--color-border);
 }
