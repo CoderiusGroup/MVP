@@ -1,4 +1,0 @@
-services:
-  backend:
-    ports: !override
-      - "5001:5000"
