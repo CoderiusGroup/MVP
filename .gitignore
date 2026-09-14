@@ -33,3 +33,6 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+
+docker-compose.override.yml
